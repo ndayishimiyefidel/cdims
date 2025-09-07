@@ -62,14 +62,14 @@ module.exports = {
 
     // Insert materials with unit prices (material_prices table removed) (ignore duplicates)
     await queryInterface.bulkInsert('materials', [
-      { id: 1, code: 'CEM-001', name: 'Portland Cement 50kg', specification: 'Portland cement, 50kg bag', category_id: 2, unit_id: 7, unit_price: 8500.00, active: 1 },
-      { id: 2, code: 'STE-001', name: 'Reinforcement Steel 12mm', specification: 'Reinforcement steel bar, 12mm diameter', category_id: 3, unit_id: 2, unit_price: 12000.00, active: 1 },
-      { id: 3, code: 'STE-002', name: 'Reinforcement Steel 16mm', specification: 'Reinforcement steel bar, 16mm diameter', category_id: 3, unit_id: 2, unit_price: 15000.00, active: 1 },
-      { id: 4, code: 'AGG-001', name: 'Coarse Aggregate', specification: 'Crushed stone aggregate, 20mm', category_id: 2, unit_id: 4, unit_price: 25000.00, active: 1 },
-      { id: 5, code: 'SAND-001', name: 'Fine Sand', specification: 'River sand for construction', category_id: 2, unit_id: 4, unit_price: 20000.00, active: 1 },
-      { id: 6, code: 'WIR-001', name: 'Electrical Wire 2.5mm', specification: 'Copper electrical wire, 2.5mm²', category_id: 5, unit_id: 2, unit_price: 800.00, active: 1 },
-      { id: 7, code: 'PIP-001', name: 'PVC Pipe 50mm', specification: 'PVC water pipe, 50mm diameter', category_id: 6, unit_id: 2, unit_price: 1500.00, active: 1 },
-      { id: 8, code: 'TOOL-001', name: 'Hammer', specification: 'Construction hammer, 1kg', category_id: 7, unit_id: 1, unit_price: 5000.00, active: 1 }
+      { id: 1, code: 'CEM-001', name: 'Portland Cement 50kg', specification: 'Portland cement, 50kg bag', category_id: 2, unit_id: 7, unit_price: 8500.00, active: true },
+      { id: 2, code: 'STE-001', name: 'Reinforcement Steel 12mm', specification: 'Reinforcement steel bar, 12mm diameter', category_id: 3, unit_id: 2, unit_price: 12000.00, active: true },
+      { id: 3, code: 'STE-002', name: 'Reinforcement Steel 16mm', specification: 'Reinforcement steel bar, 16mm diameter', category_id: 3, unit_id: 2, unit_price: 15000.00, active: true },
+      { id: 4, code: 'AGG-001', name: 'Coarse Aggregate', specification: 'Crushed stone aggregate, 20mm', category_id: 2, unit_id: 4, unit_price: 25000.00, active: true },
+      { id: 5, code: 'SAND-001', name: 'Fine Sand', specification: 'River sand for construction', category_id: 2, unit_id: 4, unit_price: 20000.00, active: true },
+      { id: 6, code: 'WIR-001', name: 'Electrical Wire 2.5mm', specification: 'Copper electrical wire, 2.5mm²', category_id: 5, unit_id: 2, unit_price: 800.00, active: true },
+      { id: 7, code: 'PIP-001', name: 'PVC Pipe 50mm', specification: 'PVC water pipe, 50mm diameter', category_id: 6, unit_id: 2, unit_price: 1500.00, active: true },
+      { id: 8, code: 'TOOL-001', name: 'Hammer', specification: 'Construction hammer, 1kg', category_id: 7, unit_id: 1, unit_price: 5000.00, active: true }
     ], { ignoreDuplicates: true });
 
     // Material prices table removed - prices now stored in materials table
@@ -98,7 +98,7 @@ module.exports = {
         email: 'admin@cdims.rw', 
         phone: '+250123456789', 
         password_hash: hashedPassword, 
-        active: 1 
+        active: true 
       }
     ], { ignoreDuplicates: true });
   },
