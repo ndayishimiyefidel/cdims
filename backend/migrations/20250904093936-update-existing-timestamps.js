@@ -13,7 +13,7 @@ module.exports = {
       try {
         // Check if table exists
         const [results] = await queryInterface.sequelize.query(
-          `SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = '${tableName}'`
+          `SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = '${tableName}'`
         );
         
         if (results[0].count > 0) {
@@ -21,12 +21,12 @@ module.exports = {
           
           // Update created_at for records with '0000-00-00 00:00:00'
           await queryInterface.sequelize.query(
-            `UPDATE \`${tableName}\` SET created_at = CURRENT_TIMESTAMP WHERE created_at = '0000-00-00 00:00:00' OR created_at IS NULL`
+            `UPDATE "${tableName}" SET created_at = CURRENT_TIMESTAMP WHERE created_at = '0000-00-00 00:00:00' OR created_at IS NULL`
           );
           
           // Update updated_at for records with '0000-00-00 00:00:00'
           await queryInterface.sequelize.query(
-            `UPDATE \`${tableName}\` SET updated_at = CURRENT_TIMESTAMP WHERE updated_at = '0000-00-00 00:00:00' OR updated_at IS NULL`
+            `UPDATE "${tableName}" SET updated_at = CURRENT_TIMESTAMP WHERE updated_at = '0000-00-00 00:00:00' OR updated_at IS NULL`
           );
           
           console.log(`✅ Updated timestamps for ${tableName}`);
@@ -43,7 +43,7 @@ module.exports = {
       try {
         // Check if table exists
         const [results] = await queryInterface.sequelize.query(
-          `SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = '${tableName}'`
+          `SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = '${tableName}'`
         );
         
         if (results[0].count > 0) {
@@ -51,7 +51,7 @@ module.exports = {
           
           // Update created_at for records with '0000-00-00 00:00:00'
           await queryInterface.sequelize.query(
-            `UPDATE \`${tableName}\` SET created_at = CURRENT_TIMESTAMP WHERE created_at = '0000-00-00 00:00:00' OR created_at IS NULL`
+            `UPDATE "${tableName}" SET created_at = CURRENT_TIMESTAMP WHERE created_at = '0000-00-00 00:00:00' OR created_at IS NULL`
           );
           
           console.log(`✅ Updated custom timestamps for ${tableName}`);

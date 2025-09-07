@@ -13,13 +13,13 @@ module.exports = {
       try {
         // Check if table exists
         const [results] = await queryInterface.sequelize.query(
-          `SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = '${tableName}'`
+          `SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = '${tableName}'`
         );
         
         if (results[0].count > 0) {
           // Check if created_at column exists
           const [createdAtResults] = await queryInterface.sequelize.query(
-            `SELECT COUNT(*) as count FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = '${tableName}' AND column_name = 'created_at'`
+            `SELECT COUNT(*) as count FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = '${tableName}' AND column_name = 'created_at'`
           );
           
           if (createdAtResults[0].count > 0) {
@@ -32,14 +32,14 @@ module.exports = {
 
           // Check if updated_at column exists
           const [updatedAtResults] = await queryInterface.sequelize.query(
-            `SELECT COUNT(*) as count FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = '${tableName}' AND column_name = 'updated_at'`
+            `SELECT COUNT(*) as count FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = '${tableName}' AND column_name = 'updated_at'`
           );
           
           if (updatedAtResults[0].count > 0) {
             await queryInterface.changeColumn(tableName, 'updated_at', {
               type: Sequelize.DATE,
               allowNull: false,
-              defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
+              defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
             });
           }
         }
