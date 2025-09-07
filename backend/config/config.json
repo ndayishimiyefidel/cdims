@@ -1,0 +1,44 @@
+{
+    "development": {
+        "username": "root",
+        "password": "",
+        "database": "cdims",
+        "host": "127.0.0.1",
+        "port": 3306,
+        "dialect": "mysql",
+        "logging": true,
+        "define": {
+            "timestamps": true,
+            "underscored": true,
+            "freezeTableName": true
+        }
+    },
+    "test": {
+        "username": "root",
+        "password": "",
+        "database": "cdims_test",
+        "host": "127.0.0.1",
+        "port": 3306,
+        "dialect": "mysql",
+        "logging": false,
+        "define": {
+            "timestamps": true,
+            "underscored": true,
+            "freezeTableName": true
+        }
+    },
+    "production": {
+        "username": "root",
+        "password": "",
+        "database": "cdims_prod",
+        "host": "127.0.0.1",
+        "port": 3306,
+        "dialect": "mysql",
+        "logging": false,
+        "define": {
+            "timestamps": true,
+            "underscored": true,
+            "freezeTableName": true
+        }
+    }
+}
