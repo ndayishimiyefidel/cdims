@@ -31,7 +31,7 @@ const allowedOrigins = [
   'http://localhost:3000', // Allow direct API testing
   'http://localhost:3001', // Frontend
   'https://cdims-frontend.onrender.com', // Production frontend (if deployed)
-  'https://cdims-backend.onrender.com' // Production backend (if needed for testing)
+  'https://cdims.onrender.com' // Production backend (if needed for testing)
 ];
 
 app.use(cors({
