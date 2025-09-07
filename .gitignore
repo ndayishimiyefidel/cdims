@@ -4,13 +4,12 @@ docs/
 
 # Documentation files (except README.md)
 *.md
+
 !README.md
 
 # Specific documentation files to ignore
-APPROVAL_WORKFLOW_IMPLEMENTATION.md
-SYSTEM_REQUIREMENTS.md
-API_DOCUMENTATION.md
-DATABASE_SCHEMA.md
+SAMPLE STORE FOR SOFTWARE CYANGUGU.xlsx
+DIOCESE  CATHOLIQUE DE CYANGUGU.txt
 
 # IDE files
 .vscode/
