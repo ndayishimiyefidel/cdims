@@ -4,8 +4,8 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     // Only fix timestamps for tables that we know exist and have the columns
     const tablesToFix = [
-      'sites', 'users', 'budget_lines', 'categories', 'units', 
-      'materials', 'material_prices', 'stores', 'stock', 
+      'sites', 'users', 'categories', 'units', 
+      'materials', 'stores', 'stock', 
       'requests', 'request_items', 'suppliers', 'purchase_orders', 'purchase_order_items'
     ];
 

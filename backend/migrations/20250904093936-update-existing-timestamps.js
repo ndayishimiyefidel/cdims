@@ -4,8 +4,8 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     // Update existing records with proper timestamps
     const tablesToUpdate = [
-      'sites', 'users', 'budget_lines', 'categories', 'units', 
-      'materials', 'material_prices', 'stores', 'stock', 
+      'sites', 'users', 'categories', 'units', 
+      'materials', 'stores', 'stock', 
       'requests', 'request_items', 'suppliers', 'purchase_orders', 'purchase_order_items'
     ];
 

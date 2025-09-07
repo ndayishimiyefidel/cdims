@@ -43,13 +43,7 @@ module.exports = {
       { id: 4, code: 'SITE-004', name: 'Parish Hall', location: 'Nyamasheke' }
     ], {});
 
-    // Insert budget lines
-    await queryInterface.bulkInsert('budget_lines', [
-      { id: 1, code: 'BL-2025-001', name: 'Construction Materials', fiscal_year: 2025 },
-      { id: 2, code: 'BL-2025-002', name: 'Electrical Installation', fiscal_year: 2025 },
-      { id: 3, code: 'BL-2025-003', name: 'Plumbing Works', fiscal_year: 2025 },
-      { id: 4, code: 'BL-2025-004', name: 'Tools & Equipment', fiscal_year: 2025 }
-    ], {});
+    // Budget lines table removed - no longer needed
 
     // Insert stores
     await queryInterface.bulkInsert('stores', [
@@ -66,29 +60,19 @@ module.exports = {
       { id: 4, name: 'Electrical Supplies Co', contact: 'Grace Mukamana', phone: '+250777888999', email: 'orders@electrical.rw' }
     ], {});
 
-    // Insert materials
+    // Insert materials with unit prices (material_prices table removed)
     await queryInterface.bulkInsert('materials', [
-      { id: 1, code: 'CEM-001', name: 'Portland Cement 50kg', specification: 'Portland cement, 50kg bag', category_id: 2, unit_id: 7, active: 1 },
-      { id: 2, code: 'STE-001', name: 'Reinforcement Steel 12mm', specification: 'Reinforcement steel bar, 12mm diameter', category_id: 3, unit_id: 2, active: 1 },
-      { id: 3, code: 'STE-002', name: 'Reinforcement Steel 16mm', specification: 'Reinforcement steel bar, 16mm diameter', category_id: 3, unit_id: 2, active: 1 },
-      { id: 4, code: 'AGG-001', name: 'Coarse Aggregate', specification: 'Crushed stone aggregate, 20mm', category_id: 2, unit_id: 4, active: 1 },
-      { id: 5, code: 'SAND-001', name: 'Fine Sand', specification: 'River sand for construction', category_id: 2, unit_id: 4, active: 1 },
-      { id: 6, code: 'WIR-001', name: 'Electrical Wire 2.5mm', specification: 'Copper electrical wire, 2.5mm²', category_id: 5, unit_id: 2, active: 1 },
-      { id: 7, code: 'PIP-001', name: 'PVC Pipe 50mm', specification: 'PVC water pipe, 50mm diameter', category_id: 6, unit_id: 2, active: 1 },
-      { id: 8, code: 'TOOL-001', name: 'Hammer', specification: 'Construction hammer, 1kg', category_id: 7, unit_id: 1, active: 1 }
+      { id: 1, code: 'CEM-001', name: 'Portland Cement 50kg', specification: 'Portland cement, 50kg bag', category_id: 2, unit_id: 7, unit_price: 8500.00, active: 1 },
+      { id: 2, code: 'STE-001', name: 'Reinforcement Steel 12mm', specification: 'Reinforcement steel bar, 12mm diameter', category_id: 3, unit_id: 2, unit_price: 12000.00, active: 1 },
+      { id: 3, code: 'STE-002', name: 'Reinforcement Steel 16mm', specification: 'Reinforcement steel bar, 16mm diameter', category_id: 3, unit_id: 2, unit_price: 15000.00, active: 1 },
+      { id: 4, code: 'AGG-001', name: 'Coarse Aggregate', specification: 'Crushed stone aggregate, 20mm', category_id: 2, unit_id: 4, unit_price: 25000.00, active: 1 },
+      { id: 5, code: 'SAND-001', name: 'Fine Sand', specification: 'River sand for construction', category_id: 2, unit_id: 4, unit_price: 20000.00, active: 1 },
+      { id: 6, code: 'WIR-001', name: 'Electrical Wire 2.5mm', specification: 'Copper electrical wire, 2.5mm²', category_id: 5, unit_id: 2, unit_price: 800.00, active: 1 },
+      { id: 7, code: 'PIP-001', name: 'PVC Pipe 50mm', specification: 'PVC water pipe, 50mm diameter', category_id: 6, unit_id: 2, unit_price: 1500.00, active: 1 },
+      { id: 8, code: 'TOOL-001', name: 'Hammer', specification: 'Construction hammer, 1kg', category_id: 7, unit_id: 1, unit_price: 5000.00, active: 1 }
     ], {});
 
-    // Insert material prices
-    await queryInterface.bulkInsert('material_prices', [
-      { id: 1, material_id: 1, unit_price: 8500.00, effective_from: '2025-01-01', effective_to: null },
-      { id: 2, material_id: 2, unit_price: 12000.00, effective_from: '2025-01-01', effective_to: null },
-      { id: 3, material_id: 3, unit_price: 15000.00, effective_from: '2025-01-01', effective_to: null },
-      { id: 4, material_id: 4, unit_price: 25000.00, effective_from: '2025-01-01', effective_to: null },
-      { id: 5, material_id: 5, unit_price: 20000.00, effective_from: '2025-01-01', effective_to: null },
-      { id: 6, material_id: 6, unit_price: 800.00, effective_from: '2025-01-01', effective_to: null },
-      { id: 7, material_id: 7, unit_price: 1500.00, effective_from: '2025-01-01', effective_to: null },
-      { id: 8, material_id: 8, unit_price: 5000.00, effective_from: '2025-01-01', effective_to: null }
-    ], {});
+    // Material prices table removed - prices now stored in materials table
 
     // Insert initial stock
     await queryInterface.bulkInsert('stock', [
@@ -123,11 +107,9 @@ module.exports = {
     // Delete in reverse order due to foreign key constraints
     await queryInterface.bulkDelete('users', null, {});
     await queryInterface.bulkDelete('stock', null, {});
-    await queryInterface.bulkDelete('material_prices', null, {});
     await queryInterface.bulkDelete('materials', null, {});
     await queryInterface.bulkDelete('suppliers', null, {});
     await queryInterface.bulkDelete('stores', null, {});
-    await queryInterface.bulkDelete('budget_lines', null, {});
     await queryInterface.bulkDelete('sites', null, {});
     await queryInterface.bulkDelete('categories', null, {});
     await queryInterface.bulkDelete('units', null, {});
