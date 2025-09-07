@@ -4,7 +4,7 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('requests', {
       id: {
-        type: Sequelize.BIGINT.UNSIGNED,
+        type: Sequelize.BIGINT,
         primaryKey: true,
         autoIncrement: true
       },
@@ -13,7 +13,7 @@ module.exports = {
         unique: true
       },
       site_id: {
-        type: Sequelize.BIGINT.UNSIGNED,
+        type: Sequelize.BIGINT,
         allowNull: false,
         references: {
           model: 'sites',
@@ -21,7 +21,7 @@ module.exports = {
         }
       },
       budget_line_id: {
-        type: Sequelize.BIGINT.UNSIGNED,
+        type: Sequelize.BIGINT,
         allowNull: true,
         references: {
           model: 'budget_lines',
@@ -29,7 +29,7 @@ module.exports = {
         }
       },
       requested_by: {
-        type: Sequelize.BIGINT.UNSIGNED,
+        type: Sequelize.BIGINT,
         allowNull: false,
         references: {
           model: 'users',

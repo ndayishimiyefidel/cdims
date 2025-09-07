@@ -4,12 +4,12 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('audit_logs', {
       id: {
-        type: Sequelize.BIGINT.UNSIGNED,
+        type: Sequelize.BIGINT,
         primaryKey: true,
         autoIncrement: true
       },
       user_id: {
-        type: Sequelize.BIGINT.UNSIGNED,
+        type: Sequelize.BIGINT,
         allowNull: true,
         references: {
           model: 'users',
@@ -20,7 +20,7 @@ module.exports = {
         type: Sequelize.STRING(50)
       },
       entity_id: {
-        type: Sequelize.BIGINT.UNSIGNED
+        type: Sequelize.BIGINT
       },
       action: {
         type: Sequelize.STRING(50)

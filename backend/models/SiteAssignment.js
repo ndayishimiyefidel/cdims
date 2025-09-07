@@ -3,12 +3,12 @@ const { sequelize } = require('../src/config/database');
 
 const SiteAssignment = sequelize.define('SiteAssignment', {
   id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     primaryKey: true,
     autoIncrement: true
   },
   site_id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'sites',
@@ -16,7 +16,7 @@ const SiteAssignment = sequelize.define('SiteAssignment', {
     }
   },
   user_id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'users',
@@ -24,7 +24,7 @@ const SiteAssignment = sequelize.define('SiteAssignment', {
     }
   },
   assigned_by: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'users',

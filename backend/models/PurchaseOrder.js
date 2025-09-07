@@ -3,7 +3,7 @@ const { sequelize } = require('../src/config/database');
 
 const PurchaseOrder = sequelize.define('PurchaseOrder', {
   id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     primaryKey: true,
     autoIncrement: true
   },
@@ -12,7 +12,7 @@ const PurchaseOrder = sequelize.define('PurchaseOrder', {
     unique: true
   },
   supplier_id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'suppliers',
@@ -25,7 +25,7 @@ const PurchaseOrder = sequelize.define('PurchaseOrder', {
     defaultValue: 'DRAFT'
   },
   created_by: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'users',

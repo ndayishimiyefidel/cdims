@@ -3,7 +3,7 @@ const { sequelize } = require('../src/config/database');
 
 const Material = sequelize.define('Material', {
   id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     primaryKey: true,
     autoIncrement: true
   },
@@ -19,7 +19,7 @@ const Material = sequelize.define('Material', {
     type: DataTypes.TEXT
   },
   category_id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: true,
     references: {
       model: 'categories',
@@ -27,7 +27,7 @@ const Material = sequelize.define('Material', {
     }
   },
   unit_id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'units',

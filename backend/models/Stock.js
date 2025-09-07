@@ -3,12 +3,12 @@ const { sequelize } = require('../src/config/database');
 
 const Stock = sequelize.define('Stock', {
   id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     primaryKey: true,
     autoIncrement: true
   },
   store_id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'stores',
@@ -16,7 +16,7 @@ const Stock = sequelize.define('Stock', {
     }
   },
   material_id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'materials',

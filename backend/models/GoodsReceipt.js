@@ -3,7 +3,7 @@ const { sequelize } = require('../src/config/database');
 
 const GoodsReceipt = sequelize.define('GoodsReceipt', {
   id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     primaryKey: true,
     autoIncrement: true
   },
@@ -12,7 +12,7 @@ const GoodsReceipt = sequelize.define('GoodsReceipt', {
     unique: true
   },
   purchase_order_id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: true,
     references: {
       model: 'purchase_orders',
@@ -20,7 +20,7 @@ const GoodsReceipt = sequelize.define('GoodsReceipt', {
     }
   },
   store_id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'stores',
@@ -28,7 +28,7 @@ const GoodsReceipt = sequelize.define('GoodsReceipt', {
     }
   },
   received_by: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'users',

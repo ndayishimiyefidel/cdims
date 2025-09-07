@@ -3,7 +3,7 @@ const { sequelize } = require('../src/config/database');
 
 const Unit = sequelize.define('Unit', {
   id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     primaryKey: true,
     autoIncrement: true
   },

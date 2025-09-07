@@ -3,12 +3,12 @@ const { sequelize } = require('../src/config/database');
 
 const Attachment = sequelize.define('Attachment', {
   id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     primaryKey: true,
     autoIncrement: true
   },
   request_id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: true,
     references: {
       model: 'requests',
@@ -24,7 +24,7 @@ const Attachment = sequelize.define('Attachment', {
     allowNull: false
   },
   uploaded_by: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'users',

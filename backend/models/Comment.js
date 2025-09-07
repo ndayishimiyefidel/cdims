@@ -3,12 +3,12 @@ const { sequelize } = require('../src/config/database');
 
 const Comment = sequelize.define('Comment', {
   id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     primaryKey: true,
     autoIncrement: true
   },
   request_id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'requests',
@@ -16,7 +16,7 @@ const Comment = sequelize.define('Comment', {
     }
   },
   author_id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'users',

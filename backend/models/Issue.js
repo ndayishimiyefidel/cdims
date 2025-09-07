@@ -3,7 +3,7 @@ const { sequelize } = require('../src/config/database');
 
 const Issue = sequelize.define('Issue', {
   id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     primaryKey: true,
     autoIncrement: true
   },
@@ -12,7 +12,7 @@ const Issue = sequelize.define('Issue', {
     unique: true
   },
   request_id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'requests',
@@ -20,7 +20,7 @@ const Issue = sequelize.define('Issue', {
     }
   },
   store_id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'stores',
@@ -28,7 +28,7 @@ const Issue = sequelize.define('Issue', {
     }
   },
   issued_by: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'users',
@@ -36,7 +36,7 @@ const Issue = sequelize.define('Issue', {
     }
   },
   issued_to: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'users',

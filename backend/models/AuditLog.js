@@ -3,12 +3,12 @@ const { sequelize } = require('../src/config/database');
 
 const AuditLog = sequelize.define('AuditLog', {
   id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     primaryKey: true,
     autoIncrement: true
   },
   user_id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+    type: DataTypes.BIGINT,
     allowNull: true,
     references: {
       model: 'users',
@@ -19,7 +19,7 @@ const AuditLog = sequelize.define('AuditLog', {
     type: DataTypes.STRING(50)
   },
   entity_id: {
-    type: DataTypes.BIGINT.UNSIGNED
+    type: DataTypes.BIGINT
   },
   action: {
     type: DataTypes.STRING(50)

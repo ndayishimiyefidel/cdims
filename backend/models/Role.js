@@ -3,7 +3,7 @@ const { sequelize } = require('../src/config/database');
 
 const Role = sequelize.define('Role', {
   id: {
-    type: DataTypes.TINYINT.UNSIGNED,
+    type: DataTypes.INTEGER,
     primaryKey: true,
     allowNull: false
   },
