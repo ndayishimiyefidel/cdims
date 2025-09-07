@@ -81,6 +81,48 @@ router.get('/', authenticate, authorize('ADMIN', 'PADIRI'), userController.getAl
 
 /**
  * @swagger
+ * /api/users/roles:
+ *   get:
+ *     summary: Get all roles
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Roles retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       name:
+ *                         type: string
+ *                         example: ADMIN
+ *                       description:
+ *                         type: string
+ *                         example: System Administrator
+ *       403:
+ *         description: Forbidden - Insufficient permissions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get('/roles', authenticate, authorize('ADMIN', 'PADIRI'), userController.getRoles);
+
+/**
+ * @swagger
  * /api/users/{id}:
  *   get:
  *     summary: Get user by ID
@@ -380,47 +422,5 @@ router.delete('/:id', authenticate, authorize('ADMIN', 'PADIRI'), userController
  *               $ref: '#/components/schemas/Error'
  */
 router.put('/:id/toggle-status', authenticate, authorize('ADMIN', 'PADIRI', 'DIOCESAN_SITE_ENGINEER'), userController.toggleUserStatus);
-
-/**
- * @swagger
- * /api/users/roles:
- *   get:
- *     summary: Get all roles
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Roles retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: integer
- *                         example: 1
- *                       name:
- *                         type: string
- *                         example: ADMIN
- *                       description:
- *                         type: string
- *                         example: System Administrator
- *       403:
- *         description: Forbidden - Insufficient permissions
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.get('/roles', authenticate, authorize('ADMIN', 'PADIRI'), userController.getRoles);
 
 module.exports = router;
