@@ -14,8 +14,20 @@ const options = {
     },
     servers: [
       {
+        url: process.env.NODE_ENV === 'production' 
+          ? 'https://cdims.onrender.com' 
+          : 'http://localhost:3000',
+        description: process.env.NODE_ENV === 'production' 
+          ? 'Production server' 
+          : 'Development server'
+      },
+      {
         url: 'http://localhost:3000',
         description: 'Development server'
+      },
+      {
+        url: 'https://cdims-backend.onrender.com',
+        description: 'Production server'
       }
     ],
     components: {
