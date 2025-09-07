@@ -73,6 +73,17 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'CDIMS Backend API is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    version: '1.0.0'
+  });
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);

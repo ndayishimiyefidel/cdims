@@ -28,12 +28,14 @@
         }
     },
     "production": {
-        "username": "root",
-        "password": "",
-        "database": "cdims_prod",
-        "host": "127.0.0.1",
-        "port": 3306,
-        "dialect": "mysql",
+        "use_env_variable": "DATABASE_URL",
+        "dialect": "postgres",
+        "dialectOptions": {
+            "ssl": {
+                "require": true,
+                "rejectUnauthorized": false
+            }
+        },
         "logging": false,
         "define": {
             "timestamps": true,
