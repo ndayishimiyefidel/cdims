@@ -75,6 +75,9 @@ const options = {
             id: { type: 'integer' },
             name: { type: 'string' },
             description: { type: 'string' },
+            code: { type: 'string' },
+            specifications: { type: 'string' },
+            unit_price: { type: 'number' },
             category: {
               type: 'object',
               properties: {
@@ -94,23 +97,11 @@ const options = {
             updated_at: { type: 'string', format: 'date-time' }
           }
         },
-        Site: {
-          type: 'object',
-          properties: {
-            id: { type: 'integer' },
-            code: { type: 'string' },
-            name: { type: 'string' },
-            location: { type: 'string' },
-            created_at: { type: 'string', format: 'date-time' },
-            updated_at: { type: 'string', format: 'date-time' }
-          }
-        },
         Request: {
           type: 'object',
           properties: {
             id: { type: 'integer' },
             site_id: { type: 'integer' },
-            budget_line_id: { type: 'integer' },
             requested_by: { type: 'integer' },
             notes: { type: 'string' },
             status: { 
@@ -129,7 +120,6 @@ const options = {
                   unit_id: { type: 'integer' },
                   qty_requested: { type: 'number' },
                   qty_approved: { type: 'number' },
-                  est_unit_price: { type: 'number' },
                   material: { $ref: '#/components/schemas/Material' }
                 }
               }
@@ -218,6 +208,37 @@ const options = {
             contact_email: { type: 'string', format: 'email' },
             created_at: { type: 'string', format: 'date-time' },
             updated_at: { type: 'string', format: 'date-time' }
+          }
+        },
+        StockMovement: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer' },
+            store_id: { type: 'integer' },
+            material_id: { type: 'integer' },
+            movement_type: { 
+              type: 'string',
+              enum: ['IN', 'OUT', 'ADJUSTMENT']
+            },
+            source_type: { 
+              type: 'string',
+              enum: ['GRN', 'ISSUE', 'ADJUSTMENT']
+            },
+            source_id: { type: 'integer' },
+            qty: { type: 'number' },
+            unit_price: { type: 'number' },
+            created_at: { type: 'string', format: 'date-time' }
+          }
+        },
+        Pagination: {
+          type: 'object',
+          properties: {
+            current_page: { type: 'integer' },
+            total_pages: { type: 'integer' },
+            total_items: { type: 'integer' },
+            items_per_page: { type: 'integer' },
+            has_next: { type: 'boolean' },
+            has_prev: { type: 'boolean' }
           }
         },
         Error: {
