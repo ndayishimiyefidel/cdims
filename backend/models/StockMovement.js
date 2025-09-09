@@ -43,6 +43,18 @@ const StockMovement = sequelize.define('StockMovement', {
     type: DataTypes.DECIMAL(12, 2),
     allowNull: true
   },
+  notes: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  created_by: {
+    type: DataTypes.BIGINT,
+    allowNull: true,
+    references: {
+      model: 'users',
+      key: 'id'
+    }
+  },
   created_at: {
     type: DataTypes.DATE,
     allowNull: false,

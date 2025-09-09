@@ -8,7 +8,7 @@ const swaggerSpecs = require('./config/swagger');
 require('dotenv').config();
 
 const { testConnection } = require('./config/database');
-const errorHandler = require('./middleware/errorHandler');
+const { errorHandler, notFound } = require('./middleware/errorHandler');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const requestRoutes = require('./routes/requests');
@@ -121,13 +121,7 @@ app.use('/api/sites', siteRoutes);
 app.use('/api/stores', storeRoutes);
 
 // 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'API endpoint not found',
-    path: req.originalUrl
-  });
-});
+app.use(notFound);
 
 // Global error handler
 app.use(errorHandler);

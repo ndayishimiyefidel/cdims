@@ -1,6 +1,7 @@
 const { Stock, Store, Material, Unit, Category, StockMovement, Request, RequestItem, User, Site } = require('../../models');
 const { Op } = require('sequelize');
 const { sequelize } = require('../../src/config/database');
+const { asyncHandler, NotFoundError, ValidationError } = require('../middleware/errorHandler');
 
 const getAllStock = async (req, res) => {
   try {
@@ -720,51 +721,70 @@ const getIssuableRequests = async (req, res) => {
   }
 };
 
-const getIssuedMaterials = async (req, res) => {
-  try {
-    const { page = 1, limit = 10, request_id, site_id, date_from, date_to } = req.query;
-    const offset = (page - 1) * limit;
+const getIssuedMaterials = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10, request_id, site_id, date_from, date_to } = req.query;
+  const offset = (page - 1) * limit;
 
-    const whereClause = { type: 'OUT' };
-    if (request_id) whereClause.reference_id = request_id;
-    if (date_from || date_to) {
-      whereClause.created_at = {};
-      if (date_from) whereClause.created_at[Op.gte] = new Date(date_from);
-      if (date_to) whereClause.created_at[Op.lte] = new Date(date_to);
+  // Validate query parameters
+  if (page < 1 || limit < 1 || limit > 100) {
+    throw new ValidationError('Invalid pagination parameters');
+  }
+
+  const whereClause = { movement_type: 'OUT' };
+  if (request_id) whereClause.source_id = request_id;
+  if (date_from || date_to) {
+    whereClause.created_at = {};
+    if (date_from) {
+      const fromDate = new Date(date_from);
+      if (isNaN(fromDate.getTime())) {
+        throw new ValidationError('Invalid date_from format');
+      }
+      whereClause.created_at[Op.gte] = fromDate;
     }
+    if (date_to) {
+      const toDate = new Date(date_to);
+      if (isNaN(toDate.getTime())) {
+        throw new ValidationError('Invalid date_to format');
+      }
+      whereClause.created_at[Op.lte] = toDate;
+    }
+  }
 
-    const { count, rows: movements } = await StockMovement.findAndCountAll({
-      where: whereClause,
-      include: [
-        {
-          model: Material,
-          as: 'material',
-          include: [
-            {
-              model: Unit,
-              as: 'unit'
-            }
-          ]
-        },
-        {
-          model: Store,
-          as: 'store'
-        },
-        {
-          model: User,
-          as: 'createdBy',
-          attributes: ['id', 'full_name', 'email']
-        }
-      ],
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-      order: [['created_at', 'DESC']]
-    });
+  const { count, rows: movements } = await StockMovement.findAndCountAll({
+    where: whereClause,
+    include: [
+      {
+        model: Material,
+        as: 'material',
+        include: [
+          {
+            model: Unit,
+            as: 'unit'
+          }
+        ]
+      },
+      {
+        model: Store,
+        as: 'store'
+      },
+      {
+        model: User,
+        as: 'createdBy',
+        attributes: ['id', 'full_name', 'email']
+      }
+    ],
+    limit: parseInt(limit),
+    offset: parseInt(offset),
+    order: [['created_at', 'DESC']]
+  });
 
-    // If site_id is provided, filter by site through the request
-    let filteredMovements = movements;
-    if (site_id) {
-      const requestIds = movements.map(m => m.reference_id).filter(id => id);
+  // If site_id is provided, filter by site through the request
+  let filteredMovements = movements;
+  let filteredCount = count;
+  
+  if (site_id) {
+    const requestIds = movements.map(m => m.source_id).filter(id => id);
+    if (requestIds.length > 0) {
       const requests = await Request.findAll({
         where: {
           id: { [Op.in]: requestIds },
@@ -773,29 +793,27 @@ const getIssuedMaterials = async (req, res) => {
         attributes: ['id']
       });
       const validRequestIds = requests.map(r => r.id);
-      filteredMovements = movements.filter(m => validRequestIds.includes(m.reference_id));
+      filteredMovements = movements.filter(m => validRequestIds.includes(m.source_id));
+      filteredCount = filteredMovements.length;
+    } else {
+      filteredMovements = [];
+      filteredCount = 0;
     }
-
-    res.json({
-      success: true,
-      data: {
-        issued_materials: filteredMovements,
-        pagination: {
-          current_page: parseInt(page),
-          total_pages: Math.ceil(count / limit),
-          total_items: count,
-          items_per_page: parseInt(limit)
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Get issued materials error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
   }
-};
+
+  res.json({
+    success: true,
+    data: {
+      issued_materials: filteredMovements,
+      pagination: {
+        current_page: parseInt(page),
+        total_pages: Math.ceil(filteredCount / limit),
+        total_items: filteredCount,
+        items_per_page: parseInt(limit)
+      }
+    }
+  });
+});
 
 module.exports = {
   getAllStock,

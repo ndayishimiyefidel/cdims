@@ -89,6 +89,7 @@ const defineAssociations = () => {
   // StockMovement associations
   StockMovement.belongsTo(Store, { foreignKey: 'store_id', as: 'store' });
   StockMovement.belongsTo(Material, { foreignKey: 'material_id', as: 'material' });
+  StockMovement.belongsTo(User, { foreignKey: 'created_by', as: 'createdBy' });
 
   // Store associations
   Store.hasMany(Stock, { foreignKey: 'store_id', as: 'stock' });
