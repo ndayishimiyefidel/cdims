@@ -39,11 +39,6 @@ const Material = sequelize.define('Material', {
     onDelete: 'RESTRICT',
     onUpdate: 'CASCADE'
   },
-  unit_price: {
-    type: DataTypes.DECIMAL(10, 2),
-    allowNull: true,
-    comment: 'Unit price of the material'
-  },
   active: {
     type: DataTypes.BOOLEAN,
     defaultValue: true

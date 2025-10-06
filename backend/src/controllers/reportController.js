@@ -44,7 +44,9 @@ const getRequestReports = async (req, res) => {
       total_requests: requests.length,
       total_value: requests.reduce((sum, req) => {
         return sum + req.items.reduce((itemSum, item) => {
-          return itemSum + (item.qty_requested * (item.material?.unit_price || 0));
+          // Note: For request reports, we can't easily get stock unit_price here
+          // This would need to be calculated differently or use a different approach
+          return itemSum + (item.qty_requested * 0); // Set to 0 for now
         }, 0);
       }, 0),
       status_breakdown: requests.reduce((acc, req) => {
@@ -73,11 +75,24 @@ const getInventoryReports = async (req, res) => {
   try {
     const { store_id, low_stock_only } = req.query;
 
+    console.log('Inventory reports query params:', { store_id, low_stock_only });
+    console.log('Store ID type:', typeof store_id, 'Value:', store_id);
+
     const whereClause = {};
-    if (store_id) whereClause.store_id = store_id;
+    if (store_id && store_id !== '' && store_id !== 'undefined') {
+      whereClause.store_id = parseInt(store_id);
+      console.log('Filtering by store_id:', whereClause.store_id);
+    } else {
+      console.log('No store filter applied - returning all stores');
+    }
 
     const stock = await Stock.findAll({
       where: whereClause,
+      attributes: [
+        'id', 'store_id', 'material_id', 'qty_on_hand', 'reorder_level', 
+        'low_stock_threshold', 'low_stock_alert', 'unit_price',
+        'created_at', 'updated_at'
+      ],
       include: [
         {
           model: Material,
@@ -87,6 +102,9 @@ const getInventoryReports = async (req, res) => {
       order: [['qty_on_hand', 'ASC']]
     });
 
+    console.log('Found stock items:', stock.length);
+    console.log('Stock items store_ids:', stock.map(s => s.store_id));
+
     // Filter low stock items if requested
     let filteredStock = stock;
     if (low_stock_only === 'true') {
@@ -95,16 +113,54 @@ const getInventoryReports = async (req, res) => {
       );
     }
 
+    // Process stock data to ensure proper date formatting
+    const processedStock = filteredStock.map(item => {
+      const stockItem = item.toJSON();
+      
+      // Handle date fields properly with better validation
+      if (stockItem.created_at && stockItem.created_at !== 'Invalid Date' && stockItem.created_at !== '0000-00-00 00:00:00') {
+        try {
+          const createdDate = new Date(stockItem.created_at);
+          if (!isNaN(createdDate.getTime())) {
+            stockItem.created_at = createdDate.toISOString();
+          } else {
+            stockItem.created_at = null;
+          }
+        } catch (error) {
+          stockItem.created_at = null;
+        }
+      } else {
+        stockItem.created_at = null;
+      }
+      
+      if (stockItem.updated_at && stockItem.updated_at !== 'Invalid Date' && stockItem.updated_at !== '0000-00-00 00:00:00') {
+        try {
+          const updatedDate = new Date(stockItem.updated_at);
+          if (!isNaN(updatedDate.getTime())) {
+            stockItem.updated_at = updatedDate.toISOString();
+          } else {
+            stockItem.updated_at = null;
+          }
+        } catch (error) {
+          stockItem.updated_at = null;
+        }
+      } else {
+        stockItem.updated_at = null;
+      }
+      
+      return stockItem;
+    });
+
     // Calculate summary statistics
     const summary = {
-      total_items: filteredStock.length,
-      total_value: filteredStock.reduce((sum, item) => {
-        return sum + (item.qty_on_hand * (item.material?.unit_price || 0));
+      total_items: processedStock.length,
+      total_value: processedStock.reduce((sum, item) => {
+        return sum + (item.qty_on_hand * (item.unit_price || 0));
       }, 0),
-      low_stock_items: filteredStock.filter(item => 
+      low_stock_items: processedStock.filter(item => 
         item.qty_on_hand <= item.reorder_level
       ).length,
-      out_of_stock_items: filteredStock.filter(item => 
+      out_of_stock_items: processedStock.filter(item => 
         item.qty_on_hand === 0
       ).length
     };
@@ -112,7 +168,7 @@ const getInventoryReports = async (req, res) => {
     res.json({
       success: true,
       data: {
-        stock: filteredStock,
+        stock: processedStock,
         summary
       }
     });

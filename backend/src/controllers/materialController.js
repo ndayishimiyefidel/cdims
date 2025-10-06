@@ -1,11 +1,12 @@
 const { Material, Category, Unit } = require('../../models');
+const { Op } = require('sequelize');
 
 const getAllMaterials = async (req, res) => {
   try {
     const { page = 1, limit = 10, search, category_id, active } = req.query;
     const offset = (page - 1) * limit;
 
-    const whereClause = {};
+    const whereClause = { active: true }; // Default to only active materials
     if (category_id) whereClause.category_id = category_id;
     if (active !== undefined) whereClause.active = active === 'true';
     if (search) {
@@ -92,7 +93,7 @@ const getMaterialById = async (req, res) => {
 
 const createMaterial = async (req, res) => {
   try {
-    const { code, name, specification, category_id, unit_id, unit_price } = req.body;
+    const { code, name, specification, category_id, unit_id } = req.body;
 
     if (!name || !unit_id) {
       return res.status(400).json({
@@ -106,8 +107,7 @@ const createMaterial = async (req, res) => {
       name,
       specification,
       category_id,
-      unit_id,
-      unit_price
+      unit_id
     });
 
     // Fetch material with relations
@@ -141,7 +141,7 @@ const createMaterial = async (req, res) => {
 const updateMaterial = async (req, res) => {
   try {
     const { id } = req.params;
-    const { code, name, specification, category_id, unit_id, unit_price, active } = req.body;
+    const { code, name, specification, category_id, unit_id, active } = req.body;
 
     const material = await Material.findByPk(id);
     if (!material) {
@@ -157,7 +157,6 @@ const updateMaterial = async (req, res) => {
     if (specification !== undefined) material.specification = specification;
     if (category_id) material.category_id = category_id;
     if (unit_id) material.unit_id = unit_id;
-    if (unit_price !== undefined) material.unit_price = unit_price;
     if (active !== undefined) material.active = active;
 
     await material.save();

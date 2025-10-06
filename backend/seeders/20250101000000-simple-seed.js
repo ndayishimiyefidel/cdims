@@ -60,30 +60,32 @@ module.exports = {
       { id: 4, name: 'Electrical Supplies Co', contact: 'Grace Mukamana', phone: '+250777888999', email: 'orders@electrical.rw' }
     ], { ignoreDuplicates: true });
 
-    // Insert materials with unit prices (material_prices table removed) (ignore duplicates)
+    // Insert materials (unit_price moved to stock table) (ignore duplicates)
     await queryInterface.bulkInsert('materials', [
-      { id: 1, code: 'CEM-001', name: 'Portland Cement 50kg', specification: 'Portland cement, 50kg bag', category_id: 2, unit_id: 7, unit_price: 8500.00, active: true },
-      { id: 2, code: 'STE-001', name: 'Reinforcement Steel 12mm', specification: 'Reinforcement steel bar, 12mm diameter', category_id: 3, unit_id: 2, unit_price: 12000.00, active: true },
-      { id: 3, code: 'STE-002', name: 'Reinforcement Steel 16mm', specification: 'Reinforcement steel bar, 16mm diameter', category_id: 3, unit_id: 2, unit_price: 15000.00, active: true },
-      { id: 4, code: 'AGG-001', name: 'Coarse Aggregate', specification: 'Crushed stone aggregate, 20mm', category_id: 2, unit_id: 4, unit_price: 25000.00, active: true },
-      { id: 5, code: 'SAND-001', name: 'Fine Sand', specification: 'River sand for construction', category_id: 2, unit_id: 4, unit_price: 20000.00, active: true },
-      { id: 6, code: 'WIR-001', name: 'Electrical Wire 2.5mm', specification: 'Copper electrical wire, 2.5mm²', category_id: 5, unit_id: 2, unit_price: 800.00, active: true },
-      { id: 7, code: 'PIP-001', name: 'PVC Pipe 50mm', specification: 'PVC water pipe, 50mm diameter', category_id: 6, unit_id: 2, unit_price: 1500.00, active: true },
-      { id: 8, code: 'TOOL-001', name: 'Hammer', specification: 'Construction hammer, 1kg', category_id: 7, unit_id: 1, unit_price: 5000.00, active: true }
+      { id: 1, code: 'CEM-001', name: 'Portland Cement 50kg', specification: 'Portland cement, 50kg bag', category_id: 2, unit_id: 7, active: true },
+      { id: 2, code: 'STE-001', name: 'Reinforcement Steel 12mm', specification: 'Reinforcement steel bar, 12mm diameter', category_id: 3, unit_id: 2, active: true },
+      { id: 3, code: 'STE-002', name: 'Reinforcement Steel 16mm', specification: 'Reinforcement steel bar, 16mm diameter', category_id: 3, unit_id: 2, active: true },
+      { id: 4, code: 'AGG-001', name: 'Coarse Aggregate', specification: 'Crushed stone aggregate, 20mm', category_id: 2, unit_id: 4, active: true },
+      { id: 5, code: 'SAND-001', name: 'Fine Sand', specification: 'River sand for construction', category_id: 2, unit_id: 4, active: true },
+      { id: 6, code: 'WIR-001', name: 'Electrical Wire 2.5mm', specification: 'Copper electrical wire, 2.5mm²', category_id: 5, unit_id: 2, active: true },
+      { id: 7, code: 'PIP-001', name: 'PVC Pipe 50mm', specification: 'PVC water pipe, 50mm diameter', category_id: 6, unit_id: 2, active: true },
+      { id: 8, code: 'TOOL-001', name: 'Hammer', specification: 'Construction hammer, 1kg', category_id: 7, unit_id: 1, active: true }
     ], { ignoreDuplicates: true });
 
-    // Material prices table removed - prices now stored in materials table
+    // Material prices table removed - prices now stored in stock table
 
-    // Insert initial stock (ignore duplicates)
+    // Insert initial stock with unit prices (ignore duplicates)
     await queryInterface.bulkInsert('stock', [
-      { id: 1, store_id: 1, material_id: 1, qty_on_hand: 100.000, reorder_level: 20.000 },
-      { id: 2, store_id: 1, material_id: 2, qty_on_hand: 50.000, reorder_level: 10.000 },
-      { id: 3, store_id: 1, material_id: 3, qty_on_hand: 30.000, reorder_level: 5.000 },
-      { id: 4, store_id: 1, material_id: 4, qty_on_hand: 200.000, reorder_level: 50.000 },
-      { id: 5, store_id: 1, material_id: 5, qty_on_hand: 150.000, reorder_level: 30.000 },
-      { id: 6, store_id: 2, material_id: 1, qty_on_hand: 50.000, reorder_level: 10.000 },
-      { id: 7, store_id: 2, material_id: 2, qty_on_hand: 25.000, reorder_level: 5.000 },
-      { id: 8, store_id: 3, material_id: 8, qty_on_hand: 10.000, reorder_level: 2.000 }
+      { id: 1, store_id: 1, material_id: 1, qty_on_hand: 100.000, reorder_level: 20.000, unit_price: 8500.00 },
+      { id: 2, store_id: 1, material_id: 2, qty_on_hand: 50.000, reorder_level: 10.000, unit_price: 12000.00 },
+      { id: 3, store_id: 1, material_id: 3, qty_on_hand: 30.000, reorder_level: 5.000, unit_price: 15000.00 },
+      { id: 4, store_id: 1, material_id: 4, qty_on_hand: 200.000, reorder_level: 50.000, unit_price: 25000.00 },
+      { id: 5, store_id: 1, material_id: 5, qty_on_hand: 150.000, reorder_level: 30.000, unit_price: 20000.00 },
+      { id: 6, store_id: 1, material_id: 6, qty_on_hand: 1000.000, reorder_level: 100.000, unit_price: 800.00 },
+      { id: 7, store_id: 1, material_id: 7, qty_on_hand: 200.000, reorder_level: 20.000, unit_price: 1500.00 },
+      { id: 8, store_id: 2, material_id: 1, qty_on_hand: 50.000, reorder_level: 10.000, unit_price: 8500.00 },
+      { id: 9, store_id: 2, material_id: 2, qty_on_hand: 25.000, reorder_level: 5.000, unit_price: 12000.00 },
+      { id: 10, store_id: 3, material_id: 8, qty_on_hand: 10.000, reorder_level: 2.000, unit_price: 5000.00 }
     ], { ignoreDuplicates: true });
 
     // Insert default admin user (password: admin123)

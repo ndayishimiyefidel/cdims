@@ -85,7 +85,7 @@ const { authenticate, authorize } = require('../middleware/auth');
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/requests', authenticate, authorize('ADMIN', 'PADIRI', 'DIOCESAN_SITE_ENGINEER'), reportController.getRequestReports);
+router.get('/requests', authenticate, authorize('ADMIN', 'PADIRI', 'DIOCESAN_SITE_ENGINEER', 'PROCUREMENT'), reportController.getRequestReports);
 
 /**
  * @swagger
@@ -142,7 +142,7 @@ router.get('/requests', authenticate, authorize('ADMIN', 'PADIRI', 'DIOCESAN_SIT
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/inventory', authenticate, authorize('ADMIN', 'PADIRI', 'DIOCESAN_SITE_ENGINEER'), reportController.getInventoryReports);
+router.get('/inventory', authenticate, authorize('ADMIN', 'PADIRI', 'DIOCESAN_SITE_ENGINEER', 'PROCUREMENT'), reportController.getInventoryReports);
 
 
 /**
@@ -229,7 +229,7 @@ router.get('/inventory', authenticate, authorize('ADMIN', 'PADIRI', 'DIOCESAN_SI
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/stock-movements', authenticate, authorize('ADMIN', 'PADIRI', 'DIOCESAN_SITE_ENGINEER'), reportController.getStockMovementReports);
+router.get('/stock-movements', authenticate, authorize('ADMIN', 'PADIRI', 'DIOCESAN_SITE_ENGINEER', 'PROCUREMENT'), reportController.getStockMovementReports);
 
 /**
  * @swagger
@@ -299,7 +299,7 @@ router.get('/stock-movements', authenticate, authorize('ADMIN', 'PADIRI', 'DIOCE
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/procurement', authenticate, authorize('ADMIN', 'PADIRI', 'DIOCESAN_SITE_ENGINEER'), reportController.getProcurementReports);
+router.get('/procurement', authenticate, authorize('ADMIN', 'PADIRI', 'DIOCESAN_SITE_ENGINEER', 'PROCUREMENT'), reportController.getProcurementReports);
 
 /**
  * @swagger
@@ -367,7 +367,7 @@ router.get('/procurement', authenticate, authorize('ADMIN', 'PADIRI', 'DIOCESAN_
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/user-activity', authenticate, authorize('ADMIN', 'PADIRI', 'DIOCESAN_SITE_ENGINEER'), reportController.getUserActivityReports);
+router.get('/user-activity', authenticate, authorize('ADMIN', 'PADIRI', 'DIOCESAN_SITE_ENGINEER', 'PROCUREMENT'), reportController.getUserActivityReports);
 
 /**
  * @swagger
@@ -437,6 +437,6 @@ router.get('/user-activity', authenticate, authorize('ADMIN', 'PADIRI', 'DIOCESA
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/site-performance', authenticate, authorize('ADMIN', 'PADIRI', 'DIOCESAN_SITE_ENGINEER'), reportController.getSitePerformanceReports);
+router.get('/site-performance', authenticate, authorize('ADMIN', 'PADIRI', 'DIOCESAN_SITE_ENGINEER', 'PROCUREMENT'), reportController.getSitePerformanceReports);
 
 module.exports = router;

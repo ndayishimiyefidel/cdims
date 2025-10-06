@@ -472,6 +472,163 @@ router.get('/site/:site_id', authenticate, requestController.getRequestsBySite);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
+
+/**
+ * @swagger
+ * /api/requests/site-receipt-history:
+ *   get:
+ *     summary: Get site receipt history
+ *     tags: [Requests]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Items per page
+ *       - in: query
+ *         name: site_id
+ *         schema:
+ *           type: integer
+ *         description: Filter by site ID
+ *       - in: query
+ *         name: site_engineer_id
+ *         schema:
+ *           type: integer
+ *         description: Filter by site engineer ID
+ *       - in: query
+ *         name: date_from
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter from date (YYYY-MM-DD)
+ *       - in: query
+ *         name: date_to
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter to date (YYYY-MM-DD)
+ *       - in: query
+ *         name: material_id
+ *         schema:
+ *           type: integer
+ *         description: Filter by material ID
+ *       - in: query
+ *         name: has_losses
+ *         schema:
+ *           type: boolean
+ *         description: Filter by items with losses
+ *     responses:
+ *       200:
+ *         description: Site receipt history retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     site_receipts:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           site_id:
+ *                             type: integer
+ *                           site_name:
+ *                             type: string
+ *                           site_location:
+ *                             type: string
+ *                           receipts_by_date:
+ *                             type: object
+ *                           total_receipts:
+ *                             type: integer
+ *                           total_qty_received:
+ *                             type: number
+ *                           total_losses:
+ *                             type: integer
+ *                           site_engineers:
+ *                             type: array
+ *                             items:
+ *                               type: string
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         current_page:
+ *                           type: integer
+ *                         total_pages:
+ *                           type: integer
+ *                         total_items:
+ *                           type: integer
+ *                         items_per_page:
+ *                           type: integer
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Forbidden
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get('/site-receipt-history', authenticate, authorize('ADMIN', 'PADIRI', 'DIOCESAN_SITE_ENGINEER', 'PROCUREMENT'), requestController.getSiteReceiptHistory);
+
+/**
+ * @swagger
+ * /api/requests/{id}:
+ *   get:
+ *     summary: Get request by ID
+ *     tags: [Requests]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Request ID
+ *     responses:
+ *       200:
+ *         description: Request details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Request'
+ *       404:
+ *         description: Request not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.get('/:id', authenticate, requestController.getRequestById);
 
 /**
@@ -1328,7 +1485,16 @@ router.post('/:id/attachments', authenticate, requestController.uploadAttachment
  *                       description: Request item ID
  *                     qty_received:
  *                       type: number
- *                       description: Quantity received
+ *                       description: Quantity actually received (can be 0 if materials are lost/damaged)
+ *                       example: 8
+ *                     receipt_notes:
+ *                       type: string
+ *                       description: Optional notes about the receipt
+ *                       example: Materials received in good condition
+ *                     damage_notes:
+ *                       type: string
+ *                       description: Optional notes about damaged or lost materials
+ *                       example: 2 bags damaged during transport, 1 bag lost in accident
  *     responses:
  *       200:
  *         description: Materials received successfully
@@ -1357,10 +1523,27 @@ router.post('/:id/attachments', authenticate, requestController.uploadAttachment
  *                             type: integer
  *                           material_name:
  *                             type: string
+ *                           qty_issued:
+ *                             type: number
+ *                             description: Quantity that was issued
  *                           qty_received:
  *                             type: number
+ *                             description: Quantity actually received
+ *                           qty_lost:
+ *                             type: number
+ *                             description: Quantity lost or damaged
  *                           total_received:
  *                             type: number
+ *                             description: Total quantity received so far
+ *                           has_loss:
+ *                             type: boolean
+ *                             description: Whether there was any loss
+ *                           receipt_notes:
+ *                             type: string
+ *                             description: Receipt notes
+ *                           damage_notes:
+ *                             type: string
+ *                             description: Damage/loss notes
  *                     request_status:
  *                       type: string
  *                       enum: [RECEIVED, PARTIALLY_RECEIVED]
@@ -1387,4 +1570,347 @@ router.post('/:id/attachments', authenticate, requestController.uploadAttachment
  */
 router.post('/:id/receive', authenticate, authorize('SITE_ENGINEER'), requestController.receiveMaterials);
 
+/**
+ * @swagger
+ * /api/requests/{id}/receipt-history:
+ *   get:
+ *     summary: Get receipt history for a request (track materials received by date)
+ *     tags: [Requests]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Request ID
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Items per page
+ *       - in: query
+ *         name: date_from
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter receipts from this date
+ *       - in: query
+ *         name: date_to
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter receipts to this date
+ *     responses:
+ *       200:
+ *         description: Receipt history retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     request:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                         ref_no:
+ *                           type: string
+ *                         site_name:
+ *                           type: string
+ *                         requested_by:
+ *                           type: string
+ *                         status:
+ *                           type: string
+ *                     receipt_history:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           date:
+ *                             type: string
+ *                             format: date
+ *                           receipts:
+ *                             type: array
+ *                             items:
+ *                               type: object
+ *                               properties:
+ *                                 id:
+ *                                   type: integer
+ *                                 material_name:
+ *                                   type: string
+ *                                 material_code:
+ *                                   type: string
+ *                                 unit_name:
+ *                                   type: string
+ *                                 qty_received:
+ *                                   type: number
+ *                                 movement_type:
+ *                                   type: string
+ *                                   enum: [IN, LOSS]
+ *                                 has_loss:
+ *                                   type: boolean
+ *                                 notes:
+ *                                   type: string
+ *                                 received_by:
+ *                                   type: string
+ *                                 received_at:
+ *                                   type: string
+ *                                   format: date-time
+ *                           total_items:
+ *                             type: integer
+ *                           total_qty_received:
+ *                             type: number
+ *                           has_losses:
+ *                             type: boolean
+ *                     summary:
+ *                       type: object
+ *                       properties:
+ *                         total_receipts:
+ *                           type: integer
+ *                         total_qty_received:
+ *                           type: number
+ *                         total_losses:
+ *                           type: integer
+ *                         has_any_losses:
+ *                           type: boolean
+ *                         date_range:
+ *                           type: object
+ *                           properties:
+ *                             from:
+ *                               type: string
+ *                               format: date
+ *                             to:
+ *                               type: string
+ *                               format: date
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         current_page:
+ *                           type: integer
+ *                         total_pages:
+ *                           type: integer
+ *                         total_items:
+ *                           type: integer
+ *                         items_per_page:
+ *                           type: integer
+ *       404:
+ *         description: Request not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get('/:id/receipt-history', authenticate, authorize('SITE_ENGINEER', 'ADMIN', 'PADIRI'), requestController.getReceiptHistory);
+
+/**
+ * @swagger
+ * /api/requests/site-receipt-history:
+ *   get:
+ *     summary: Get receipt history by site (for ADMIN, PADIRI, DIOCESAN_SITE_ENGINEER)
+ *     tags: [Requests]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Items per page
+ *       - in: query
+ *         name: site_id
+ *         schema:
+ *           type: integer
+ *         description: Filter by specific site
+ *       - in: query
+ *         name: site_engineer_id
+ *         schema:
+ *           type: integer
+ *         description: Filter by specific site engineer
+ *       - in: query
+ *         name: date_from
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter receipts from this date
+ *       - in: query
+ *         name: date_to
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter receipts to this date
+ *       - in: query
+ *         name: material_id
+ *         schema:
+ *           type: integer
+ *         description: Filter by specific material
+ *       - in: query
+ *         name: has_losses
+ *         schema:
+ *           type: boolean
+ *         description: Filter only receipts with losses
+ *     responses:
+ *       200:
+ *         description: Site receipt history retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     site_receipts:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           site_id:
+ *                             type: integer
+ *                           site_name:
+ *                             type: string
+ *                           site_location:
+ *                             type: string
+ *                           receipts_by_date:
+ *                             type: array
+ *                             items:
+ *                               type: object
+ *                               properties:
+ *                                 date:
+ *                                   type: string
+ *                                   format: date
+ *                                 receipts:
+ *                                   type: array
+ *                                   items:
+ *                                     type: object
+ *                                     properties:
+ *                                       id:
+ *                                         type: integer
+ *                                       request_id:
+ *                                         type: integer
+ *                                       request_ref:
+ *                                         type: string
+ *                                       material_name:
+ *                                         type: string
+ *                                       material_code:
+ *                                         type: string
+ *                                       unit_name:
+ *                                         type: string
+ *                                       qty_received:
+ *                                         type: number
+ *                                       movement_type:
+ *                                         type: string
+ *                                         enum: [IN, LOSS]
+ *                                       has_loss:
+ *                                         type: boolean
+ *                                       notes:
+ *                                         type: string
+ *                                       received_by:
+ *                                         type: string
+ *                                       received_by_role:
+ *                                         type: string
+ *                                       received_at:
+ *                                         type: string
+ *                                         format: date-time
+ *                                 total_items:
+ *                                   type: integer
+ *                                 total_qty_received:
+ *                                   type: number
+ *                                 has_losses:
+ *                                   type: boolean
+ *                           total_receipts:
+ *                             type: integer
+ *                           total_qty_received:
+ *                             type: number
+ *                           total_losses:
+ *                             type: integer
+ *                           site_engineers:
+ *                             type: array
+ *                             items:
+ *                               type: string
+ *                     summary:
+ *                       type: object
+ *                       properties:
+ *                         total_sites:
+ *                           type: integer
+ *                         total_receipts:
+ *                           type: integer
+ *                         total_qty_received:
+ *                           type: number
+ *                         total_losses:
+ *                           type: integer
+ *                         date_range:
+ *                           type: object
+ *                           properties:
+ *                             from:
+ *                               type: string
+ *                               format: date
+ *                             to:
+ *                               type: string
+ *                               format: date
+ *                         filters:
+ *                           type: object
+ *                           properties:
+ *                             site_id:
+ *                               type: integer
+ *                             site_engineer_id:
+ *                               type: integer
+ *                             material_id:
+ *                               type: integer
+ *                             has_losses:
+ *                               type: boolean
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         current_page:
+ *                           type: integer
+ *                         total_pages:
+ *                           type: integer
+ *                         total_items:
+ *                           type: integer
+ *                         items_per_page:
+ *                           type: integer
+ *       403:
+ *         description: Forbidden - Insufficient permissions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 module.exports = router;

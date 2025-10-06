@@ -709,6 +709,10 @@ router.get('/alerts/low-stock', authenticate, authorize('STOREKEEPER', 'ADMIN','
  *                 type: number
  *                 description: Low stock threshold
  *                 example: 10
+ *               unit_price:
+ *                 type: number
+ *                 description: Unit price of the material (set by storekeeper)
+ *                 example: 15000
  *     responses:
  *       201:
  *         description: Stock record created successfully
@@ -815,6 +819,14 @@ router.get('material/:id', authenticate, authorize('STOREKEEPER', 'ADMIN','PADIR
  *               low_stock_threshold:
  *                 type: number
  *                 example: 10
+ *               unit_price:
+ *                 type: number
+ *                 description: Unit price of the material (if provided, updates all stock of this material)
+ *                 example: 15000
+ *               notes:
+ *                 type: string
+ *                 description: Optional notes about the stock update
+ *                 example: Stock updated with new price
  *     responses:
  *       200:
  *         description: Stock updated successfully
@@ -834,6 +846,14 @@ router.get('material/:id', authenticate, authorize('STOREKEEPER', 'ADMIN','PADIR
  *                   properties:
  *                     stock:
  *                       $ref: '#/components/schemas/Stock'
+ *                     price_updated:
+ *                       type: boolean
+ *                       description: Whether the price was updated for all stock of this material
+ *                       example: true
+ *                     quantity_changed:
+ *                       type: boolean
+ *                       description: Whether the quantity was changed
+ *                       example: false
  *       400:
  *         description: Bad request
  *         content:
@@ -1000,9 +1020,13 @@ router.put('/:id/acknowledge-alert', authenticate, authorize('STOREKEEPER', 'ADM
  *                 type: number
  *                 description: Quantity to add to existing stock
  *                 example: 50
+ *               unit_price:
+ *                 type: number
+ *                 description: New unit price (optional - if provided, updates all stock of this material)
+ *                 example: 15000
  *               notes:
  *                 type: string
- *                 description: Notes about the stock addition
+ *                 description: Optional notes about the stock addition
  *                 example: Received new shipment from supplier
  *     responses:
  *       200:
@@ -1070,5 +1094,6 @@ router.put('/:id/acknowledge-alert', authenticate, authorize('STOREKEEPER', 'ADM
  *               $ref: '#/components/schemas/Error'
  */
 router.post('/:id/add-quantity', authenticate, authorize('STOREKEEPER', 'ADMIN','PADIRI'), stockController.addStockQuantity);
+
 
 module.exports = router;

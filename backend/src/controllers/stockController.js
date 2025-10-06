@@ -65,7 +65,7 @@ const getAllStock = async (req, res) => {
 
 const createStock = async (req, res) => {
   try {
-    const { material_id, store_id, qty_on_hand, low_stock_threshold } = req.body;
+    const { material_id, store_id, qty_on_hand, low_stock_threshold, unit_price } = req.body;
 
     // Check if stock record already exists for this material and store
     const existingStock = await Stock.findOne({
@@ -90,7 +90,26 @@ const createStock = async (req, res) => {
       store_id,
       qty_on_hand,
       low_stock_threshold: low_stock_threshold || 0,
-      low_stock_alert: shouldAlert
+      low_stock_alert: shouldAlert,
+      unit_price
+    });
+
+    // Create stock history record for the creation
+    await StockHistory.create({
+      stock_id: stock.id,
+      material_id: stock.material_id,
+      store_id: stock.store_id,
+      movement_type: 'IN',
+      source_type: 'CREATION',
+      source_id: stock.id,
+      qty_before: 0,
+      qty_change: qty_on_hand,
+      qty_after: qty_on_hand,
+      unit_price: unit_price,
+      unit_price_before: null,
+      unit_price_after: unit_price,
+      notes: `Initial stock creation by ${req.user.role.name} - ${req.user.full_name}`,
+      created_by: req.user.id
     });
 
     // Fetch the created stock with associations
@@ -229,7 +248,7 @@ const getStockByMaterialId = async (req, res) => {
 const updateStock = async (req, res) => {
   try {
     const { id } = req.params;
-    const { qty_on_hand, reorder_level, low_stock_threshold, low_stock_alert, notes } = req.body;
+    const { qty_on_hand, reorder_level, low_stock_threshold, low_stock_alert, unit_price, notes } = req.body;
 
     const stock = await Stock.findByPk(id);
     if (!stock) {
@@ -239,52 +258,80 @@ const updateStock = async (req, res) => {
       });
     }
 
-    // Keep current quantity for history logging
-    const currentQty = stock.qty_on_hand;
+    // Start transaction for price update logic
+    const transaction = await sequelize.transaction();
+    try {
+      // Keep current quantity for history logging
+      const currentQty = stock.qty_on_hand;
+      const currentPrice = stock.unit_price;
 
-    // Determine quantity change
-    const newQty = qty_on_hand !== undefined ? qty_on_hand : currentQty;
-    const addedQty = newQty - currentQty;
+      // Determine quantity change
+      const newQty = qty_on_hand !== undefined ? qty_on_hand : currentQty;
+      const addedQty = newQty - currentQty;
 
-    
+      // Check if stock is going low
+      let shouldAlert = false;
+      if (low_stock_threshold && newQty <= low_stock_threshold) {
+        shouldAlert = true;
+      }
 
-    // Check if stock is going low
-    let shouldAlert = false;
-    if (low_stock_threshold && newQty <= low_stock_threshold) {
-      shouldAlert = true;
-    }
+      // Update stock
+      await stock.update({
+        qty_on_hand: newQty,
+        reorder_level,
+        low_stock_threshold,
+        low_stock_alert: shouldAlert || low_stock_alert,
+        unit_price: unit_price !== undefined ? unit_price : stock.unit_price
+      }, { transaction });
 
-    // Update stock
-    await stock.update({
-      qty_on_hand: newQty,
-      reorder_level,
-      low_stock_threshold,
-      low_stock_alert: shouldAlert || low_stock_alert
-    });
+      // If unit_price is provided, update ALL existing stock of the same material
+      let priceUpdated = false;
+      if (unit_price !== undefined && unit_price !== currentPrice) {
+        await Stock.update(
+          { unit_price: unit_price },
+          { 
+            where: { material_id: stock.material_id },
+            transaction 
+          }
+        );
+        priceUpdated = true;
+      }
 
-    // Record stock history (only if quantity actually changed)
-    if (addedQty !== 0) {
-      await StockHistory.create({
-        stock_id: stock.id,
-        material_id: stock.material_id,
-        store_id: stock.store_id,
-        movement_type: addedQty > 0 ? 'IN' : 'OUT', // Decide direction
-        source_type: 'ADJUSTMENT',
-        source_id: id, // Using stock ID as reference
-        qty_before: currentQty,
-        qty_change: addedQty,
-        qty_after: newQty,
-        unit_price: null,
-        notes: notes || `Stock adjusted by ${ req.user.role.name}  - ${ req.user.full_name}`,
-        created_by: req.user.id
+      // Record stock history (only if quantity or price actually changed)
+      if (addedQty !== 0 || priceUpdated) {
+        await StockHistory.create({
+          stock_id: stock.id,
+          material_id: stock.material_id,
+          store_id: stock.store_id,
+          movement_type: addedQty > 0 ? 'IN' : (addedQty < 0 ? 'OUT' : 'PRICE_UPDATE'),
+          source_type: 'ADJUSTMENT',
+          source_id: id, // Using stock ID as reference
+          qty_before: currentQty,
+          qty_change: addedQty,
+          qty_after: newQty,
+          unit_price: unit_price !== undefined ? unit_price : currentPrice,
+          unit_price_before: currentPrice,
+          unit_price_after: unit_price !== undefined ? unit_price : currentPrice,
+          notes: notes || `Stock updated by ${req.user.role.name} - ${req.user.full_name}${priceUpdated ? ` with new price ${unit_price}` : ''}`,
+          created_by: req.user.id
+        }, { transaction });
+      }
+
+      await transaction.commit();
+
+      res.json({
+        success: true,
+        message: 'Stock updated successfully',
+        data: {
+          stock: stock,
+          price_updated: priceUpdated,
+          quantity_changed: addedQty !== 0
+        }
       });
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
     }
-
-    res.json({
-      success: true,
-      message: 'Stock updated successfully',
-      data: stock
-    });
   } catch (error) {
     console.error('Update stock error:', error);
     res.status(500).json({
@@ -916,7 +963,7 @@ const getIssuedMaterials = asyncHandler(async (req, res) => {
 const addStockQuantity = async (req, res) => {
   try {
     const { id } = req.params;
-    const { qty_to_add, notes } = req.body;
+    const { qty_to_add, unit_price, notes } = req.body;
 
     if (!qty_to_add || qty_to_add <= 0) {
       return res.status(400).json({
@@ -933,62 +980,86 @@ const addStockQuantity = async (req, res) => {
       });
     }
 
-    // Additive update: new_qty = old_qty + qty_to_add
-    const currentQty = parseFloat(stock.qty_on_hand);
-    const addedQty = parseFloat(qty_to_add);
-    const newQty = currentQty + addedQty;
-    const shouldAlert = newQty <= (stock.low_stock_threshold || 0);
+    // Start transaction for price update logic
+    const transaction = await sequelize.transaction();
+    try {
+      // Additive update: new_qty = old_qty + qty_to_add
+      const currentQty = parseFloat(stock.qty_on_hand);
+      const addedQty = parseFloat(qty_to_add);
+      const newQty = currentQty + addedQty;
+      const shouldAlert = newQty <= (stock.low_stock_threshold || 0);
 
-    await stock.update({
-      qty_on_hand: newQty,
-      low_stock_alert: shouldAlert
-    });
+      // Update stock with new quantity and price
+      await stock.update({
+        qty_on_hand: newQty,
+        low_stock_alert: shouldAlert,
+        unit_price: unit_price || stock.unit_price
+      }, { transaction });
 
-    // Create stock history record for the addition
-    const stockHistory = await StockHistory.create({
-      stock_id: stock.id,
-      material_id: stock.material_id,
-      store_id: stock.store_id,
-      movement_type: 'IN',
-      source_type: 'ADJUSTMENT',
-      source_id: id, // Using stock ID as source
-      qty_before: currentQty,
-      qty_change: addedQty,
-      qty_after: newQty,
-      unit_price: null,
-      notes: notes || `Stock added by storekeeper`,
-      created_by: req.user.id
-    });
-
-    // Also create stock movement record for backward compatibility
-    const stockMovement = await StockMovement.create({
-      material_id: stock.material_id,
-      store_id: stock.store_id,
-      movement_type: 'IN',
-      source_type: 'ADJUSTMENT',
-      source_id: id, // Using stock ID as source
-      qty: addedQty,
-      unit_price: null,
-      notes: notes || `Stock added by storekeeper`,
-      created_by: req.user.id
-    });
-
-    res.json({
-      success: true,
-      message: 'Stock quantity added successfully',
-      data: {
-        stock: {
-          id: stock.id,
-          material_id: stock.material_id,
-          store_id: stock.store_id,
-          previous_qty: currentQty,
-          added_qty: qty_to_add,
-          new_qty: newQty,
-          low_stock_alert: shouldAlert
-        },
-        stock_movement: stockMovement
+      // If unit_price is provided, update ALL existing stock of the same material
+      if (unit_price) {
+        await Stock.update(
+          { unit_price: unit_price },
+          { 
+            where: { material_id: stock.material_id },
+            transaction 
+          }
+        );
       }
-    });
+
+      // Create stock history record for the addition
+      const stockHistory = await StockHistory.create({
+        stock_id: stock.id,
+        material_id: stock.material_id,
+        store_id: stock.store_id,
+        movement_type: 'IN',
+        source_type: 'ADJUSTMENT',
+        source_id: id, // Using stock ID as source
+        qty_before: currentQty,
+        qty_change: addedQty,
+        qty_after: newQty,
+        unit_price: unit_price,
+        notes: notes || `Stock added by storekeeper${unit_price ? ` with new price ${unit_price}` : ''}`,
+        created_by: req.user.id
+      }, { transaction });
+
+      // Also create stock movement record for backward compatibility
+      const stockMovement = await StockMovement.create({
+        material_id: stock.material_id,
+        store_id: stock.store_id,
+        movement_type: 'IN',
+        source_type: 'ADJUSTMENT',
+        source_id: id, // Using stock ID as source
+        qty: addedQty,
+        unit_price: unit_price,
+        notes: notes || `Stock added by storekeeper${unit_price ? ` with new price ${unit_price}` : ''}`,
+        created_by: req.user.id
+      }, { transaction });
+
+      await transaction.commit();
+
+      res.json({
+        success: true,
+        message: 'Stock quantity added successfully',
+        data: {
+          stock: {
+            id: stock.id,
+            material_id: stock.material_id,
+            store_id: stock.store_id,
+            previous_qty: currentQty,
+            added_qty: qty_to_add,
+            new_qty: newQty,
+            low_stock_alert: shouldAlert,
+            unit_price: unit_price || stock.unit_price
+          },
+          stock_movement: stockMovement,
+          price_updated: !!unit_price
+        }
+      });
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   } catch (error) {
     console.error('Add stock quantity error:', error);
     res.status(500).json({
@@ -997,6 +1068,7 @@ const addStockQuantity = async (req, res) => {
     });
   }
 };
+
 
 // Get stock history with date range filtering
 const getStockHistory = async (req, res) => {

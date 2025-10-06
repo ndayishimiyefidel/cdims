@@ -34,11 +34,11 @@ const StockHistory = sequelize.define('StockHistory', {
     }
   },
   movement_type: {
-    type: DataTypes.ENUM('IN', 'OUT', 'ADJUSTMENT'),
+    type: DataTypes.ENUM('IN', 'OUT', 'ADJUSTMENT', 'LOSS', 'PRICE_UPDATE'),
     allowNull: false
   },
   source_type: {
-    type: DataTypes.ENUM('GRN', 'ISSUE', 'ADJUSTMENT', 'RECEIPT'),
+    type: DataTypes.ENUM('GRN', 'ISSUE', 'ADJUSTMENT', 'RECEIVE', 'CREATION', 'PRICE_UPDATE'),
     allowNull: false
   },
   source_id: {
@@ -65,6 +65,16 @@ const StockHistory = sequelize.define('StockHistory', {
     type: DataTypes.DECIMAL(12, 2),
     allowNull: true,
     comment: 'Unit price at the time of movement'
+  },
+  unit_price_before: {
+    type: DataTypes.DECIMAL(12, 2),
+    allowNull: true,
+    comment: 'Unit price before the movement'
+  },
+  unit_price_after: {
+    type: DataTypes.DECIMAL(12, 2),
+    allowNull: true,
+    comment: 'Unit price after the movement'
   },
   notes: {
     type: DataTypes.TEXT,

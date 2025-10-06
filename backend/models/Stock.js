@@ -46,6 +46,11 @@ const Stock = sequelize.define('Stock', {
     allowNull: false,
     defaultValue: false,
     comment: 'Whether low stock alert is active'
+  },
+  unit_price: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    comment: 'Current unit price of the material in this stock'
   }
 }, {
   tableName: 'stock',

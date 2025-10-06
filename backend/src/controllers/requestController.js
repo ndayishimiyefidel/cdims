@@ -456,7 +456,13 @@ model: Approval,
           include: [
             {
               model: Material,
-              as: 'material'
+              as: 'material',
+              include: [
+                {
+                  model: Unit,
+                  as: 'unit'
+                }
+              ]
             },
             {
               model: Unit,
@@ -1563,7 +1569,7 @@ const receiveMaterials = async (req, res) => {
       const stockHistoryRecords = [];
 
       for (const item of items) {
-        const { request_item_id, qty_received } = item;
+        const { request_item_id, qty_received, receipt_notes, damage_notes } = item;
 
         // Find matching request item
         const requestItem = request.items.find(ri => ri.id === request_item_id);
@@ -1571,15 +1577,20 @@ const receiveMaterials = async (req, res) => {
           throw new Error(`Request item ${request_item_id} not found`);
         }
 
-        // Validate received quantity
+        // Validate received quantity (can be 0 if materials are lost/damaged)
         if (qty_received > requestItem.qty_issued) {
           throw new Error(
             `Cannot receive more than issued for ${requestItem.material.name}. Issued: ${requestItem.qty_issued}, Received: ${qty_received}`
           );
         }
-        if (qty_received <= 0) {
-          throw new Error(`Received quantity must be greater than 0 for ${requestItem.material.name}`);
+        if (qty_received < 0) {
+          throw new Error(`Received quantity cannot be negative for ${requestItem.material.name}`);
         }
+
+        // Check if materials are lost/damaged
+        // Only consider it a loss if the user explicitly indicates loss in notes
+        const hasLoss = damage_notes && damage_notes.toLowerCase().includes('lost');
+        const qtyLost = hasLoss ? Math.max(0, requestItem.qty_issued - qty_received) : 0;
 
         const foundMaterial = stockMovement.find(s => s.material_id == requestItem.material_id);
         if (!foundMaterial) {
@@ -1606,27 +1617,44 @@ const receiveMaterials = async (req, res) => {
           { transaction }
         );
 
+        // Create comprehensive notes for stock history
+        let historyNotes = `Received by ${req.user.full_name} at ${request.site.name}`;
+        if (hasLoss) {
+          historyNotes += ` (LOST: ${qtyLost} units)`;
+        }
+        if (receipt_notes) {
+          historyNotes += ` | Receipt Notes: ${receipt_notes}`;
+        }
+        if (damage_notes) {
+          historyNotes += ` | Damage Notes: ${damage_notes}`;
+        }
+
         // Log stock history (audit only, not stock table)
         const stockHistory = await StockHistory.create({
           stock_id: stock.id,
           material_id: requestItem.material_id,
           store_id: foundMaterial.store_id,
-          movement_type: 'IN', // Materials entering site
+          movement_type: 'IN', // Materials are always received (IN) when site engineer confirms
           source_type: 'RECEIVE',
           source_id: id,
           qty_before: Number(requestItem.qty_received) || 0,
           qty_change: qty_received,
           qty_after: newQtyReceived,
-          notes: `Received by ${req.user.full_name} at ${request.site.name}`,
+          notes: historyNotes,
           created_by: received_by
         }, { transaction });
 
         receivedItems.push({
           request_item_id,
           material_name: requestItem.material.name,
+          qty_issued: requestItem.qty_issued,
           qty_received,
+          qty_lost: qtyLost,
           total_received: newQtyReceived,
-          qty_remaining: requestItem.qty_remaining
+          qty_remaining: requestItem.qty_remaining,
+          has_loss: hasLoss,
+          receipt_notes: receipt_notes || null,
+          damage_notes: damage_notes || null
         });
 
         stockHistoryRecords.push(stockHistory);
@@ -1687,6 +1715,402 @@ const receiveMaterials = async (req, res) => {
   }
 };
 
+// Get receipt history for a request
+const getReceiptHistory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { page = 1, limit = 10, date_from, date_to } = req.query;
+    const offset = (page - 1) * limit;
+
+    // Load request with details
+    const request = await Request.findByPk(id, {
+      include: [
+        {
+          model: RequestItem,
+          as: 'items',
+          include: [
+            { model: Material, as: 'material' },
+            { model: Unit, as: 'unit' }
+          ]
+        },
+        { model: User, as: 'requestedBy' },
+        { model: Site, as: 'site' }
+      ]
+    });
+
+    if (!request) {
+      return res.status(404).json({ success: false, message: 'Request not found' });
+    }
+
+    // Build date filter for stock history
+    const dateFilter = {};
+    if (date_from || date_to) {
+      dateFilter.created_at = {};
+      if (date_from) {
+        dateFilter.created_at[Op.gte] = new Date(date_from);
+      }
+      if (date_to) {
+        dateFilter.created_at[Op.lte] = new Date(date_to);
+      }
+    }
+
+    // Get receipt history from stock history
+    // Include both 'RECEIVE' source_type and empty source_type with receipt notes
+    const { count, rows: receiptHistory } = await StockHistory.findAndCountAll({
+      where: {
+        source_id: id,
+        [Op.or]: [
+          { source_type: 'RECEIVE' },
+          { 
+            source_type: '',
+            notes: { [Op.like]: '%Received by%' }
+          }
+        ],
+        ...dateFilter
+      },
+      include: [
+        {
+          model: Material,
+          as: 'material',
+          include: [{ model: Unit, as: 'unit' }]
+        },
+        {
+          model: User,
+          as: 'createdBy',
+          attributes: ['id', 'full_name', 'email']
+        }
+      ],
+      order: [['created_at', 'DESC']],
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
+
+    // Group receipts by date for better tracking
+    const receiptsByDate = {};
+    receiptHistory.forEach(receipt => {
+      // Handle cases where created_at might be undefined
+      const createdDate = receipt.created_at || receipt.createdAt || new Date();
+      const date = createdDate.toISOString().split('T')[0];
+      if (!receiptsByDate[date]) {
+        receiptsByDate[date] = {
+          date: date,
+          receipts: [],
+          total_items: 0,
+          total_qty_received: 0,
+          has_losses: false
+        };
+      }
+      
+      const qtyReceived = parseFloat(receipt.qty_change || 0);
+      const hasLoss = receipt.movement_type === 'LOSS';
+      
+      receiptsByDate[date].receipts.push({
+        id: receipt.id,
+        material_name: receipt.material.name,
+        material_code: receipt.material.code,
+        unit_name: receipt.material.unit.name,
+        qty_received: qtyReceived,
+        movement_type: receipt.movement_type,
+        has_loss: hasLoss,
+        notes: receipt.notes,
+        received_by: receipt.createdBy.full_name,
+        received_at: createdDate
+      });
+      
+      receiptsByDate[date].total_items += 1;
+      receiptsByDate[date].total_qty_received += qtyReceived;
+      if (hasLoss) {
+        receiptsByDate[date].has_losses = true;
+      }
+    });
+
+    // Convert to array and sort by date
+    const receiptHistoryByDate = Object.values(receiptsByDate).sort((a, b) => 
+      new Date(b.date) - new Date(a.date)
+    );
+
+    // Calculate summary statistics
+    const totalReceipts = receiptHistory.length;
+    const totalQtyReceived = receiptHistory.reduce((sum, receipt) => 
+      sum + parseFloat(receipt.qty_change || 0), 0
+    );
+    const totalLosses = receiptHistory.filter(r => r.movement_type === 'LOSS').length;
+    const hasAnyLosses = totalLosses > 0;
+
+    res.json({
+      success: true,
+      data: {
+        request: {
+          id: request.id,
+          ref_no: request.ref_no,
+          site_name: request.site.name,
+          requested_by: request.requestedBy.full_name,
+          status: request.status
+        },
+        receipt_history: receiptHistoryByDate,
+        summary: {
+          total_receipts: totalReceipts,
+          total_qty_received: totalQtyReceived,
+          total_losses: totalLosses,
+          has_any_losses: hasAnyLosses,
+          date_range: {
+            from: date_from || null,
+            to: date_to || null
+          }
+        },
+        pagination: {
+          current_page: parseInt(page),
+          total_pages: Math.ceil(count / limit),
+          total_items: count,
+          items_per_page: parseInt(limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get receipt history error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
+// Get receipt history by site (for ADMIN, PADIRI, DIOCESAN_SITE_ENGINEER)
+const getSiteReceiptHistory = async (req, res) => {
+  try {
+    const { 
+      page = 1, 
+      limit = 10, 
+      site_id, 
+      site_engineer_id, 
+      date_from, 
+      date_to,
+      material_id,
+      has_losses
+    } = req.query;
+    const offset = (page - 1) * limit;
+
+    // Build filters - include both 'RECEIVE' source_type and empty source_type with receipt notes
+    const whereClause = {
+      [Op.or]: [
+        { source_type: 'RECEIVE' },
+        { 
+          source_type: '',
+          notes: { [Op.like]: '%Received by%' }
+        }
+      ]
+    };
+
+    if (date_from || date_to) {
+      whereClause.created_at = {};
+      if (date_from) {
+        whereClause.created_at[Op.gte] = new Date(date_from);
+      }
+      if (date_to) {
+        whereClause.created_at[Op.lte] = new Date(date_to);
+      }
+    }
+
+    if (material_id) {
+      whereClause.material_id = material_id;
+    }
+
+    if (has_losses === 'true') {
+      whereClause.movement_type = 'LOSS';
+    }
+
+    // Get receipt history with site information
+    const { count, rows: receiptHistory } = await StockHistory.findAndCountAll({
+      where: whereClause,
+      include: [
+        {
+          model: Material,
+          as: 'material',
+          include: [{ model: Unit, as: 'unit' }]
+        },
+        {
+          model: User,
+          as: 'createdBy',
+          attributes: ['id', 'full_name', 'email', 'role_id'],
+          include: [
+            {
+              model: Role,
+              as: 'role',
+              attributes: ['id', 'name']
+            }
+          ]
+        }
+      ],
+      order: [['created_at', 'DESC']],
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
+
+    // Filter by site_engineer_id if provided
+    let filteredHistory = receiptHistory;
+    if (site_engineer_id) {
+      filteredHistory = filteredHistory.filter(receipt => 
+        receipt.created_by == site_engineer_id
+      );
+    }
+
+    // Fetch request data for receipts that have source_id
+    const requestIds = [...new Set(filteredHistory.map(receipt => receipt.source_id).filter(Boolean))];
+    const requests = {};
+    
+    if (requestIds.length > 0) {
+      const requestData = await Request.findAll({
+        where: { id: requestIds },
+        attributes: ['id', 'ref_no', 'created_at', 'site_id'],
+        include: [
+          {
+            model: Site,
+            as: 'site',
+            attributes: ['id', 'name', 'location']
+          }
+        ]
+      });
+      
+      requestData.forEach(request => {
+        requests[request.id] = request;
+      });
+    }
+
+    // Filter by site_id if provided (after we have request data)
+    if (site_id) {
+      filteredHistory = filteredHistory.filter(receipt => {
+        if (!receipt.source_id) return false; // Skip if no source request
+        const requestData = requests[receipt.source_id];
+        return requestData && parseInt(requestData.site_id) === parseInt(site_id);
+      });
+    }
+
+    // Group by date for better analysis (simplified approach)
+    const receiptsByDate = {};
+    filteredHistory.forEach(receipt => {
+      // Handle cases where created_at might be undefined
+      const createdDate = receipt.created_at || receipt.createdAt || new Date();
+      const date = createdDate.toISOString().split('T')[0];
+      
+      if (!receiptsByDate[date]) {
+        receiptsByDate[date] = {
+          date: date,
+          receipts: [],
+          total_items: 0,
+          total_qty_received: 0,
+          has_losses: false,
+          unique_materials: new Set() // Track unique materials
+        };
+      }
+
+      const qtyReceived = parseFloat(receipt.qty_change || 0);
+      const hasLoss = receipt.movement_type === 'LOSS';
+      
+      // Get request data if available
+      const requestData = receipt.source_id ? requests[receipt.source_id] : null;
+      const requestRef = requestData ? requestData.ref_no : 'N/A';
+      const requestDate = requestData ? requestData.created_at : null;
+      
+      receiptsByDate[date].receipts.push({
+        id: receipt.id,
+        request_id: receipt.source_id || null,
+        request_ref: requestRef,
+        request_date: requestDate,
+        material_name: receipt.material.name,
+        material_code: receipt.material.code,
+        unit_name: receipt.material.unit.name,
+        qty_received: qtyReceived,
+        movement_type: receipt.movement_type,
+        has_loss: hasLoss,
+        notes: receipt.notes,
+        received_by: receipt.createdBy.full_name,
+        received_by_role: receipt.createdBy.role ? receipt.createdBy.role.name : 'Unknown',
+        received_at: createdDate
+      });
+      
+      // Track unique materials instead of counting all receipts
+      receiptsByDate[date].unique_materials.add(receipt.material_id);
+      receiptsByDate[date].total_qty_received += qtyReceived;
+      receiptsByDate[date].has_losses = receiptsByDate[date].has_losses || hasLoss;
+    });
+
+    // Convert unique materials set to count and update total_items
+    Object.values(receiptsByDate).forEach(dateGroup => {
+      dateGroup.total_items = dateGroup.unique_materials.size;
+      delete dateGroup.unique_materials; // Clean up the Set
+    });
+
+    // Convert receiptsByDate object to array format for frontend compatibility
+    const receiptsByDateArray = Object.values(receiptsByDate).sort((a, b) => 
+      new Date(b.date) - new Date(a.date)
+    );
+
+    // Get site information for the filtered results
+    let siteInfo = {
+      site_id: 0,
+      site_name: 'All Sites',
+      site_location: 'Multiple Locations'
+    };
+
+    // If filtering by specific site, get the site info from the database
+    if (site_id) {
+      const site = await Site.findByPk(site_id);
+      if (site) {
+        siteInfo = {
+          site_id: site.id,
+          site_name: site.name,
+          site_location: site.location || 'Unknown Location'
+        };
+      }
+    }
+
+    // Create a simplified site structure for compatibility
+    const siteReceipts = [{
+      site_id: siteInfo.site_id,
+      site_name: siteInfo.site_name,
+      site_location: siteInfo.site_location,
+      receipts_by_date: receiptsByDateArray, // Now an array instead of object
+      total_receipts: filteredHistory.length,
+      total_qty_received: filteredHistory.reduce((sum, receipt) => sum + parseFloat(receipt.qty_change || 0), 0),
+      total_losses: filteredHistory.filter(receipt => receipt.movement_type === 'LOSS').length,
+      site_engineers: [...new Set(filteredHistory.map(receipt => receipt.createdBy.full_name).filter(Boolean))]
+    }];
+
+    // Calculate summary statistics
+    // Always show total sites in system, regardless of filtering
+    const totalSitesCount = await Site.count();
+    const totalSites = totalSitesCount;
+    const totalReceipts = siteReceipts.reduce((sum, site) => sum + site.total_receipts, 0);
+    const totalQtyReceived = siteReceipts.reduce((sum, site) => sum + site.total_qty_received, 0);
+    const totalLosses = siteReceipts.reduce((sum, site) => sum + site.total_losses, 0);
+
+    res.json({
+      success: true,
+      data: {
+        site_receipts: siteReceipts,
+        summary: {
+          total_sites: totalSites,
+          total_receipts: totalReceipts,
+          total_qty_received: totalQtyReceived,
+          total_losses: totalLosses
+        },
+        pagination: {
+          current_page: parseInt(page),
+          total_pages: Math.ceil(count / limit),
+          total_items: count,
+          items_per_page: parseInt(limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get site receipt history error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
 
 module.exports = {
   getAllRequests,
@@ -1707,5 +2131,7 @@ module.exports = {
   uploadAttachment,
   getAvailableSites,
   closeRequisition,
-  receiveMaterials
+  receiveMaterials,
+  getReceiptHistory,
+  getSiteReceiptHistory
 };
