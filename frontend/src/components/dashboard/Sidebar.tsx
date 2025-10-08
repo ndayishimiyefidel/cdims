@@ -415,15 +415,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle }) => {
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-4 border-b border-primary-200">
           <div className="flex items-center space-x-2">
-            <div className="flex items-center justify-center w-16 h-8 bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg">
+            <div className="flex items-center justify-center w-24 h-8 bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg">
               <div className="flex items-center space-x-0.5">
-                <img src={Logo} alt="CIDMS Logo" />
+                <img src={Logo} alt="CIDMS Logo" className=" object-cover h-20" />
               </div>
             </div>
             <div>
               <h2 className="font-bold text-lg text-primary-800">CIDMS</h2>
-              <p className="text-xs capitalize text-primary-500">{formatRole(user)?.toLowerCase() ?? 'dashboard'}</p>
-              {/* <p className="text-xs text-primary-500">{user?.role?.name} Portal</p> */}
+              {/* <p className="text-xs capitalize text-primary-500">{formatRole(user)?.toLowerCase() ?? 'dashboard'}</p> */}
+              <p className="text-xs text-primary-500">{user?.role?.name} Portal</p>
             </div>
           </div>
           <button
