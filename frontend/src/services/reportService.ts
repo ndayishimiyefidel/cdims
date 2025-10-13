@@ -85,6 +85,9 @@ export interface InventoryReport {
   material_id: number;
   qty_on_hand: number;
   reorder_level: number;
+  unit_price?: number;
+  created_at?: string;
+  updated_at?: string;
   material?: Material;
 }
 

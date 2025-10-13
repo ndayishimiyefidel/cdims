@@ -118,6 +118,8 @@ export interface RequisitionResponse {
 export interface ReceiveMaterialItem {
   request_item_id: number;
   qty_received: number;
+  receipt_notes?: string;
+  damage_notes?: string;
 }
 
 export interface ReceiveMaterialsResponse {
@@ -489,6 +491,63 @@ modifyRequest : async (
     } catch (error: any) {
       console.error('Error deleting requisition:', error);
       throw new Error(error.response?.data?.message || 'Failed to delete requisition');
+    }
+  },
+
+  getReceiptHistory: async (requestId: string, filters?: { page?: number; limit?: number; date_from?: string; date_to?: string }): Promise<any> => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+      const params = new URLSearchParams();
+      if (filters?.page) params.append('page', filters.page.toString());
+      if (filters?.limit) params.append('limit', filters.limit.toString());
+      if (filters?.date_from) params.append('date_from', filters.date_from);
+      if (filters?.date_to) params.append('date_to', filters.date_to);
+      
+      const { data } = await api.get(`/requests/${requestId}/receipt-history?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return data;
+    } catch (error: any) {
+      console.error('Error fetching receipt history:', error);
+      throw error;
+    }
+  },
+
+  getSiteReceiptHistory: async (filters?: { 
+    page?: number; 
+    limit?: number; 
+    site_id?: number; 
+    site_engineer_id?: number; 
+    date_from?: string; 
+    date_to?: string; 
+    material_id?: number; 
+    has_losses?: boolean; 
+  }): Promise<any> => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+      const params = new URLSearchParams();
+      if (filters?.page) params.append('page', filters.page.toString());
+      if (filters?.limit) params.append('limit', filters.limit.toString());
+      if (filters?.site_id) params.append('site_id', filters.site_id.toString());
+      if (filters?.site_engineer_id) params.append('site_engineer_id', filters.site_engineer_id.toString());
+      if (filters?.date_from) params.append('date_from', filters.date_from);
+      if (filters?.date_to) params.append('date_to', filters.date_to);
+      if (filters?.material_id) params.append('material_id', filters.material_id.toString());
+      if (filters?.has_losses !== undefined) params.append('has_losses', filters.has_losses.toString());
+      
+      const { data } = await api.get(`/requests/site-receipt-history?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return data;
+    } catch (error: any) {
+      console.error('Error fetching site receipt history:', error);
+      throw error;
     }
   },
 

@@ -388,6 +388,8 @@ const renderPagination = () => {
                       <th className="text-left py-2 px-2 text-gray-600 font-medium">Qty Before</th>
                       <th className="text-left py-2 px-2 text-gray-600 font-medium">Qty Change</th>
                       <th className="text-left py-2 px-2 text-gray-600 font-medium">Qty After</th>
+                      <th className="text-left py-2 px-2 text-gray-600 font-medium hidden lg:table-cell">Price Before</th>
+                      <th className="text-left py-2 px-2 text-gray-600 font-medium hidden lg:table-cell">Price After</th>
                       <th className="text-left py-2 px-2 text-gray-600 font-medium hidden lg:table-cell">Notes</th>
                       <th className="text-left py-2 px-2 text-gray-600 font-medium hidden lg:table-cell">Created By</th>
                       <th className="text-left py-2 px-2 text-gray-600 font-medium">Created At</th>
@@ -403,6 +405,12 @@ const renderPagination = () => {
                         <td className="py-2 px-2 text-gray-700">{Number(item.qty_before) || 0}</td>
                         <td className="py-2 px-2 text-gray-700">{Number(item.qty_change) || 0}</td>
                         <td className="py-2 px-2 text-gray-700">{Number(item.qty_after) || 0}</td>
+                        <td className="py-2 px-2 text-gray-700 hidden lg:table-cell">
+                          {item.unit_price_before ? `RWF ${item.unit_price_before.toLocaleString()}` : '-'}
+                        </td>
+                        <td className="py-2 px-2 text-gray-700 hidden lg:table-cell">
+                          {item.unit_price_after ? `RWF ${item.unit_price_after.toLocaleString()}` : '-'}
+                        </td>
                         <td className="py-2 px-2 text-gray-700 hidden lg:table-cell">{item.notes || '-'}</td>
                         <td className="py-2 px-2 text-gray-700 hidden lg:table-cell">{item.createdBy?.full_name || '-'}</td>
                         <td className="py-2 px-2 text-gray-700">{formatDate(item.created_at)}</td>

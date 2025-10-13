@@ -7,6 +7,7 @@ export interface Stock {
   material_id: number;
   store_id: number;
   qty_on_hand: number;
+  unit_price?: number;
   reorder_level?: number;
   low_stock_threshold?: number;
   low_stock_alert?: boolean;
@@ -30,8 +31,14 @@ export interface StockMovement {
   id: number;
   material_id: number;
   store_id: number;
-  movement_type: 'IN' | 'OUT' | 'TRANSFER' | 'ADJUSTMENT';
+  movement_type: 'IN' | 'OUT' | 'TRANSFER' | 'ADJUSTMENT' | 'PRICE_UPDATE';
   quantity: number;
+  qty_before?: number;
+  qty_change?: number;
+  qty_after?: number;
+  unit_price?: number;
+  unit_price_before?: number;
+  unit_price_after?: number;
   reference_type?: string;
   reference_id?: number;
   notes?: string;

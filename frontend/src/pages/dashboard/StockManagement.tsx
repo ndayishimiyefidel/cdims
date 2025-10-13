@@ -87,6 +87,7 @@ const StockDashboard: React.FC = () => {
     material_id: 0,
     store_id: 0,
     qty_on_hand: 0,
+    unit_price: 0,
     low_stock_threshold: 0,
   });
   const [additionalQty, setAdditionalQty] = useState<number>(0);
@@ -251,6 +252,7 @@ const StockDashboard: React.FC = () => {
       material_id: 0,
       store_id: 0,
       qty_on_hand: 0,
+      unit_price: 0,
       low_stock_threshold: 0,
     });
     setFormError('');
@@ -345,6 +347,7 @@ const StockDashboard: React.FC = () => {
     const updatedFormData = {
       qty_on_hand: totalQty,
       low_stock_threshold: Number(formData.low_stock_threshold) || 0,
+      unit_price: Number(formData.unit_price) || undefined,
     };
 
     const validation: ValidationResult = stockService.validateStockData({
@@ -367,6 +370,7 @@ const StockDashboard: React.FC = () => {
         material_id: 0,
         store_id: 0,
         qty_on_hand: 0,
+        unit_price: 0,
         low_stock_threshold: 0,
       });
       loadData();
@@ -438,6 +442,7 @@ const StockDashboard: React.FC = () => {
       material_id: Number(stock.material_id) || 0,
       store_id: Number(stock.store_id) || 0,
       qty_on_hand: currentQty,
+      unit_price: Number(stock.unit_price) || 0,
       low_stock_threshold: Number(stock.low_stock_threshold) || 0,
     });
     setAdditionalQty(0);
@@ -519,10 +524,10 @@ const StockDashboard: React.FC = () => {
                 <td className="py-2 px-2 text-gray-700 hidden sm:table-cell">{stock.store?.name || 'N/A'}</td>
                 <td className="py-2 px-2 text-gray-700 hidden lg:table-cell">{stock.qty_on_hand}</td>
                 <td className="py-2 px-2 text-gray-700">
-                  RWF {(stock.material?.unit_price || 0).toLocaleString()}
+                  RWF {(stock.unit_price || 0).toLocaleString()}
                 </td>
                 <td className="py-2 px-2 text-gray-700">
-                  RWF {((stock.material?.unit_price || 0) * (stock.qty_on_hand || 0)).toLocaleString()}
+                  RWF {((stock.unit_price || 0) * (stock.qty_on_hand || 0)).toLocaleString()}
                 </td>
                 <td className="py-2 px-2 text-gray-700 hidden sm:table-cell">{formatDate(stock.createdAt)}</td>
                 <td className="py-2 px-2">
@@ -841,10 +846,10 @@ const StockDashboard: React.FC = () => {
                           <td className="py-2 px-2 text-gray-700 hidden sm:table-cell">{alert.store?.name || 'N/A'}</td>
                           <td className="py-2 px-2 text-gray-700 hidden lg:table-cell">{alert.qty_on_hand}</td>
                           <td className="py-2 px-2 text-gray-700 hidden lg:table-cell">
-                            RWF {(alert.material?.unit_price || 0).toLocaleString()}
+                            RWF {(alert.unit_price || 0).toLocaleString()}
                           </td>
                           <td className="py-2 px-2 text-gray-700 hidden lg:table-cell">
-                            RWF {((alert.material?.unit_price || 0) * (alert.qty_on_hand || 0)).toLocaleString()}
+                            RWF {((alert.unit_price || 0) * (alert.qty_on_hand || 0)).toLocaleString()}
                           </td>
                           <td className="py-2 px-2 text-gray-700 hidden lg:table-cell">{alert.low_stock_threshold}</td>
                           <td className="py-2 px-2">
@@ -1320,6 +1325,20 @@ const StockDashboard: React.FC = () => {
                 />
               </div>
               <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Unit Price *</label>
+                <input
+                  type="number"
+                  name="unit_price"
+                  value={formData.unit_price}
+                  onChange={handleInputChange}
+                  required
+                  step="0.01"
+                  min="0"
+                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  placeholder="Enter unit price"
+                />
+              </div>
+              <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Low Stock Threshold</label>
                 <input
                   type="number"
@@ -1383,6 +1402,10 @@ const StockDashboard: React.FC = () => {
                 <p className="text-xs text-gray-900">{Number(selectedStock.qty_on_hand) || 0}</p>
               </div>
               <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Current Unit Price</label>
+                <p className="text-xs text-gray-900">{selectedStock.unit_price ? `RWF ${selectedStock.unit_price.toLocaleString()}` : 'Not set'}</p>
+              </div>
+              <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Additional Quantity *</label>
                 <input
                   type="number"
@@ -1397,6 +1420,20 @@ const StockDashboard: React.FC = () => {
                 <p className="text-xs text-gray-500 mt-1">
                   New Total Quantity: {(Number(selectedStock.qty_on_hand) || 0) + additionalQty}
                 </p>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Unit Price *</label>
+                <input
+                  type="number"
+                  name="unit_price"
+                  value={formData.unit_price}
+                  onChange={handleInputChange}
+                  required
+                  step="0.01"
+                  min="0"
+                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  placeholder="Enter unit price"
+                />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Low Stock Threshold</label>
@@ -1514,6 +1551,10 @@ const StockDashboard: React.FC = () => {
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Quantity on Hand</label>
                 <p className="text-xs text-gray-900">{selectedStock.qty_on_hand || '-'}</p>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Unit Price</label>
+                <p className="text-xs text-gray-900">{selectedStock.unit_price ? `RWF ${selectedStock.unit_price.toLocaleString()}` : '-'}</p>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Low Stock Threshold</label>

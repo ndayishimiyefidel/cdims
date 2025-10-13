@@ -19,10 +19,26 @@ const ReceiveMaterialsModal: React.FC<ReceiveMaterialsModalProps> = ({
     const [items, setItems] = useState<ReceiveMaterialItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
+    const [generalNotes, setGeneralNotes] = useState<string>('');
 
     // Initialize items when modal opens or requisition changes
     useEffect(() => {
         if (isOpen && requisition) {
+            // Debug: Log the requisition data to see what we're receiving
+            console.log('=== RECEIVE MODAL DEBUG ===');
+            console.log('Requisition:', requisition);
+            console.log('Items:', requisition.items);
+            requisition.items?.forEach((item, index) => {
+                console.log(`Item ${index + 1}:`, {
+                    material: item.material.name,
+                    itemUnit: item.unit,
+                    itemUnitName: item.unit?.name,
+                    itemUnitCode: item.unit?.code,
+                    materialUnit: item.material.unit,
+                    materialUnitName: item.material.unit?.name,
+                    materialUnitCode: item.material.unit?.code
+                });
+            });
             const initialItems = requisition.items
                 ?.filter(item => {
                     const qtyIssued = Number(item.qty_issued || 0);
@@ -41,6 +57,8 @@ const ReceiveMaterialsModal: React.FC<ReceiveMaterialsModalProps> = ({
                     return {
                         request_item_id: item.id,
                         qty_received: unreceivedQty,
+                        receipt_notes: '',
+                        damage_notes: ''
                     };
                 }) || [];
             setItems(initialItems);
@@ -64,6 +82,14 @@ const ReceiveMaterialsModal: React.FC<ReceiveMaterialsModalProps> = ({
         if (submitError) {
             setSubmitError(null);
         }
+    };
+
+    const handleNotesChange = (requestItemId: number, field: 'receipt_notes' | 'damage_notes', value: string) => {
+        setItems(prev => prev.map(item => 
+            item.request_item_id === requestItemId 
+                ? { ...item, [field]: value }
+                : item
+        ));
     };
 
     // Check if item is fully completed
@@ -103,9 +129,9 @@ const ReceiveMaterialsModal: React.FC<ReceiveMaterialsModalProps> = ({
             return { isValid: false, message: 'Must be greater than 0' };
         }
         
-        // Must receive exactly the full unreceived quantity
-        if (qtyReceivedInput !== requiredQty) {
-            return { isValid: false, message: `Must be exactly ${requiredQty}` };
+        // Cannot receive more than the unreceived quantity
+        if (qtyReceivedInput > requiredQty) {
+            return { isValid: false, message: `Cannot exceed ${requiredQty}` };
         }
         
         return { isValid: true, message: '' };
@@ -209,6 +235,8 @@ const ReceiveMaterialsModal: React.FC<ReceiveMaterialsModalProps> = ({
                                         <th className="text-right py-3 px-3 text-gray-600 font-medium">Issued</th>
                                         <th className="text-right py-3 px-3 text-gray-600 font-medium">Already Received</th>
                                         <th className="text-right py-3 px-3 text-gray-600 font-medium">Receive Now</th>
+                                        <th className="text-left py-3 px-3 text-gray-600 font-medium">Receipt Notes</th>
+                                        <th className="text-left py-3 px-3 text-gray-600 font-medium">Damage Notes</th>
                                         <th className="text-left py-3 px-3 text-gray-600 font-medium">Status</th>
                                     </tr>
                                 </thead>
@@ -230,7 +258,7 @@ const ReceiveMaterialsModal: React.FC<ReceiveMaterialsModalProps> = ({
                                                     {requisitionItem.material.name}
                                                 </td>
                                                 <td className="py-3 px-3 text-gray-700">
-                                                    {requisitionItem.material.unit?.name || 'N/A'}
+                                                    {requisitionItem.unit?.name || requisitionItem.unit?.code || requisitionItem.material.unit?.name || requisitionItem.material.unit?.code || 'N/A'}
                                                 </td>
                                                 <td className="py-3 px-3 text-right text-gray-700">
                                                     {requisitionItem.qty_requested || 0}
@@ -268,6 +296,34 @@ const ReceiveMaterialsModal: React.FC<ReceiveMaterialsModalProps> = ({
                                                         <div className="flex justify-end">
                                                             <span className="text-gray-400 text-xs">-</span>
                                                         </div>
+                                                    )}
+                                                </td>
+                                                <td className="py-3 px-3">
+                                                    {canReceive ? (
+                                                        <input
+                                                            type="text"
+                                                            value={item?.receipt_notes || ''}
+                                                            onChange={(e) => handleNotesChange(requisitionItem.id, 'receipt_notes', e.target.value)}
+                                                            placeholder="Receipt notes..."
+                                                            className="w-full px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                                            disabled={loading}
+                                                        />
+                                                    ) : (
+                                                        <span className="text-gray-400 text-xs">-</span>
+                                                    )}
+                                                </td>
+                                                <td className="py-3 px-3">
+                                                    {canReceive ? (
+                                                        <input
+                                                            type="text"
+                                                            value={item?.damage_notes || ''}
+                                                            onChange={(e) => handleNotesChange(requisitionItem.id, 'damage_notes', e.target.value)}
+                                                            placeholder="Damage notes..."
+                                                            className="w-full px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                                            disabled={loading}
+                                                        />
+                                                    ) : (
+                                                        <span className="text-gray-400 text-xs">-</span>
                                                     )}
                                                 </td>
                                                 <td className="py-3 px-3">
@@ -353,6 +409,21 @@ const ReceiveMaterialsModal: React.FC<ReceiveMaterialsModalProps> = ({
                             </div>
                         </div>
                     )}
+
+                    {/* General Notes */}
+                    <div className="mt-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            General Notes (Optional)
+                        </label>
+                        <textarea
+                            value={generalNotes}
+                            onChange={(e) => setGeneralNotes(e.target.value)}
+                            placeholder="Add any general notes about this receipt..."
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                            rows={3}
+                            disabled={loading}
+                        />
+                    </div>
                 </div>
 
                 {/* Footer */}

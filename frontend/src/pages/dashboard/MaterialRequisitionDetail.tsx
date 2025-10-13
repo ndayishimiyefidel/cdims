@@ -22,6 +22,166 @@ import requisitionService, { type MaterialRequisition } from '../../services/req
 import { formatPrice, formatRole } from '../../utils/dateUtils';
 import useAuth from '../../context/AuthContext';
 
+// Receipt History Section Component
+const ReceiptHistorySection: React.FC<{ requestId: string | undefined }> = ({ requestId }) => {
+  const [receiptHistory, setReceiptHistory] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+
+  const fetchReceiptHistory = async () => {
+    if (!requestId) return;
+    
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await requisitionService.getReceiptHistory(requestId, {
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined
+      });
+      console.log('Receipt History Response:', response);
+      console.log('Receipt History Data:', response.data);
+      setReceiptHistory(response.data.receipt_history || []);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch receipt history');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReceiptHistory();
+  }, [requestId, dateFrom, dateTo]);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="px-6 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+            <Package className="h-5 w-5 mr-2 text-green-600" />
+            Receipt History
+          </h2>
+          <div className="flex space-x-2">
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="px-3 py-1 border border-gray-300 rounded text-sm"
+              placeholder="From Date"
+            />
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="px-3 py-1 border border-gray-300 rounded text-sm"
+              placeholder="To Date"
+            />
+            <button
+              onClick={fetchReceiptHistory}
+              className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+            >
+              Filter
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="px-6 py-4">
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="ml-2 text-gray-600">Loading receipt history...</span>
+          </div>
+        ) : error ? (
+          <div className="text-center py-8">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <p className="text-red-600">{error}</p>
+          </div>
+        ) : receiptHistory.length === 0 ? (
+          <div className="text-center py-8">
+            <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600">No receipt history found</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {Object.values(receiptHistory).map((dateGroup: any) => (
+              <div key={dateGroup.date} className="border border-gray-200 rounded-lg">
+                <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-gray-900">
+                      {new Date(dateGroup.date).toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </h3>
+                    <div className="flex items-center space-x-4 text-sm text-gray-600">
+                      <span>{dateGroup.total_items} items</span>
+                      <span>{dateGroup.total_qty_received} total qty</span>
+                      {dateGroup.has_losses && (
+                        <span className="text-red-600 font-medium">⚠️ Has losses</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <div className="space-y-3">
+                    {dateGroup.receipts.map((receipt: any) => (
+                      <div key={receipt.id} className={`p-3 rounded-lg border ${
+                        receipt.has_loss ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
+                      }`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <span className="font-medium text-gray-900">{receipt.material_name}</span>
+                            <span className="text-sm text-gray-500">({receipt.material_code})</span>
+                            <span className="text-sm text-gray-600">{receipt.unit_name}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${
+                              receipt.has_loss ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                            }`}>
+                              {receipt.movement_type}
+                            </span>
+                            <span className="text-sm font-medium text-gray-900">
+                              {receipt.qty_received} {receipt.unit_name}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between text-sm text-gray-600">
+                          <span>Received by: {receipt.received_by}</span>
+                          <span>{formatDate(receipt.received_at)}</span>
+                        </div>
+                        {receipt.notes && (
+                          <div className="mt-2 p-2 bg-white rounded border">
+                            <p className="text-sm text-gray-700">
+                              <strong>Notes:</strong> {receipt.notes}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const RequestDetailView: React.FC = () => {
   const { id } = useParams<{ id: string }>(); // Get the requisition ID from URL params
   const [request, setRequest] = useState<MaterialRequisition | null>(null);
@@ -291,6 +451,9 @@ const RequestDetailView: React.FC = () => {
             </div>
           </div>
 
+          {/* Receipt History */}
+          <ReceiptHistorySection requestId={id} />
+
           {/* Notes */}
           {request.notes && (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -375,6 +538,7 @@ const RequestDetailView: React.FC = () => {
               </div>
             </div>
           </div>
+
 
           {/* Summary */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">

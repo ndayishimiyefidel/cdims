@@ -203,6 +203,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle }) => {
       allowedRoles: ["PADIRI", "ADMIN", "DIOCESAN_SITE_ENGINEER", "SITE_ENGINEER"],
     },
     {
+      id: "siteReceiptTracking",
+      label: "Site Receipt Tracking",
+      icon: Building, // Building icon for site tracking
+      path: "/admin/dashboard/site-receipt-tracking",
+      allowedRoles: ["PADIRI", "ADMIN", "DIOCESAN_SITE_ENGINEER"],
+    },
+    {
       id: "materialManagement",
       label: "Material Management",
       icon: Package,

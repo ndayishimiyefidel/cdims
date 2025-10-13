@@ -19,6 +19,8 @@ import {
   Download,
   FileImage,
   Calendar, // Added Calendar icon
+  AlertTriangle,
+  DollarSign
 } from "lucide-react";
 import reportService, { type InventoryReport, type ReportSummary } from "../../../services/reportService";
 import storeService, { type Store } from "../../../services/storeService";
@@ -97,27 +99,37 @@ const InventoryReportsPage: React.FC = () => {
   const loadStores = async () => {
     try {
       const storesResponse = await storeService.getAllStores();
+      console.log("Stores loaded:", storesResponse.stores);
       setStores(storesResponse.stores || []);
     } catch (err: any) {
       console.error("Failed to load stores:", err);
     }
   };
 
-  const loadReports = async () => {
+  const loadReports = async (customFilters?: ReportFilters) => {
     try {
       setLoading(true);
+      const currentFilters = customFilters || filters;
       const params: any = {};
       
-      if (filters.store_id) params.store_id = parseInt(filters.store_id);
-      if (filters.low_stock_only) params.low_stock_only = filters.low_stock_only;
+      if (currentFilters.store_id && currentFilters.store_id !== '') {
+        params.store_id = parseInt(currentFilters.store_id);
+      }
+      // When store_id is empty, don't send any store_id parameter to get all stores
+      if (currentFilters.low_stock_only) params.low_stock_only = currentFilters.low_stock_only;
       // Server-side date filtering (optional, uncomment if needed)
       // if (filters.date_from) params.date_from = filters.date_from;
       // if (filters.date_to) params.date_to = filters.date_to;
 
+      console.log("Loading reports with params:", params);
+      console.log("Current filters:", filters);
+      console.log("Store ID being sent:", filters.store_id, "Type:", typeof filters.store_id);
       const response = await reportService.getInventoryReports(params);
       
       if (response.success && response.data) {
-        console.log(response.data.stock);
+        console.log("API Response - Stock data:", response.data.stock);
+        console.log("API Response - Stock count:", response.data.stock?.length);
+        console.log("API Response - Summary:", response.data.summary);
         
         setReports(response.data.stock as InventoryReport[] || []);
         setSummary(response.data.summary as ReportSummary || {});
@@ -607,7 +619,7 @@ const InventoryReportsPage: React.FC = () => {
   };
 
   const handleExport = async () => {
-    if (filteredReports.length === 0) {
+    if (filteredReports.filtered.length === 0) {
       showOperationStatus("error", "No data to export");
       return;
     }
@@ -626,16 +638,48 @@ const InventoryReportsPage: React.FC = () => {
   };
 
   const filteredReports = useMemo(() => {
+    console.log("Filtering reports with filters:", filters);
+    console.log("Total reports:", reports.length);
+    console.log("Reports data:", reports);
+    
     let filtered = reports.filter(
-      (report) =>
-        (!searchTerm.trim() ||
+      (report) => {
+        const matchesSearch = !searchTerm.trim() ||
           report.material?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          report.material?.code?.toLowerCase().includes(searchTerm.toLowerCase())) &&
-        (!filters.store_id || report.store_id === parseInt(filters.store_id)) &&
-        (!filters.low_stock_only || report.qty_on_hand <= report.reorder_level) &&
-        (!filters.date_from || new Date(report.createdAt).setHours(0, 0, 0, 0) >= new Date(filters.date_from).setHours(0, 0, 0, 0)) &&
-        (!filters.date_to || new Date(report.createdAt).setHours(0, 0, 0, 0) <= new Date(filters.date_to).setHours(23, 59, 59, 999))
+          report.material?.code?.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        // Remove client-side store filtering since backend handles it
+        // const matchesStore = !filters.store_id || report.store_id === parseInt(filters.store_id);
+        
+        const matchesLowStock = !filters.low_stock_only || report.qty_on_hand <= report.reorder_level;
+        
+        const matchesDateFrom = !filters.date_from || (report.created_at && new Date(report.created_at).setHours(0, 0, 0, 0) >= new Date(filters.date_from).setHours(0, 0, 0, 0));
+        
+        const matchesDateTo = !filters.date_to || (report.created_at && new Date(report.created_at).setHours(0, 0, 0, 0) <= new Date(filters.date_to).setHours(23, 59, 59, 999));
+        
+        console.log(`Report ${report.id}: search=${matchesSearch}, lowStock=${matchesLowStock}, dateFrom=${matchesDateFrom}, dateTo=${matchesDateTo}`);
+        
+        return matchesSearch && matchesLowStock && matchesDateFrom && matchesDateTo;
+      }
     );
+    
+    console.log("Filtered reports:", filtered.length);
+    
+    // Calculate summary statistics based on filtered data
+    const filteredSummary = {
+      total_items: filtered.length,
+      total_value: filtered.reduce((sum, item) => {
+        return sum + (item.qty_on_hand * (item.unit_price || 0));
+      }, 0),
+      low_stock_items: filtered.filter(item => 
+        item.qty_on_hand <= item.reorder_level
+      ).length,
+      out_of_stock_items: filtered.filter(item => 
+        item.qty_on_hand === 0
+      ).length
+    };
+    
+    console.log("Filtered summary:", filteredSummary);
 
     filtered.sort((a, b) => {
       let aValue: any;
@@ -667,16 +711,31 @@ const InventoryReportsPage: React.FC = () => {
       else return aStr < bStr ? 1 : aStr > bStr ? -1 : 0;
     });
 
-    return filtered;
+    return { filtered, summary: filteredSummary };
   }, [reports, searchTerm, sortBy, sortOrder, filters]);
 
   const handleFilterChange = (name: keyof ReportFilters, value: string | boolean) => {
-    setFilters((prev) => ({ ...prev, [name]: value }));
+    const newFilters = { ...filters, [name]: value };
+    setFilters(newFilters);
+    // Auto-apply filters on change
+    setTimeout(() => {
+      loadReports(newFilters);
+    }, 100);
   };
 
-  const applyFilters = () => {
-    loadReports();
-    showOperationStatus("info", "Filters applied successfully");
+  const handleStoreChange = (value: string) => {
+    // Clear store filter when "All Stores" is selected
+    const storeId = value === "" ? "" : value;
+    console.log("Store changed to:", value, "Store ID:", storeId);
+    console.log("Previous filters:", filters);
+    const newFilters = { ...filters, store_id: storeId };
+    console.log("New filters:", newFilters);
+    setFilters(newFilters);
+    // Auto-apply filters on change with updated filters
+    setTimeout(() => {
+      console.log("Calling loadReports with updated filters");
+      loadReports(newFilters);
+    }, 100);
   };
 
   const clearFilters = () => {
@@ -687,7 +746,10 @@ const InventoryReportsPage: React.FC = () => {
       date_to: "",
     });
     setSearchTerm(""); // Also clear search term for consistency
-    loadReports();
+    // Auto-reload after clearing filters
+    setTimeout(() => {
+      loadReports();
+    }, 100);
   };
 
   const handleClearDates = () => {
@@ -696,6 +758,10 @@ const InventoryReportsPage: React.FC = () => {
       date_from: "",
       date_to: "",
     }));
+    // Auto-reload after clearing dates
+    setTimeout(() => {
+      loadReports();
+    }, 100);
   };
 
   const handleViewStock = (stock: InventoryReport) => {
@@ -720,10 +786,14 @@ const InventoryReportsPage: React.FC = () => {
     });
   };
 
-  const totalPages = Math.ceil(filteredReports.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredReports.filtered.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentReports = filteredReports.slice(startIndex, endIndex);
+  const currentReports = filteredReports.filtered.slice(startIndex, endIndex);
+  
+  // Debug logging
+  console.log("Filtered reports structure:", filteredReports);
+  console.log("Filtered summary:", filteredReports.summary);
 
   const renderTableView = () => (
     <div className="bg-white rounded border border-gray-200">
@@ -757,6 +827,7 @@ const InventoryReportsPage: React.FC = () => {
               </th>
               <th className="text-left py-2 px-2 text-gray-600 font-medium">Unit Price</th>
               <th className="text-left py-2 px-2 text-gray-600 font-medium">Total Price</th>
+              <th className="text-left py-2 px-2 text-gray-600 font-medium hidden lg:table-cell">Last Updated</th>
               <th className="text-left py-2 px-2 text-gray-600 font-medium">Status</th>
               {/* <th className="text-right py-2 px-2 text-gray-600 font-medium">Actions</th> */}
             </tr>
@@ -771,10 +842,21 @@ const InventoryReportsPage: React.FC = () => {
                   {report.qty_on_hand} {report.material?.unit?.symbol || ""}
                 </td>
                 <td className="py-2 px-2 text-gray-700">
-                  RWF {(report.material?.unit_price || 0).toLocaleString()}
+                  RWF {(report.unit_price || 0).toLocaleString()}
                 </td>
                 <td className="py-2 px-2 text-gray-700">
-                  RWF {((report.material?.unit_price || 0) * report.qty_on_hand).toLocaleString()}
+                  RWF {((report.unit_price || 0) * report.qty_on_hand).toLocaleString()}
+                </td>
+                <td className="py-2 px-2 text-gray-700 hidden lg:table-cell">
+                  {report.updated_at ? new Date(report.updated_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  }) : (report.created_at ? new Date(report.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  }) : 'N/A')}
                 </td>
                 <td className="py-2 px-2">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStockStatusColor(report)}`}>
@@ -900,7 +982,7 @@ const InventoryReportsPage: React.FC = () => {
     return (
       <div className="flex items-center justify-between bg-white px-3 py-2 border-t border-gray-200">
         <div className="text-xs text-gray-600">
-          Showing {startIndex + 1}-{Math.min(endIndex, filteredReports.length)} of {filteredReports.length}
+          Showing {startIndex + 1}-{Math.min(endIndex, filteredReports.filtered.length)} of {filteredReports.filtered.length}
         </div>
         <div className="flex items-center space-x-1">
           <button
@@ -1056,7 +1138,7 @@ const InventoryReportsPage: React.FC = () => {
                   <label className="block text-xs font-medium text-gray-700 mb-1">Store</label>
                   <select
                     value={filters.store_id}
-                    onChange={(e) => handleFilterChange("store_id", e.target.value)}
+                    onChange={(e) => handleStoreChange(e.target.value)}
                     className="w-1/2 text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary-500"
                   >
                     <option value="">All Stores</option>
@@ -1099,12 +1181,6 @@ const InventoryReportsPage: React.FC = () => {
               </div>
               <div className="flex items-center space-x-2 mt-3">
                 <button
-                  onClick={applyFilters}
-                  className="px-3 py-1.5 text-xs bg-primary-600 text-white rounded hover:bg-primary-700"
-                >
-                  Apply Filters
-                </button>
-                <button
                   onClick={handleClearDates}
                   className="px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded hover:bg-gray-50"
                 >
@@ -1120,6 +1196,67 @@ const InventoryReportsPage: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Summary Cards */}
+        {!loading && Object.keys(summary).length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+              <div className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600 font-medium">Total Items</p>
+                    <p className="text-2xl font-semibold text-gray-900 mt-1">{filteredReports.summary?.total_items || filteredReports.filtered?.length || 0}</p>
+                  </div>
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Package className="h-5 w-5 text-blue-600" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+              <div className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600 font-medium">Low Stock Items</p>
+                    <p className="text-2xl font-semibold text-yellow-600 mt-1">{filteredReports.summary?.low_stock_items || filteredReports.filtered?.filter(item => item.qty_on_hand <= item.reorder_level).length || 0}</p>
+                  </div>
+                  <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                    <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+              <div className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600 font-medium">Out of Stock</p>
+                    <p className="text-2xl font-semibold text-red-600 mt-1">{filteredReports.summary?.out_of_stock_items || filteredReports.filtered?.filter(item => item.qty_on_hand === 0).length || 0}</p>
+                  </div>
+                  <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                    <XCircle className="h-5 w-5 text-red-600" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+              <div className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600 font-medium">Total Value</p>
+                    <p className="text-2xl font-semibold text-green-600 mt-1">RWF {(filteredReports.summary?.total_value || filteredReports.filtered?.reduce((sum, item) => sum + (item.qty_on_hand * (item.unit_price || 0)), 0) || 0).toLocaleString()}</p>
+                  </div>
+                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <span className="text-green-600 font-bold text-sm">RWF</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded p-3 text-red-700 text-xs">

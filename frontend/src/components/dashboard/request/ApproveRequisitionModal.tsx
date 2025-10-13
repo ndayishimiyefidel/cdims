@@ -110,10 +110,21 @@ const ApproveRequisitionModal: React.FC<ApproveRequisitionModalProps> = ({ isOpe
       const field = name.split('.')[1];
       setFormData((prev) => {
         const newItems = [...prev[type]];
-        newItems[index] = {
-          ...newItems[index],
-          [field]: field === 'qty_approved' || field === 'qty_requested' ? parseFloat(value) || 0 : parseInt(value, 10) || 0,
-        };
+        // If material is selected, auto-populate unit_id
+        if (field === 'material_id') {
+          const materialId = parseInt(value, 10) || 0;
+          const selectedMaterial = materials.find(m => m.id === materialId);
+          newItems[index] = {
+            ...newItems[index],
+            material_id: materialId,
+            unit_id: selectedMaterial?.unit_id || 0
+          };
+        } else {
+          newItems[index] = {
+            ...newItems[index],
+            [field]: field === 'qty_approved' || field === 'qty_requested' ? parseFloat(value) || 0 : parseInt(value, 10) || 0,
+          };
+        }
 
         // Validate no duplicate materials
         const allMaterialIds = [
@@ -325,22 +336,17 @@ const ApproveRequisitionModal: React.FC<ApproveRequisitionModalProps> = ({ isOpe
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-700">Unit</label>
-                        <select
-                          name="item_modifications.unit_id"
-                          value={item.unit_id}
-                          onChange={(e) => handleChange(e, index, 'item_modifications')}
-                          disabled={isLoadingUnits}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
-                        >
-                          <option value={0}>
-                            {isLoadingUnits ? 'Loading units...' : 'Select a unit'}
-                          </option>
-                          {units.map((unit) => (
-                            <option key={unit.id} value={unit.id}>
-                              {unit.name} ({unit.symbol})
-                            </option>
-                          ))}
-                        </select>
+                        <input
+                          type="text"
+                          value={item.material_id ? (() => {
+                            const material = materials.find(m => m.id === item.material_id);
+                            const unit = units.find(u => u.id === material?.unit_id);
+                            return unit ? `${unit.name} (${unit.symbol})` : 'Loading...';
+                          })() : 'Select a material first'}
+                          disabled
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-100 text-gray-600 text-sm cursor-not-allowed"
+                          placeholder="Unit will be auto-selected"
+                        />
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-700">Quantity Requested</label>
@@ -419,22 +425,17 @@ const ApproveRequisitionModal: React.FC<ApproveRequisitionModalProps> = ({ isOpe
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-gray-700">Unit</label>
-                      <select
-                        name="items_to_add.unit_id"
-                        value={item.unit_id}
-                        onChange={(e) => handleChange(e, index, 'items_to_add')}
-                        disabled={isLoadingUnits}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
-                      >
-                        <option value={0}>
-                          {isLoadingUnits ? 'Loading units...' : 'Select a unit'}
-                        </option>
-                        {units.map((unit) => (
-                          <option key={unit.id} value={unit.id}>
-                            {unit.name} ({unit.symbol})
-                          </option>
-                        ))}
-                      </select>
+                      <input
+                        type="text"
+                        value={item.material_id ? (() => {
+                          const material = materials.find(m => m.id === item.material_id);
+                          const unit = units.find(u => u.id === material?.unit_id);
+                          return unit ? `${unit.name} (${unit.symbol})` : 'Loading...';
+                        })() : 'Select a material first'}
+                        disabled
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-100 text-gray-600 text-sm cursor-not-allowed"
+                        placeholder="Unit will be auto-selected"
+                      />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-gray-700">Quantity Requested</label>

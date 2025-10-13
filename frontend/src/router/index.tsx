@@ -36,6 +36,7 @@ import InventoryReportManagement from '../pages/dashboard/report/InventoryReport
 import SiteReportManagement from '../pages/dashboard/report/SiteReportManagement'
 
 import MaterialRequisition from '../pages/dashboard/MaterialRequisition';
+import SiteReceiptTracking from '../pages/dashboard/SiteReceiptTracking';
 
 import SiteAssignmentDashboard from '../pages/dashboard/SiteAssignmentDashboard';
 import MaterialRequisitionDetail from '../pages/dashboard/MaterialRequisitionDetail';
@@ -316,6 +317,14 @@ const routes = createBrowserRouter([
                 element: (
                   <SuspenseWrapper>
                      <MaterialRequisitionDetail />
+                  </SuspenseWrapper>
+                ),
+              },
+              {
+                path: 'site-receipt-tracking',
+                element: (
+                  <SuspenseWrapper>
+                     <SiteReceiptTracking />
                   </SuspenseWrapper>
                 ),
               },

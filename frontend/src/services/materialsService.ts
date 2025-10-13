@@ -9,7 +9,6 @@ export interface Material {
   specification?: string;
   category_id?: number;
   unit_id: number;
-  unit_price?: number;
   active?: boolean;
   createdAt?: Date;
   updated_at?: Date;
