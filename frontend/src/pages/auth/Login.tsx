@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import { Eye, EyeOff, Building2 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import useAuth from "../../context/AuthContext";
+import Image from '../../assets/hello.jpg'
 
 // Define interfaces
 interface FormData {
@@ -184,13 +185,13 @@ const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 relative overflow-hidden">
+    <div className="min-h-screen flex bg-gradient-to-br from-primary-400 via-primary-500 to-primary-600 relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-orange-300 rounded-full opacity-20 blur-xl"></div>
-        <div className="absolute top-40 right-20 w-24 h-24 bg-orange-200 rounded-full opacity-30 blur-lg"></div>
-        <div className="absolute bottom-32 left-20 w-40 h-40 bg-orange-300 rounded-full opacity-15 blur-2xl"></div>
-        <div className="absolute bottom-20 right-10 w-20 h-20 bg-orange-200 rounded-full opacity-25 blur-lg"></div>
+        <div className="absolute top-20 left-10 w-32 h-32 bg-primary-300 rounded-full opacity-20 blur-xl"></div>
+        <div className="absolute top-40 right-20 w-24 h-24 bg-primary-200 rounded-full opacity-30 blur-lg"></div>
+        <div className="absolute bottom-32 left-20 w-40 h-40 bg-primary-300 rounded-full opacity-15 blur-2xl"></div>
+        <div className="absolute bottom-20 right-10 w-20 h-20 bg-primary-200 rounded-full opacity-25 blur-lg"></div>
       </div>
 
       {/* Left side - Brand and illustration */}
@@ -200,13 +201,13 @@ const AdminLogin: React.FC = () => {
           backgroundImage: `url("https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80")`,
         }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-600/75 to-orange-500/85"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-600/75 to-primary-500/85"></div>
         <div className="max-w-lg text-white relative z-10">
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 shadow-2xl">
             <h1 className="text-4xl font-bold mb-6 text-white">
               Streamlining Infrastructure for the Catholic Diocese
             </h1>
-            <p className="text-orange-100 text-lg leading-relaxed">
+            <p className="text-primary-100 text-lg leading-relaxed">
               Manage diocese infrastructure, materials, and sites with ease.
             </p>
           </div>
@@ -219,11 +220,8 @@ const AdminLogin: React.FC = () => {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center mr-3">
-                <Building2 className="w-6 h-6 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900">CDIMS</h2>
-            </div>
+             <img src={Image} className="h-40 w-52" alt="" />
+           </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Sign In</h3>
             <p className="text-gray-600 text-sm">Please enter your details to access the CDIMS</p>
           </div>
@@ -255,7 +253,7 @@ const AdminLogin: React.FC = () => {
                 className={`w-full px-4 py-3 rounded-lg border transition-colors duration-200 ${
                   errors.email
                     ? "border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-500/20"
-                    : "border-gray-300 focus:border-orange-500 focus:ring-orange-500/20"
+                    : "border-gray-300 focus:border-primary-500 focus:ring-primary-500/20"
                 } focus:outline-none focus:ring-4`}
                 placeholder="Enter your email"
                 disabled={isLoading || authLoading}
@@ -284,7 +282,7 @@ const AdminLogin: React.FC = () => {
                   className={`w-full px-4 py-3 pr-12 rounded-lg border transition-colors duration-200 ${
                     errors.password
                       ? "border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-500/20"
-                      : "border-gray-300 focus:border-orange-500 focus:ring-orange-500/20"
+                      : "border-gray-300 focus:border-primary-500 focus:ring-primary-500/20"
                   } focus:outline-none focus:ring-4`}
                   placeholder="Enter your password"
                   disabled={isLoading || authLoading}
@@ -311,7 +309,7 @@ const AdminLogin: React.FC = () => {
             <div className="flex items-center justify-end">
               <button
                 type="button"
-                className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
                 onClick={() => console.log('Forgot password clicked')}
               >
                 Forgot Password?
@@ -322,7 +320,7 @@ const AdminLogin: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading || authLoading || !isFormValid()}
-              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-4 rounded-lg font-medium hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-500/30 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed shadow-lg"
+              className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-3 px-4 rounded-lg font-medium hover:from-primary-600 hover:to-primary-700 focus:outline-none focus:ring-4 focus:ring-primary-500/30 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed shadow-lg"
             >
               {isLoading || authLoading ? (
                 <div className="flex items-center justify-center">
