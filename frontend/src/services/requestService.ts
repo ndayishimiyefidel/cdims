@@ -200,7 +200,7 @@ const requisitionService = {
       if (!token) {
         throw new Error('Authentication token not found');
       }
-      const { data } = await api.get<RequisitionResponse>('/api/requests', {
+      const { data } = await api.get<RequisitionResponse>('/requests', {
         headers: { Authorization: `Bearer ${token}` },
       });
       // Validate response structure
@@ -208,9 +208,9 @@ const requisitionService = {
         throw new Error('Invalid response structure');
       }
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching requisitions:', error);
-      throw new Error(error.response?.data?.message || 'Failed to fetch requisitions');
+      throw new Error((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to fetch requisitions');
     }
   },
 
@@ -220,7 +220,7 @@ const requisitionService = {
       if (!token) {
         throw new Error('Authentication token not found');
       }
-      const { data } = await api.get<RequisitionResponse>('/api/requests/my-requests', {
+      const { data } = await api.get<RequisitionResponse>('/requests/my-requests', {
         headers: { Authorization: `Bearer ${token}` },
       });
       // Validate response structure
@@ -228,9 +228,9 @@ const requisitionService = {
         throw new Error('Invalid response structure');
       }
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching requisitions:', error);
-      throw new Error(error.response?.data?.message || 'Failed to fetch requisitions');
+      throw new Error((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to fetch requisitions');
     }
   },
 
@@ -245,7 +245,7 @@ const requisitionService = {
       if (!token) {
         throw new Error('Authentication token not found');
       }
-      const { data } = await api.get<MaterialRequisition>(`/api/requests/${id}`, {
+      const { data } = await api.get<MaterialRequisition>(`/requests/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       // Validate that the material unit exists to prevent undefined errors
@@ -256,9 +256,9 @@ const requisitionService = {
         }
       });
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching requisition:', error);
-      throw new Error(error.response?.data?.message || 'Failed to fetch requisition');
+      throw new Error((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to fetch requisition');
     }
   },
 // Approve a requisition
@@ -287,7 +287,7 @@ approveRequisition:  async (
     };
 
     const { data } = await api.post<ApproveRequestResponse>(
-      `/api/requests/${requestId}/approve`,
+      `/requests/${requestId}/approve`,
       payload,
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -297,9 +297,9 @@ approveRequisition:  async (
     }
 
     return data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error approving request:', error);
-    throw new Error(error.response?.data?.message || 'Failed to approve request');
+    throw new Error((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to approve request');
   }
 },
 
@@ -310,13 +310,13 @@ approveRequisition:  async (
       if (!token) {
         throw new Error('Authentication token not found');
       }
-      const { data: newRequisition } = await api.post<MaterialRequisition>('/api/requests', data, {
+      const { data: newRequisition } = await api.post<MaterialRequisition>('/requests', data, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return newRequisition;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating requisition:', error);
-      throw new Error(error.response?.data?.message || 'Failed to create requisition');
+      throw new Error((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to create requisition');
     }
   },
 
@@ -330,13 +330,13 @@ approveRequisition:  async (
       if (!token) {
         throw new Error('Authentication token not found');
       }
-      const { data: updatedRequisition } = await api.put<MaterialRequisition>(`/api/requests/${id}`, data, {
+      const { data: updatedRequisition } = await api.put<MaterialRequisition>(`/requests/${id}`, data, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return updatedRequisition;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating requisition:', error);
-      throw new Error(error.response?.data?.message || 'Failed to update requisition');
+      throw new Error((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to update requisition');
     }
   },
   
@@ -365,7 +365,7 @@ rejectRequisition: async (
       success: boolean;
       data: { request: MaterialRequisition };
     }>(
-      `/api/requests/${id}/reject`,
+      `/requests/${id}/reject`,
       { level, reason, comment },
       {
         headers: { Authorization: `Bearer ${token}` },
@@ -377,9 +377,9 @@ rejectRequisition: async (
     }
 
     return data.data.request;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error rejecting requisition:', error);
-    throw new Error(error.response?.data?.message || 'Failed to reject requisition');
+    throw new Error((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to reject requisition');
   }
 },
 
@@ -413,9 +413,9 @@ rejectRequisition: async (
     }
 
     return data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error receiving materials:', error);
-    throw new Error(error.response?.data?.message || 'Failed to receive materials');
+    throw new Error((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to receive materials');
   }
 },
 
@@ -438,9 +438,9 @@ closeRequisition: async (id: string, comment?: string): Promise<MaterialRequisit
     }
 
     return data.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error closing requisition:', error);
-    throw new Error(error.response?.data?.message || 'Failed to close requisition');
+    throw new Error((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to close requisition');
   }
 },
 
@@ -467,9 +467,9 @@ modifyRequest : async (
     }
 
     return data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error modifying request:', error);
-    throw new Error(error.response?.data?.message || 'Failed to modify request');
+    throw new Error((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to modify request');
   }
 },
 
@@ -488,13 +488,13 @@ modifyRequest : async (
       await api.delete(`/requests/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting requisition:', error);
-      throw new Error(error.response?.data?.message || 'Failed to delete requisition');
+      throw new Error((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to delete requisition');
     }
   },
 
-  getReceiptHistory: async (requestId: string, filters?: { page?: number; limit?: number; date_from?: string; date_to?: string }): Promise<any> => {
+  getReceiptHistory: async (requestId: string, filters?: { page?: number; limit?: number; date_from?: string; date_to?: string }): Promise<unknown> => {
     try {
       const token = localStorage.getItem('auth_token');
       if (!token) {
@@ -510,7 +510,7 @@ modifyRequest : async (
         headers: { Authorization: `Bearer ${token}` },
       });
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching receipt history:', error);
       throw error;
     }
@@ -525,7 +525,7 @@ modifyRequest : async (
     date_to?: string; 
     material_id?: number; 
     has_losses?: boolean; 
-  }): Promise<any> => {
+  }): Promise<unknown> => {
     try {
       const token = localStorage.getItem('auth_token');
       if (!token) {
@@ -545,7 +545,7 @@ modifyRequest : async (
         headers: { Authorization: `Bearer ${token}` },
       });
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching site receipt history:', error);
       throw error;
     }
