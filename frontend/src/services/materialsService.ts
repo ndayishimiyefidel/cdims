@@ -98,7 +98,7 @@ class MaterialService {
       if (params?.active !== undefined) queryParams.append('active', params.active.toString());
 
       const response: AxiosResponse<{ success: boolean; data: { materials: Material[] } }> = 
-        await this.api.get(`/materials?${queryParams.toString()}`);
+        await this.api.get(`/api/materials?${queryParams.toString()}`);
       return response.data.data.materials;
     } catch (error: any) {
       console.error('Error fetching materials:', error);
@@ -116,7 +116,7 @@ class MaterialService {
   async getMaterialById(id: number | string): Promise<Material | null> {
     try {
       const response: AxiosResponse<{ success: boolean; data: { material: Material } }> = 
-        await this.api.get(`/materials/${id}`);
+        await this.api.get(`/api/materials/${id}`);
       return response.data.data.material;
     } catch (error: any) {
       if (error.response?.status === 404) {
@@ -137,7 +137,7 @@ class MaterialService {
   async createMaterial(materialData: CreateMaterialInput): Promise<Material> {
     try {
       const response: AxiosResponse<{ success: boolean; data: { material: Material }; message: string }> = 
-        await this.api.post('/materials', materialData);
+        await this.api.post('/api/materials', materialData);
       return response.data.data.material;
     } catch (error: any) {
       console.error('Error creating material:', error);
@@ -156,7 +156,7 @@ class MaterialService {
   async updateMaterial(id: number | string, updateData: UpdateMaterialInput): Promise<Material> {
     try {
       const response: AxiosResponse<{ success: boolean; data: { material: Material }; message: string }> = 
-        await this.api.put(`/materials/${id}`, updateData);
+        await this.api.put(`/api/materials/${id}`, updateData);
       return response.data.data.material;
     } catch (error: any) {
       console.error('Error updating material:', error);
@@ -173,7 +173,7 @@ class MaterialService {
    */
   async deleteMaterial(id: number | string): Promise<DeleteResponse> {
     try {
-      const response: AxiosResponse<DeleteResponse> = await this.api.delete(`/materials/${id}`);
+      const response: AxiosResponse<DeleteResponse> = await this.api.delete(`/api/materials/${id}`);
       return response.data;
     } catch (error: any) {
       console.error('Error deleting material:', error);
@@ -191,7 +191,7 @@ class MaterialService {
   async getMaterialPrices(id: number | string): Promise<MaterialPrice[]> {
     try {
       const response: AxiosResponse<{ success: boolean; data: MaterialPrice[] }> = 
-        await this.api.get(`/materials/${id}/prices`);
+        await this.api.get(`/api/materials/${id}/prices`);
       return response.data.data;
     } catch (error: any) {
       if (error.response?.status === 404) {
@@ -213,7 +213,7 @@ class MaterialService {
   async addMaterialPrice(id: number | string, priceData: CreateMaterialPriceInput): Promise<MaterialPrice> {
     try {
       const response: AxiosResponse<{ success: boolean; data: { price: MaterialPrice }; message: string }> = 
-        await this.api.post(`/materials/${id}/prices`, priceData);
+        await this.api.post(`/api/materials/${id}/prices`, priceData);
       return response.data.data.price;
     } catch (error: any) {
       console.error('Error adding material price:', error);
@@ -232,7 +232,7 @@ class MaterialService {
   async getAllCategories(): Promise<Category[]> {
     try {
       const response: AxiosResponse<{ success: boolean; data: { categories: Category[] } }> = 
-        await this.api.get('/materials/categories');
+        await this.api.get('/api/materials/categories');
       return response.data.data.categories;
     } catch (error: any) {
       console.error('Error fetching categories:', error);
@@ -250,7 +250,7 @@ class MaterialService {
   async getCategoryById(id: number | string): Promise<Category | null> {
     try {
       const response: AxiosResponse<{ success: boolean; data: { category: Category } }> = 
-        await this.api.get(`/materials/categories/${id}`);
+        await this.api.get(`/api/materials/categories/${id}`);
       return response.data.data.category;
     } catch (error: any) {
       if (error.response?.status === 404) {
@@ -271,7 +271,7 @@ class MaterialService {
   async createCategory(categoryData: CreateCategoryInput): Promise<Category> {
     try {
       const response: AxiosResponse<{ success: boolean; data: { category: Category }; message: string }> = 
-        await this.api.post('/materials/categories', categoryData);
+        await this.api.post('/api/materials/categories', categoryData);
       return response.data.data.category;
     } catch (error: any) {
       console.error('Error creating category:', error);
@@ -290,7 +290,7 @@ class MaterialService {
   async updateCategory(id: number | string, updateData: UpdateCategoryInput): Promise<Category> {
     try {
       const response: AxiosResponse<{ success: boolean; data: { category: Category }; message: string }> = 
-        await this.api.put(`/materials/categories/${id}`, updateData);
+        await this.api.put(`/api/materials/categories/${id}`, updateData);
       return response.data.data.category;
     } catch (error: any) {
       console.error('Error updating category:', error);
@@ -307,7 +307,7 @@ class MaterialService {
    */
   async deleteCategory(id: number | string): Promise<DeleteResponse> {
     try {
-      const response: AxiosResponse<DeleteResponse> = await this.api.delete(`/materials/categories/${id}`);
+      const response: AxiosResponse<DeleteResponse> = await this.api.delete(`/api/materials/categories/${id}`);
       return response.data;
     } catch (error: any) {
       console.error('Error deleting category:', error);
@@ -326,7 +326,7 @@ class MaterialService {
   async getAllUnits(): Promise<Unit[]> {
     try {
       const response: AxiosResponse<{ success: boolean; data: { units: Unit[] } }> = 
-        await this.api.get('/materials/units');
+        await this.api.get('/api/materials/units');
       return response.data.data.units;
     } catch (error: any) {
       console.error('Error fetching units:', error);
@@ -344,7 +344,7 @@ class MaterialService {
   async getUnitById(id: number | string): Promise<Unit | null> {
     try {
       const response: AxiosResponse<{ success: boolean; data: { unit: Unit } }> = 
-        await this.api.get(`/materials/units/${id}`);
+        await this.api.get(`/api/materials/units/${id}`);
       return response.data.data.unit;
     } catch (error: any) {
       if (error.response?.status === 404) {
@@ -365,7 +365,7 @@ class MaterialService {
   async createUnit(unitData: CreateUnitInput): Promise<Unit> {
     try {
       const response: AxiosResponse<{ success: boolean; data: { unit: Unit }; message: string }> = 
-        await this.api.post('/materials/units', unitData);
+        await this.api.post('/api/materials/units', unitData);
       return response.data.data.unit;
     } catch (error: any) {
       console.error('Error creating unit:', error);
@@ -384,7 +384,7 @@ class MaterialService {
   async updateUnit(id: number | string, updateData: UpdateUnitInput): Promise<Unit> {
     try {
       const response: AxiosResponse<{ success: boolean; data: { unit: Unit }; message: string }> = 
-        await this.api.put(`/materials/units/${id}`, updateData);
+        await this.api.put(`/api/materials/units/${id}`, updateData);
       return response.data.data.unit;
     } catch (error: any) {
       console.error('Error updating unit:', error);
@@ -401,7 +401,7 @@ class MaterialService {
    */
   async deleteUnit(id: number | string): Promise<DeleteResponse> {
     try {
-      const response: AxiosResponse<DeleteResponse> = await this.api.delete(`/materials/units/${id}`);
+      const response: AxiosResponse<DeleteResponse> = await this.api.delete(`/api/materials/units/${id}`);
       return response.data;
     } catch (error: any) {
       console.error('Error deleting unit:', error);

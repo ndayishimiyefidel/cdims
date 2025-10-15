@@ -200,7 +200,7 @@ const requisitionService = {
       if (!token) {
         throw new Error('Authentication token not found');
       }
-      const { data } = await api.get<RequisitionResponse>('/requests', {
+      const { data } = await api.get<RequisitionResponse>('/api/api/requests', {
         headers: { Authorization: `Bearer ${token}` },
       });
       // Validate response structure
@@ -220,7 +220,7 @@ const requisitionService = {
       if (!token) {
         throw new Error('Authentication token not found');
       }
-      const { data } = await api.get<RequisitionResponse>('/requests/my-requests', {
+      const { data } = await api.get<RequisitionResponse>('/api/api/requests/my-requests', {
         headers: { Authorization: `Bearer ${token}` },
       });
       // Validate response structure
@@ -245,7 +245,7 @@ const requisitionService = {
       if (!token) {
         throw new Error('Authentication token not found');
       }
-      const { data } = await api.get<MaterialRequisition>(`/requests/${id}`, {
+      const { data } = await api.get<MaterialRequisition>(`/api/api/requests/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       // Validate that the material unit exists to prevent undefined errors
@@ -287,7 +287,7 @@ approveRequisition:  async (
     };
 
     const { data } = await api.post<ApproveRequestResponse>(
-      `/requests/${requestId}/approve`,
+      `/api/api/requests/${requestId}/approve`,
       payload,
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -310,7 +310,7 @@ approveRequisition:  async (
       if (!token) {
         throw new Error('Authentication token not found');
       }
-      const { data: newRequisition } = await api.post<MaterialRequisition>('/requests', data, {
+      const { data: newRequisition } = await api.post<MaterialRequisition>('/api/api/requests', data, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return newRequisition;
@@ -330,7 +330,7 @@ approveRequisition:  async (
       if (!token) {
         throw new Error('Authentication token not found');
       }
-      const { data: updatedRequisition } = await api.put<MaterialRequisition>(`/requests/${id}`, data, {
+      const { data: updatedRequisition } = await api.put<MaterialRequisition>(`/api/api/requests/${id}`, data, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return updatedRequisition;
@@ -365,7 +365,7 @@ rejectRequisition: async (
       success: boolean;
       data: { request: MaterialRequisition };
     }>(
-      `/requests/${id}/reject`,
+      `/api/api/requests/${id}/reject`,
       { level, reason, comment },
       {
         headers: { Authorization: `Bearer ${token}` },
@@ -401,7 +401,7 @@ rejectRequisition: async (
     }
 
     const { data } = await api.post<ReceiveMaterialsResponse>(
-      `/requests/${requestId}/receive`,
+      `/api/requests/${requestId}/receive`,
       { items },
       {
         headers: { Authorization: `Bearer ${token}` },
@@ -428,7 +428,7 @@ closeRequisition: async (id: string, comment?: string): Promise<MaterialRequisit
 
   try {
     const { data } = await api.post<{ success: boolean; data: MaterialRequisition }>(
-      `/requests/${id}/close`,
+      `/api/requests/${id}/close`,
       { comment },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -457,7 +457,7 @@ modifyRequest : async (
     if (!token) throw new Error('Authentication token not found');
 
     const { data } = await api.put<ModifyRequestResponse>(
-      `/requests/${requestId}/modify`,
+      `/api/requests/${requestId}/modify`,
       payload,
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -485,7 +485,7 @@ modifyRequest : async (
       if (!token) {
         throw new Error('Authentication token not found');
       }
-      await api.delete(`/requests/${id}`, {
+      await api.delete(`/api/requests/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
     } catch (error: any) {
@@ -506,7 +506,7 @@ modifyRequest : async (
       if (filters?.date_from) params.append('date_from', filters.date_from);
       if (filters?.date_to) params.append('date_to', filters.date_to);
       
-      const { data } = await api.get(`/requests/${requestId}/receipt-history?${params.toString()}`, {
+      const { data } = await api.get(`/api/requests/${requestId}/receipt-history?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return data;
@@ -541,7 +541,7 @@ modifyRequest : async (
       if (filters?.material_id) params.append('material_id', filters.material_id.toString());
       if (filters?.has_losses !== undefined) params.append('has_losses', filters.has_losses.toString());
       
-      const { data } = await api.get(`/requests/site-receipt-history?${params.toString()}`, {
+      const { data } = await api.get(`/api/requests/site-receipt-history?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return data;

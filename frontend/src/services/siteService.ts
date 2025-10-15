@@ -62,7 +62,7 @@ class SiteService {
       if (params?.search) queryParams.append('search', params.search);
 
       const response: AxiosResponse<{ success: boolean; data: { sites: Site[]; pagination: Pagination } }> =
-        await this.api.get(`/sites?${queryParams.toString()}`);
+        await this.api.get(`/api/sites?${queryParams.toString()}`);
       return response.data.data;
     } catch (error: any) {
       console.error('Error fetching sites:', error);
@@ -80,7 +80,7 @@ class SiteService {
   async getSiteById(id: number | string): Promise<Site | null> {
     try {
       const response: AxiosResponse<{ success: boolean; data: { site: Site } }> =
-        await this.api.get(`/sites/${id}`);
+        await this.api.get(`/api/sites/${id}`);
       return response.data.data.site;
     } catch (error: any) {
       if (error.response?.status === 404) {
@@ -101,7 +101,7 @@ class SiteService {
   async createSite(siteData: CreateSiteInput): Promise<Site> {
     try {
       const response: AxiosResponse<{ success: boolean; data: { site: Site }; message: string }> =
-        await this.api.post('/sites', siteData);
+        await this.api.post('/api/sites', siteData);
       return response.data.data.site;
     } catch (error: any) {
       console.error('Error creating site:', error);
@@ -120,7 +120,7 @@ class SiteService {
   async updateSite(id: number | string, updateData: UpdateSiteInput): Promise<Site> {
     try {
       const response: AxiosResponse<{ success: boolean; data: { site: Site }; message: string }> =
-        await this.api.put(`/sites/${id}`, updateData);
+        await this.api.put(`/api/sites/${id}`, updateData);
       return response.data.data.site;
     } catch (error: any) {
       console.error('Error updating site:', error);
@@ -137,7 +137,7 @@ class SiteService {
    */
   async deleteSite(id: number | string): Promise<DeleteResponse> {
     try {
-      const response: AxiosResponse<DeleteResponse> = await this.api.delete(`/sites/${id}`);
+      const response: AxiosResponse<DeleteResponse> = await this.api.delete(`/api/sites/${id}`);
       return response.data;
     } catch (error: any) {
       console.error('Error deleting site:', error);
