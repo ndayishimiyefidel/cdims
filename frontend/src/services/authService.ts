@@ -48,7 +48,7 @@ class AuthService {
   async login(loginData: LoginData): Promise<AuthResponse> {
     try {
       const response: AxiosResponse<AuthResponse> = await api.post(
-        '/auth/login',
+        '/api/auth/login',
         loginData
       );
 
@@ -75,7 +75,7 @@ class AuthService {
       if (!token) return null;
 
       const response: AxiosResponse<ProfileResponse> = await api.get(
-        '/auth/profile',
+        '/api/auth/profile',
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -103,7 +103,7 @@ class AuthService {
     try {
       const token = localStorage.getItem('auth_token');
       const response: AxiosResponse<{ success: boolean; data: { user: User } }> =
-        await api.put('/auth/profile', updates, {
+        await api.put('/api/auth/profile', updates, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -128,7 +128,7 @@ class AuthService {
       const token = localStorage.getItem('auth_token');
       const response: AxiosResponse<{ success: boolean; message: string }> =
         await api.put(
-          '/auth/change-password',
+          '/api/auth/change-password',
           { current_password, new_password },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -149,7 +149,7 @@ class AuthService {
   async resetPassword(email: string): Promise<string> {
     try {
       const response: AxiosResponse<{ success: boolean; message: string }> =
-        await api.post('/auth/reset-password', { email });
+        await api.post('/api/auth/reset-password', { email });
 
       return response.data.message;
     } catch (error: any) {
@@ -168,7 +168,7 @@ class AuthService {
     try {
       const token = localStorage.getItem('auth_token');
       const response: AxiosResponse<{ success: boolean; message: string }> =
-        await api.delete('/auth/delete-account', {
+        await api.delete('/api/auth/delete-account', {
           headers: { Authorization: `Bearer ${token}` },
           data: { password },
         });
@@ -192,7 +192,7 @@ class AuthService {
       const token = localStorage.getItem('auth_token');
       const response: AxiosResponse<{ success: boolean; message: string }> =
         await api.post(
-          '/auth/logout',
+          '/api/auth/logout',
           {},
           { headers: { Authorization: `Bearer ${token}` } }
         );
