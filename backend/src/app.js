@@ -31,6 +31,10 @@ const allowedOrigins = [
     process.env.FRONTEND_URL || 'http://localhost:3001',
     'http://localhost:3000', // Allow direct API testing
     'http://localhost:3001', // Frontend
+    'http://cyangugudims.com', // Production domain
+    'https://cyangugudims.com', // Production domain with SSL
+    'http://www.cyangugudims.com', // WWW subdomain
+    'https://www.cyangugudims.com', // WWW subdomain with SSL
     'https://cdims-frontend.onrender.com', // Production frontend (if deployed)
     'https://cdims.onrender.com' // Production backend (if needed for testing)
 ];
