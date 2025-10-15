@@ -1,10 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { type FC, lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
-import Home from '../pages/landing/Home';
-import MainLayout from '../layout/MainLayout';
-import BlogsPage from '../pages/landing/BlogsPage';
-import BlogViewPage from '../components/landing/BlogViewPage';
+// import Home from '../pages/landing/Home';
+// import MainLayout from '../layout/MainLayout';
+// import BlogsPage from '../pages/landing/BlogsPage';
+// import BlogViewPage from '../components/landing/BlogViewPage';
 import AuthLayout from '../layout/AuthLayout';
 import AdminLogin from '../pages/auth/Login';
 import logo from '../assets/images/aby_hr.png';
@@ -20,8 +20,8 @@ import ViewEmployee from '../components/dashboard/employee/EmployeeViewMorePage'
 import SitesManagement from '../pages/dashboard/SitesManagement';
 import UpserJobPost from '../components/dashboard/recruitment/UpsertJobPost';
 import JobView from '../components/dashboard/recruitment/JobView';
-import JobBoard from '../pages/landing/JobBoard';
-import JobPostView from '../components/landing/JobViewPage';
+// import JobBoard from '../pages/landing/JobBoard';
+// import JobPostView from '../components/landing/JobViewPage';
 // import JobApplicationForm from '../components/landing/ApplyJob';
 import ApplicantView from '../components/dashboard/recruitment/ApplicantView';
 import ClientManagement from '../pages/dashboard/ClientManagement';
