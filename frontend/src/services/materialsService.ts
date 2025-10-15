@@ -100,10 +100,11 @@ class MaterialService {
       const response: AxiosResponse<{ success: boolean; data: { materials: Material[] } }> = 
         await this.api.get(`/materials?${queryParams.toString()}`);
       return response.data.data.materials;
-    } catch (error: any) {
+    } catch (error:unknown) {
       console.error('Error fetching materials:', error);
       const errorMessage =
-        error.response?.data?.message || error.message || 'Failed to fetch materials';
+        (error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || 
+        (error as { message?: string }).message || 'Failed to fetch materials';
       throw new Error(errorMessage);
     }
   }
@@ -118,13 +119,14 @@ class MaterialService {
       const response: AxiosResponse<{ success: boolean; data: { material: Material } }> = 
         await this.api.get(`/materials/${id}`);
       return response.data.data.material;
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error: unknown) {
+      if ((error as { response?: { status?: number } }).response?.status === 404) {
         return null;
       }
       console.error('Error fetching material by ID:', error);
       const errorMessage =
-        error.response?.data?.message || error.message || 'Failed to fetch material';
+        (error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || 
+        (error as { message?: string }).message || 'Failed to fetch material';
       throw new Error(errorMessage);
     }
   }
@@ -139,10 +141,11 @@ class MaterialService {
       const response: AxiosResponse<{ success: boolean; data: { material: Material }; message: string }> = 
         await this.api.post('/materials', materialData);
       return response.data.data.material;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating material:', error);
       const errorMessage =
-        error.response?.data?.message || error.message || 'Failed to create material';
+        (error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || 
+        (error as { message?: string }).message || 'Failed to create material';
       throw new Error(errorMessage);
     }
   }
@@ -158,10 +161,11 @@ class MaterialService {
       const response: AxiosResponse<{ success: boolean; data: { material: Material }; message: string }> = 
         await this.api.put(`/materials/${id}`, updateData);
       return response.data.data.material;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating material:', error);
       const errorMessage =
-        error.response?.data?.message || error.message || 'Failed to update material';
+        (error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || 
+        (error as { message?: string }).message || 'Failed to update material';
       throw new Error(errorMessage);
     }
   }
@@ -175,10 +179,11 @@ class MaterialService {
     try {
       const response: AxiosResponse<DeleteResponse> = await this.api.delete(`/materials/${id}`);
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting material:', error);
       const errorMessage =
-        error.response?.data?.message || error.message || 'Failed to delete material';
+        (error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || 
+        (error as { message?: string }).message || 'Failed to delete material';
       throw new Error(errorMessage);
     }
   }
@@ -193,13 +198,14 @@ class MaterialService {
       const response: AxiosResponse<{ success: boolean; data: MaterialPrice[] }> = 
         await this.api.get(`/materials/${id}/prices`);
       return response.data.data;
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error: unknown) {
+      if ((error as { response?: { status?: number } }).response?.status === 404) {
         return [];
       }
       console.error('Error fetching material prices:', error);
       const errorMessage =
-        error.response?.data?.message || error.message || 'Failed to fetch material prices';
+        (error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || 
+        (error as { message?: string }).message || 'Failed to fetch material prices';
       throw new Error(errorMessage);
     }
   }
@@ -215,10 +221,11 @@ class MaterialService {
       const response: AxiosResponse<{ success: boolean; data: { price: MaterialPrice }; message: string }> = 
         await this.api.post(`/materials/${id}/prices`, priceData);
       return response.data.data.price;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding material price:', error);
       const errorMessage =
-        error.response?.data?.message || error.message || 'Failed to add material price';
+        (error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || 
+        (error as { message?: string }).message || 'Failed to add material price';
       throw new Error(errorMessage);
     }
   }
@@ -234,10 +241,11 @@ class MaterialService {
       const response: AxiosResponse<{ success: boolean; data: { categories: Category[] } }> = 
         await this.api.get('/materials/categories');
       return response.data.data.categories;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching categories:', error);
       const errorMessage =
-        error.response?.data?.message || error.message || 'Failed to fetch categories';
+        (error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || 
+        (error as { message?: string }).message || 'Failed to fetch categories';
       throw new Error(errorMessage);
     }
   }
@@ -252,13 +260,14 @@ class MaterialService {
       const response: AxiosResponse<{ success: boolean; data: { category: Category } }> = 
         await this.api.get(`/materials/categories/${id}`);
       return response.data.data.category;
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error: unknown) {
+      if ((error as { response?: { status?: number } }).response?.status === 404) {
         return null;
       }
       console.error('Error fetching category by ID:', error);
       const errorMessage =
-        error.response?.data?.message || error.message || 'Failed to fetch category';
+        (error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || 
+        (error as { message?: string }).message || 'Failed to fetch category';
       throw new Error(errorMessage);
     }
   }
@@ -273,10 +282,11 @@ class MaterialService {
       const response: AxiosResponse<{ success: boolean; data: { category: Category }; message: string }> = 
         await this.api.post('/materials/categories', categoryData);
       return response.data.data.category;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating category:', error);
       const errorMessage =
-        error.response?.data?.message || error.message || 'Failed to create category';
+        (error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || 
+        (error as { message?: string }).message || 'Failed to create category';
       throw new Error(errorMessage);
     }
   }
@@ -292,10 +302,11 @@ class MaterialService {
       const response: AxiosResponse<{ success: boolean; data: { category: Category }; message: string }> = 
         await this.api.put(`/materials/categories/${id}`, updateData);
       return response.data.data.category;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating category:', error);
       const errorMessage =
-        error.response?.data?.message || error.message || 'Failed to update category';
+        (error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || 
+        (error as { message?: string }).message || 'Failed to update category';
       throw new Error(errorMessage);
     }
   }
@@ -309,10 +320,11 @@ class MaterialService {
     try {
       const response: AxiosResponse<DeleteResponse> = await this.api.delete(`/materials/categories/${id}`);
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting category:', error);
       const errorMessage =
-        error.response?.data?.message || error.message || 'Failed to delete category';
+        (error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || 
+        (error as { message?: string }).message || 'Failed to delete category';
       throw new Error(errorMessage);
     }
   }
@@ -328,10 +340,11 @@ class MaterialService {
       const response: AxiosResponse<{ success: boolean; data: { units: Unit[] } }> = 
         await this.api.get('/materials/units');
       return response.data.data.units;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching units:', error);
       const errorMessage =
-        error.response?.data?.message || error.message || 'Failed to fetch units';
+        (error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || 
+        (error as { message?: string }).message || 'Failed to fetch units';
       throw new Error(errorMessage);
     }
   }
@@ -346,13 +359,14 @@ class MaterialService {
       const response: AxiosResponse<{ success: boolean; data: { unit: Unit } }> = 
         await this.api.get(`/materials/units/${id}`);
       return response.data.data.unit;
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error: unknown) {
+      if ((error as { response?: { status?: number } }).response?.status === 404) {
         return null;
       }
       console.error('Error fetching unit by ID:', error);
       const errorMessage =
-        error.response?.data?.message || error.message || 'Failed to fetch unit';
+        (error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || 
+        (error as { message?: string }).message || 'Failed to fetch unit';
       throw new Error(errorMessage);
     }
   }
@@ -367,10 +381,11 @@ class MaterialService {
       const response: AxiosResponse<{ success: boolean; data: { unit: Unit }; message: string }> = 
         await this.api.post('/materials/units', unitData);
       return response.data.data.unit;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating unit:', error);
       const errorMessage =
-        error.response?.data?.message || error.message || 'Failed to create unit';
+        (error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || 
+        (error as { message?: string }).message || 'Failed to create unit';
       throw new Error(errorMessage);
     }
   }
@@ -386,10 +401,11 @@ class MaterialService {
       const response: AxiosResponse<{ success: boolean; data: { unit: Unit }; message: string }> = 
         await this.api.put(`/materials/units/${id}`, updateData);
       return response.data.data.unit;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating unit:', error);
       const errorMessage =
-        error.response?.data?.message || error.message || 'Failed to update unit';
+        (error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || 
+        (error as { message?: string }).message || 'Failed to update unit';
       throw new Error(errorMessage);
     }
   }
@@ -403,10 +419,11 @@ class MaterialService {
     try {
       const response: AxiosResponse<DeleteResponse> = await this.api.delete(`/materials/units/${id}`);
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting unit:', error);
       const errorMessage =
-        error.response?.data?.message || error.message || 'Failed to delete unit';
+        (error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || 
+        (error as { message?: string }).message || 'Failed to delete unit';
       throw new Error(errorMessage);
     }
   }
