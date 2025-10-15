@@ -1,5 +1,5 @@
 import { type AxiosInstance, type AxiosResponse } from 'axios';
-import api from '../api';
+import api from '../api/api';
 
 // Assuming these interfaces are defined elsewhere or import them
 // For completeness, defining minimal versions here

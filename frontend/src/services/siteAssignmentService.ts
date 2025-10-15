@@ -1,5 +1,5 @@
 import { type AxiosInstance, type AxiosResponse } from 'axios';
-import api from '../api';
+import api from '../api/api';
 
 // Interface for Site
 export interface Site {

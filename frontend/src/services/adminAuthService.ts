@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import api from '../api';
+import api from '../api/api';
 import { type AxiosInstance, type AxiosResponse } from 'axios';
 
 interface Role {
