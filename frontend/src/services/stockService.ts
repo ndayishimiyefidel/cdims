@@ -203,10 +203,10 @@ interface Pagination {
 }
 
 // Interface for delete response
-interface DeleteResponse {
-  success: boolean;
-  message: string;
-}
+// interface DeleteResponse {
+//   success: boolean;
+//   message: string;
+// }
 
 // Interface for validation result
 interface ValidationResult {

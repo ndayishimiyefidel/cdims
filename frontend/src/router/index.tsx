@@ -22,7 +22,7 @@ import UpserJobPost from '../components/dashboard/recruitment/UpsertJobPost';
 import JobView from '../components/dashboard/recruitment/JobView';
 import JobBoard from '../pages/landing/JobBoard';
 import JobPostView from '../components/landing/JobViewPage';
-import JobApplicationForm from '../components/landing/ApplyJob';
+// import JobApplicationForm from '../components/landing/ApplyJob';
 import ApplicantView from '../components/dashboard/recruitment/ApplicantView';
 import ClientManagement from '../pages/dashboard/ClientManagement';
 import MaterialManagement from '../pages/dashboard/MaterialManagement';
@@ -46,10 +46,10 @@ import IssuableMaterialsDashboard from '../pages/dashboard/IssuableMaterialsDash
 import IssueMaterialPage from '../components/dashboard/MaterialRequest/IssueMaterialPage';
 import StockHistory from '../pages/dashboard/StockHistory';
 
-const ProductPage = lazy(() => import('../pages/landing/FeaturesPage'));
-const ServicesPage = lazy(() => import('../pages/landing/ServicePage'));
-const ContactPage = lazy(() => import('../pages/landing/ContactUs'));
-const AboutPage = lazy(() => import('../pages/landing/AboutPage'));
+// const ProductPage = lazy(() => import('../pages/landing/FeaturesPage'));
+// const ServicesPage = lazy(() => import('../pages/landing/ServicePage'));
+// const ContactPage = lazy(() => import('../pages/landing/ContactUs'));
+// const AboutPage = lazy(() => import('../pages/landing/AboutPage'));
 const StockManagement = lazy(() => import('../pages/dashboard/StockManagement'));
 
 

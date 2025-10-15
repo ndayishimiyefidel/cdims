@@ -313,7 +313,7 @@ approveRequisition:  async (
       const { data: newRequisition } = await api.post<MaterialRequisition>('/requests', data, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      return newRequisition.data.request;
+      return newRequisition;
     } catch (error: any) {
       console.error('Error creating requisition:', error);
       throw new Error(error.response?.data?.message || 'Failed to create requisition');
@@ -333,7 +333,7 @@ approveRequisition:  async (
       const { data: updatedRequisition } = await api.put<MaterialRequisition>(`/requests/${id}`, data, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      return updatedRequisition.data.request;
+      return updatedRequisition;
     } catch (error: any) {
       console.error('Error updating requisition:', error);
       throw new Error(error.response?.data?.message || 'Failed to update requisition');
