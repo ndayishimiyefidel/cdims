@@ -237,7 +237,7 @@ class StockService {
       if (params?.low_stock !== undefined) queryParams.append('low_stock', params.low_stock.toString());
 
       const response: AxiosResponse<{ success: boolean; data: { stock: Stock[]; pagination: Pagination } }> =
-        await this.api.get(`/api/stock?${queryParams.toString()}`);
+        await this.api.get(`/stock?${queryParams.toString()}`);
       return response.data.data;
     } catch (error: any) {
       console.error('Error fetching stock:', error);
@@ -255,7 +255,7 @@ class StockService {
   async getStockById(id: number | string): Promise<Stock | null> {
     try {
       const response: AxiosResponse<{ success: boolean; data: { stock: Stock } }> =
-        await this.api.get(`/api/stock/${id}`);
+        await this.api.get(`/stock/${id}`);
       return response.data.data.stock;
     } catch (error: any) {
       if (error.response?.status === 404) {
@@ -276,7 +276,7 @@ class StockService {
   async createStock(stockData: CreateStockInput): Promise<Stock> {
     try {
       const response: AxiosResponse<{ success: boolean; data: { stock: Stock }; message: string }> =
-        await this.api.post('/api/stock', stockData);
+        await this.api.post('/stock', stockData);
       return response.data.data.stock;
     } catch (error: any) {
       console.error('Error creating stock:', error);
@@ -295,7 +295,7 @@ class StockService {
   async updateStock(id: number | string, updateData: UpdateStockInput): Promise<Stock> {
     try {
       const response: AxiosResponse<{ success: boolean; data: { stock: Stock }; message: string }> =
-        await this.api.put(`/api/stock/${id}`, updateData);
+        await this.api.put(`/stock/${id}`, updateData);
       return response.data.data.stock;
     } catch (error: any) {
       console.error('Error updating stock:', error);
@@ -314,7 +314,7 @@ class StockService {
   async setLowStockThreshold(id: number | string, thresholdData: SetLowStockThresholdInput): Promise<Stock> {
     try {
       const response: AxiosResponse<{ success: boolean; data: { stock: Stock }; message: string }> =
-        await this.api.put(`/api/stock/${id}/threshold`, thresholdData);
+        await this.api.put(`/stock/${id}/threshold`, thresholdData);
       return response.data.data.stock;
     } catch (error: any) {
       console.error('Error setting low stock threshold:', error);
@@ -332,7 +332,7 @@ class StockService {
   async acknowledgeLowStockAlert(id: number | string): Promise<Stock> {
     try {
       const response: AxiosResponse<{ success: boolean; data: { stock: Stock }; message: string }> =
-        await this.api.put(`/api/stock/${id}/acknowledge-alert`);
+        await this.api.put(`/stock/${id}/acknowledge-alert`);
       return response.data.data.stock;
     } catch (error: any) {
       console.error('Error acknowledging low stock alert:', error);
@@ -355,7 +355,7 @@ class StockService {
       if (params?.store_id) queryParams.append('store_id', params.store_id.toString());
 
       const response: AxiosResponse<{ success: boolean; data: { lowStockItems: Stock[]; pagination: Pagination } }> =
-        await this.api.get(`/api/stock/alerts/low-stock?${queryParams.toString()}`);
+        await this.api.get(`/stock/alerts/low-stock?${queryParams.toString()}`);
       return response.data.data;
     } catch (error: any) {
       console.error('Error fetching low stock alerts:', error);
@@ -380,7 +380,7 @@ class StockService {
       if (params?.type) queryParams.append('type', params.type);
 
       const response: AxiosResponse<{ success: boolean; data: { movements: StockMovement[]; pagination: Pagination } }> =
-        await this.api.get(`/api/stock/movements?${queryParams.toString()}`);
+        await this.api.get(`/stock/movements?${queryParams.toString()}`);
       return response.data.data;
     } catch (error: any) {
       console.error('Error fetching stock movements:', error);
@@ -403,7 +403,7 @@ class StockService {
       if (params?.store_id) queryParams.append('store_id', params.store_id.toString());
 
       const response: AxiosResponse<{ success: boolean; data: { recommendations: (Stock & { procurementRecommendation: ProcurementRecommendation })[]; pagination: Pagination } }> =
-        await this.api.get(`/api/stock/procurement-recommendations?${queryParams.toString()}`);
+        await this.api.get(`/stock/procurement-recommendations?${queryParams.toString()}`);
       return response.data.data;
     } catch (error: any) {
       console.error('Error fetching procurement recommendations:', error);
@@ -434,7 +434,7 @@ class StockService {
           request_status: 'ISSUED' | 'PARTIALLY_ISSUED';
         };
         message: string;
-      }> = await this.api.post('/api/stock/issue-materials', issueData);
+      }> = await this.api.post('/stock/issue-materials', issueData);
       return response.data.data;
     } catch (error: any) {
       console.error('Error issuing materials:', error);
@@ -457,7 +457,7 @@ class StockService {
       if (params?.site_id) queryParams.append('site_id', params.site_id.toString());
 
       const response: AxiosResponse<{ success: boolean; data: { requests: Request[]; pagination: Pagination } }> =
-        await this.api.get(`/api/stock/issuable-requests?${queryParams.toString()}`);
+        await this.api.get(`/stock/issuable-requests?${queryParams.toString()}`);
       return response.data.data;
     } catch (error: any) {
       console.error('Error fetching issuable requests:', error);
@@ -483,7 +483,7 @@ class StockService {
       if (params?.date_to) queryParams.append('date_to', params.date_to);
 
       const response: AxiosResponse<{ success: boolean; data: { issued_materials: StockMovement[]; pagination: Pagination } }> =
-        await this.api.get(`/api/stock/issued-materials?${queryParams.toString()}`);
+        await this.api.get(`/stock/issued-materials?${queryParams.toString()}`);
       return response.data.data;
     } catch (error: any) {
       console.error('Error fetching issued materials:', error);
@@ -511,7 +511,7 @@ class StockService {
       if (params?.date_to) queryParams.append('date_to', params.date_to);
 
       const response: AxiosResponse<{ success: boolean; data: { history: StockMovement[]; pagination: Pagination } }> =
-        await this.api.get(`/api/stock/history?${queryParams.toString()}`);
+        await this.api.get(`/stock/history?${queryParams.toString()}`);
       return response.data.data;
     } catch (error: any) {
       console.error('Error fetching stock history:', error);

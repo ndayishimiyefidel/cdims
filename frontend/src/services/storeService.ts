@@ -66,7 +66,7 @@ class StoreService {
       if (params?.search) queryParams.append('search', params.search);
 
       const response: AxiosResponse<{ success: boolean; data: { stores: Store[]; pagination: Pagination } }> = 
-        await this.api.get(`/api/stores?${queryParams.toString()}`);
+        await this.api.get(`/stores?${queryParams.toString()}`);
       return response.data.data;
     } catch (error: any) {
       console.error('Error fetching stores:', error);
@@ -84,7 +84,7 @@ class StoreService {
   async getStoreById(id: number | string): Promise<Store | null> {
     try {
       const response: AxiosResponse<{ success: boolean; data: Store }> = 
-        await this.api.get(`/api/stores/${id}`);
+        await this.api.get(`/stores/${id}`);
       return response.data.data;
     } catch (error: any) {
       if (error.response?.status === 404) {
@@ -105,7 +105,7 @@ class StoreService {
   async createStore(storeData: CreateStoreInput): Promise<Store> {
     try {
       const response: AxiosResponse<{ success: boolean; data: Store; message: string }> = 
-        await this.api.post('/api/stores', storeData);
+        await this.api.post('/stores', storeData);
       return response.data.data;
     } catch (error: any) {
       console.error('Error creating store:', error);
@@ -124,7 +124,7 @@ class StoreService {
   async updateStore(id: number | string, updateData: UpdateStoreInput): Promise<Store> {
     try {
       const response: AxiosResponse<{ success: boolean; data: Store; message: string }> = 
-        await this.api.put(`/api/stores/${id}`, updateData);
+        await this.api.put(`/stores/${id}`, updateData);
       return response.data.data;
     } catch (error: any) {
       console.error('Error updating store:', error);
@@ -141,7 +141,7 @@ class StoreService {
    */
   async deleteStore(id: number | string): Promise<DeleteResponse> {
     try {
-      const response: AxiosResponse<DeleteResponse> = await this.api.delete(`/api/stores/${id}`);
+      const response: AxiosResponse<DeleteResponse> = await this.api.delete(`/stores/${id}`);
       return response.data;
     } catch (error: any) {
       console.error('Error deleting store:', error);

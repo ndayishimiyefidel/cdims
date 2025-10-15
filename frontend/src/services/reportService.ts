@@ -206,7 +206,7 @@ class ReportService {
       if (params?.date_to) queryParams.append('date_to', params.date_to);
 
       const response: AxiosResponse<ReportResponse<RequestReport[]>> = 
-        await this.api.get(`/api/reports/requests?${queryParams.toString()}`);
+        await this.api.get(`/reports/requests?${queryParams.toString()}`);
       return response.data;
     } catch (error: any) {
       console.error('Error fetching request reports:', error);
@@ -228,7 +228,7 @@ class ReportService {
       if (params?.low_stock_only) queryParams.append('low_stock_only', params.low_stock_only.toString());
 
       const response: AxiosResponse<ReportResponse<InventoryReport[]>> = 
-        await this.api.get(`/api/reports/inventory?${queryParams.toString()}`);
+        await this.api.get(`/reports/inventory?${queryParams.toString()}`);
       return response.data;
     } catch (error: any) {
       console.error('Error fetching inventory reports:', error);
@@ -253,7 +253,7 @@ class ReportService {
       if (params?.date_to) queryParams.append('date_to', params.date_to);
 
       const response: AxiosResponse<ReportResponse<StockMovementReport[]>> = 
-        await this.api.get(`/api/reports/stock-movements?${queryParams.toString()}`);
+        await this.api.get(`/reports/stock-movements?${queryParams.toString()}`);
       return response.data;
     } catch (error: any) {
       console.error('Error fetching stock movement reports:', error);
@@ -277,7 +277,7 @@ class ReportService {
       if (params?.date_to) queryParams.append('date_to', params.date_to);
 
       const response: AxiosResponse<ReportResponse<ProcurementReport[]>> = 
-        await this.api.get(`/api/reports/procurement?${queryParams.toString()}`);
+        await this.api.get(`/reports/procurement?${queryParams.toString()}`);
       return response.data;
     } catch (error: any) {
       console.error('Error fetching procurement reports:', error);
@@ -300,7 +300,7 @@ class ReportService {
       if (params?.date_to) queryParams.append('date_to', params.date_to);
 
       const response: AxiosResponse<ReportResponse<UserActivityReport>> = 
-        await this.api.get(`/api/reports/user-activity?${queryParams.toString()}`);
+        await this.api.get(`/reports/user-activity?${queryParams.toString()}`);
       return response.data;
     } catch (error: any) {
       console.error('Error fetching user activity reports:', error);
@@ -323,7 +323,7 @@ class ReportService {
       if (params?.date_to) queryParams.append('date_to', params.date_to);
 
       const response: AxiosResponse<ReportResponse<SitePerformanceReport>> = 
-        await this.api.get(`/api/reports/site-performance?${queryParams.toString()}`);
+        await this.api.get(`/reports/site-performance?${queryParams.toString()}`);
       return response.data;
     } catch (error: any) {
       console.error('Error fetching site performance reports:', error);

@@ -1,6 +1,6 @@
 import axios, { type AxiosInstance } from "axios";
 
-export const API_URL: string = import.meta.env.VITE_API_URL || "https://cyangugudims.com";
+export const API_URL: string = import.meta.env.VITE_API_URL || "https://cyangugudims.com/api";
 
 // Create an axios instance with a base URL
 const api: AxiosInstance = axios.create({
