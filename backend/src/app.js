@@ -109,6 +109,38 @@ app.get('/api/health', (req, res) => {
     });
 });
 
+// Main API route
+app.get('/api', (req, res) => {
+    res.json({
+        success: true,
+        message: 'CDIMS API is running',
+        version: '1.0.0',
+        endpoints: [
+            '/api/auth',
+            '/api/users',
+            '/api/requests',
+            '/api/materials',
+            '/api/stock',
+            '/api/procurement',
+            '/api/reports',
+            '/api/site-assignments',
+            '/api/sites',
+            '/api/stores',
+            '/api/admin'
+        ]
+    });
+});
+
+// Backend route
+app.get('/backend', (req, res) => {
+    res.json({
+        success: true,
+        message: 'CDIMS Backend is running',
+        version: '1.0.0',
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
