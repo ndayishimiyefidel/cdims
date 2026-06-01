@@ -11,9 +11,7 @@ import {
   CheckCircle,
   Clock
 } from 'lucide-react';
-import requisitionService from '../../services/requestService';
-import siteService from '../../services/siteService';
-import userService from '../../services/userService';
+import { requisitionService, siteService, userService } from '../../services';
 
 interface SiteReceiptData {
   site_id: number;

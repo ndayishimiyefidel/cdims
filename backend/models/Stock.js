@@ -5,32 +5,32 @@ const Stock = sequelize.define('Stock', {
   id: {
     type: DataTypes.BIGINT,
     primaryKey: true,
-    autoIncrement: true
+    autoIncrement: true,
   },
   store_id: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'stores',
-      key: 'id'
+      key: 'id',
     },
     onUpdate: 'CASCADE',
-    onDelete: 'CASCADE'
+    onDelete: 'CASCADE',
   },
   material_id: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'materials',
-      key: 'id'
+      key: 'id',
     },
     onUpdate: 'CASCADE',
-    onDelete: 'CASCADE'
+    onDelete: 'CASCADE',
   },
   qty_on_hand: {
     type: DataTypes.DECIMAL(12, 3),
     allowNull: false,
-    defaultValue: 0
+    defaultValue: 0,
   },
   reorder_level: {
     type: DataTypes.DECIMAL(12, 3),
@@ -39,19 +39,19 @@ const Stock = sequelize.define('Stock', {
   low_stock_threshold: {
     type: DataTypes.DECIMAL(12, 3),
     allowNull: true,
-    comment: 'Minimum stock level before alert'
+    comment: 'Minimum stock level before alert',
   },
   low_stock_alert: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: false,
-    comment: 'Whether low stock alert is active'
+    comment: 'Whether low stock alert is active',
   },
   unit_price: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: true,
-    comment: 'Current unit price of the material in this stock'
-  }
+    comment: 'Current unit price of the material in this stock',
+  },
 }, {
   tableName: 'stock',
   timestamps: true,   // ✅ enable timestamps
@@ -59,9 +59,9 @@ const Stock = sequelize.define('Stock', {
   indexes: [
     {
       unique: true,
-      fields: ['store_id', 'material_id']
-    }
-  ]
+      fields: ['store_id', 'material_id'],
+    },
+  ],
 });
 
 module.exports = Stock;

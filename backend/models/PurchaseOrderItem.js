@@ -5,42 +5,42 @@ const PurchaseOrderItem = sequelize.define('PurchaseOrderItem', {
   id: {
     type: DataTypes.BIGINT,
     primaryKey: true,
-    autoIncrement: true
+    autoIncrement: true,
   },
   purchase_order_id: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'purchase_orders',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   material_id: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'materials',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   unit_id: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'units',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   qty_ordered: {
     type: DataTypes.DECIMAL(12, 3),
-    allowNull: false
+    allowNull: false,
   },
   unit_price: {
     type: DataTypes.DECIMAL(12, 2),
-    allowNull: false
-  }
+    allowNull: false,
+  },
 }, {
-  tableName: 'purchase_order_items'
+  tableName: 'purchase_order_items',
 });
 
 module.exports = PurchaseOrderItem;

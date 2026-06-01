@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, CheckCircle, XCircle, AlertCircle, Package } from 'lucide-react';
 import { type Request, type Store, type IssueMaterialPayload, type Stock } from '../../../services/stockService';
-import stockService from '../../../services/stockService';
+import { stockService } from '../../../services';
 import { useNavigate } from 'react-router-dom';
 import { debounce } from 'lodash';
 

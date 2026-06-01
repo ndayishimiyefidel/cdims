@@ -11,8 +11,6 @@ The error `ERROR 1396 (HY000): Operation CREATE USER failed for 'cdims_user'@'lo
 -- Connect to MySQL as root
 mysql -u root -p
 
--- Drop existing user
-DROP USER IF EXISTS 'cdims_user'@'localhost';
 
 -- Create user again
 CREATE USER 'cdims_user'@'localhost' IDENTIFIED BY 'password@123';

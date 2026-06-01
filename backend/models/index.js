@@ -205,5 +205,5 @@ module.exports = {
   IssueItem,
   AuditLog,
   SystemConfig,
-  SiteAssignment
+  SiteAssignment,
 };

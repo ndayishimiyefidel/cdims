@@ -5,42 +5,42 @@ const GoodsReceiptItem = sequelize.define('GoodsReceiptItem', {
   id: {
     type: DataTypes.BIGINT,
     primaryKey: true,
-    autoIncrement: true
+    autoIncrement: true,
   },
   goods_receipt_id: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'goods_receipts',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   material_id: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'materials',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   unit_id: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'units',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   qty_received: {
     type: DataTypes.DECIMAL(12, 3),
-    allowNull: false
+    allowNull: false,
   },
   unit_price: {
     type: DataTypes.DECIMAL(12, 2),
-    allowNull: false
-  }
+    allowNull: false,
+  },
 }, {
-  tableName: 'goods_receipt_items'
+  tableName: 'goods_receipt_items',
 });
 
 module.exports = GoodsReceiptItem;

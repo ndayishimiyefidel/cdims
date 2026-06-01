@@ -16,9 +16,10 @@ import {
   AlertCircle,
   X,
 } from 'lucide-react';
-import stockService, { type IssuedMaterial, type Request } from '../../services/stockService';
-import materialService, { type Material } from '../../services/materialsService';
-import storeService, { type Store } from '../../services/storeService';
+import { stockService, materialService, storeService } from '../../services';
+import type { IssuedMaterial, Request } from '../../services/stockService';
+import type { Material } from '../../services/materialsService';
+import type { Store } from '../../services/storeService';
 import html2pdf from 'html2pdf.js';
 import { useNavigate } from 'react-router-dom';
 

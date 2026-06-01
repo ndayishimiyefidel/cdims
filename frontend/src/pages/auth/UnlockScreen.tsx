@@ -9,8 +9,8 @@ import {
   User,
   ArrowLeft 
 } from 'lucide-react';
-import useAdminAuth from '../../context/AuthContext';
-import { API_URL } from '../../api/api';
+import { useAuth as useAdminAuth } from '../../context';
+import { API_URL } from '../../api';
 
 const UnlockScreen = () => {
   const [password, setPassword] = useState('');

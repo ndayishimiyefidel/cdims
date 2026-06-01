@@ -19,7 +19,8 @@ import {
 } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import useAuth ,{ type AuthContextType } from '../../context/AuthContext';
+import { useAuth } from '../../context';
+import type { AuthContextType } from '../../context';
 
 import "flag-icons/css/flag-icons.min.css"; // Import flag-icons CSS
 

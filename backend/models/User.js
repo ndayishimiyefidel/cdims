@@ -6,45 +6,45 @@ const User = sequelize.define('User', {
   id: {
     type: DataTypes.BIGINT,
     primaryKey: true,
-    autoIncrement: true
+    autoIncrement: true,
   },
   role_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
       model: 'roles',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   full_name: {
     type: DataTypes.STRING(150),
-    allowNull: false
+    allowNull: false,
   },
   email: {
     type: DataTypes.STRING(150),
     unique: true,
     validate: {
-      isEmail: true
-    }
+      isEmail: true,
+    },
   },
   phone: {
-    type: DataTypes.STRING(30)
+    type: DataTypes.STRING(30),
   },
   password_hash: {
     type: DataTypes.STRING(255),
-    allowNull: false
+    allowNull: false,
   },
   active: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
-    defaultValue: true
+    defaultValue: true,
   },
   first_login: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: true,
-    comment: 'Flag to track if user needs to change password on first login'
-  }
+    comment: 'Flag to track if user needs to change password on first login',
+  },
 }, {
   tableName: 'users',
   hooks: {
@@ -57,8 +57,8 @@ const User = sequelize.define('User', {
       if (user.changed('password_hash')) {
         user.password_hash = await bcrypt.hash(user.password_hash, 12);
       }
-    }
-  }
+    },
+  },
 });
 
 // Instance methods

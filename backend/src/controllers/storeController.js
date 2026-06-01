@@ -10,7 +10,7 @@ const getAllStores = async (req, res) => {
     if (search) {
       whereClause[Op.or] = [
         { name: { [Op.like]: `%${search}%` } },
-        { location: { [Op.like]: `%${search}%` } }
+        { location: { [Op.like]: `%${search}%` } },
       ];
     }
 
@@ -18,7 +18,7 @@ const getAllStores = async (req, res) => {
       where: whereClause,
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['name', 'ASC']]
+      order: [['name', 'ASC']],
     });
 
     res.json({
@@ -29,15 +29,15 @@ const getAllStores = async (req, res) => {
           current_page: parseInt(page),
           total_pages: Math.ceil(count / limit),
           total_items: count,
-          items_per_page: parseInt(limit)
-        }
-      }
+          items_per_page: parseInt(limit),
+        },
+      },
     });
   } catch (error) {
     console.error('Get stores error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -51,19 +51,19 @@ const getStoreById = async (req, res) => {
     if (!store) {
       return res.status(404).json({
         success: false,
-        message: 'Store not found'
+        message: 'Store not found',
       });
     }
 
     res.json({
       success: true,
-      data: store
+      data: store,
     });
   } catch (error) {
     console.error('Get store by ID error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -77,9 +77,9 @@ const createStore = async (req, res) => {
     if (!storeCode) {
       // Get the last store to generate next code
       const lastStore = await Store.findOne({
-        order: [['id', 'DESC']]
+        order: [['id', 'DESC']],
       });
-      
+
       if (lastStore && lastStore.code) {
         // Extract number from last code and increment
         const lastNumber = parseInt(lastStore.code.split('-')[1]) || 0;
@@ -91,13 +91,13 @@ const createStore = async (req, res) => {
 
     // Check if code already exists
     const existingStore = await Store.findOne({
-      where: { code: storeCode }
+      where: { code: storeCode },
     });
 
     if (existingStore) {
       return res.status(400).json({
         success: false,
-        message: 'Store code already exists'
+        message: 'Store code already exists',
       });
     }
 
@@ -108,19 +108,19 @@ const createStore = async (req, res) => {
       description,
       manager_name,
       contact_phone,
-      contact_email
+      contact_email,
     });
 
     res.status(201).json({
       success: true,
       message: 'Store created successfully',
-      data: store
+      data: store,
     });
   } catch (error) {
     console.error('Create store error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -134,20 +134,20 @@ const updateStore = async (req, res) => {
     if (!store) {
       return res.status(404).json({
         success: false,
-        message: 'Store not found'
+        message: 'Store not found',
       });
     }
 
     // Check if code is being updated and if it already exists
     if (code && code !== store.code) {
       const existingStore = await Store.findOne({
-        where: { code: code }
+        where: { code: code },
       });
 
       if (existingStore) {
         return res.status(400).json({
           success: false,
-          message: 'Store code already exists'
+          message: 'Store code already exists',
         });
       }
     }
@@ -159,19 +159,19 @@ const updateStore = async (req, res) => {
       description,
       manager_name,
       contact_phone,
-      contact_email
+      contact_email,
     });
 
     res.json({
       success: true,
       message: 'Store updated successfully',
-      data: store
+      data: store,
     });
   } catch (error) {
     console.error('Update store error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -184,7 +184,7 @@ const deleteStore = async (req, res) => {
     if (!store) {
       return res.status(404).json({
         success: false,
-        message: 'Store not found'
+        message: 'Store not found',
       });
     }
 
@@ -192,13 +192,13 @@ const deleteStore = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Store deleted successfully'
+      message: 'Store deleted successfully',
     });
   } catch (error) {
     console.error('Delete store error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -208,5 +208,5 @@ module.exports = {
   getStoreById,
   createStore,
   updateStore,
-  deleteStore
+  deleteStore,
 };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, CheckSquare, AlertCircle } from 'lucide-react';
 import type { MaterialRequisition, ReceiveMaterialItem, ReceiveMaterialsResponse } from '../../../services/requestService';
-import requisitionService from '../../../services/requestService';
+import { requisitionService } from '../../../services';
 
 interface ReceiveMaterialsModalProps {
     isOpen: boolean;

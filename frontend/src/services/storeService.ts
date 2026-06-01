@@ -1,5 +1,5 @@
-import { type AxiosInstance, type AxiosResponse } from 'axios'; // Type-only imports for verbatimModuleSyntax
-import api from '../api/api'; // Adjust the import path as needed
+import { type AxiosInstance } from 'axios'; // Type-only imports for verbatimModuleSyntax
+import { api } from '../api'; // Adjust the import path as needed
 
 // Interface for Store
 export interface Store {
@@ -65,9 +65,8 @@ class StoreService {
       if (params?.limit) queryParams.append('limit', params.limit.toString());
       if (params?.search) queryParams.append('search', params.search);
 
-      const response: AxiosResponse<{ success: boolean; data: { stores: Store[]; pagination: Pagination } }> = 
-        await this.api.get(`/stores?${queryParams.toString()}`);
-      return response.data.data;
+      const result: any = await this.api.get(`/stores?${queryParams.toString()}`);
+      return result;
     } catch (error: any) {
       console.error('Error fetching stores:', error);
       const errorMessage =
@@ -83,9 +82,8 @@ class StoreService {
    */
   async getStoreById(id: number | string): Promise<Store | null> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: Store }> = 
-        await this.api.get(`/stores/${id}`);
-      return response.data.data;
+      const result: any = await this.api.get(`/stores/${id}`);
+      return result.store || result;
     } catch (error: any) {
       if (error.response?.status === 404) {
         return null;
@@ -104,9 +102,8 @@ class StoreService {
    */
   async createStore(storeData: CreateStoreInput): Promise<Store> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: Store; message: string }> = 
-        await this.api.post('/stores', storeData);
-      return response.data.data;
+      const result: any = await this.api.post('/stores', storeData);
+      return result.store || result;
     } catch (error: any) {
       console.error('Error creating store:', error);
       const errorMessage =
@@ -123,9 +120,8 @@ class StoreService {
    */
   async updateStore(id: number | string, updateData: UpdateStoreInput): Promise<Store> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: Store; message: string }> = 
-        await this.api.put(`/stores/${id}`, updateData);
-      return response.data.data;
+      const result: any = await this.api.put(`/stores/${id}`, updateData);
+      return result.store || result;
     } catch (error: any) {
       console.error('Error updating store:', error);
       const errorMessage =
@@ -141,8 +137,8 @@ class StoreService {
    */
   async deleteStore(id: number | string): Promise<DeleteResponse> {
     try {
-      const response: AxiosResponse<DeleteResponse> = await this.api.delete(`/stores/${id}`);
-      return response.data;
+      const result = await this.api.delete(`/stores/${id}`);
+      return result;
     } catch (error: any) {
       console.error('Error deleting store:', error);
       const errorMessage =

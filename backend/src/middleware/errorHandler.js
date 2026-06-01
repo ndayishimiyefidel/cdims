@@ -7,7 +7,7 @@ class AppError extends Error {
     this.statusCode = statusCode;
     this.isOperational = isOperational;
     this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
-    
+
     Error.captureStackTrace(this, this.constructor);
   }
 }
@@ -56,7 +56,7 @@ const errorHandler = (err, req, res, next) => {
     method: req.method,
     ip: req.ip,
     userAgent: req.get('User-Agent'),
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 
   // Sequelize validation error
@@ -118,8 +118,8 @@ const errorHandler = (err, req, res, next) => {
     message: error.message,
     ...(process.env.NODE_ENV === 'development' && {
       stack: err.stack,
-      error: err
-    })
+      error: err,
+    }),
   };
 
   // Add validation errors if they exist
@@ -163,5 +163,5 @@ module.exports = {
   ConflictError,
   errorHandler,
   asyncHandler,
-  notFound
+  notFound,
 };

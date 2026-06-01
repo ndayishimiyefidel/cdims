@@ -26,7 +26,7 @@ class AuditService {
     request = null,
     status = 'SUCCESS',
     errorMessage = null,
-    metadata = null
+    metadata = null,
   }) {
     try {
     const auditData = {
@@ -37,10 +37,10 @@ class AuditService {
       details: {
         old_values: oldValues,
         new_values: newValues,
-        metadata: metadata
+        metadata: metadata,
       },
       status,
-      error_message: errorMessage
+      error_message: errorMessage,
     };
 
       // Extract request information if available
@@ -70,8 +70,8 @@ class AuditService {
       errorMessage,
       metadata: {
         login_method: 'email_password',
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   }
 
@@ -83,8 +83,8 @@ class AuditService {
       request,
       metadata: {
         logout_method: 'manual',
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   }
 
@@ -97,8 +97,8 @@ class AuditService {
       request,
       metadata: {
         change_type: 'password_update',
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   }
 
@@ -115,8 +115,8 @@ class AuditService {
       request,
       metadata: {
         operation: 'create',
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   }
 
@@ -131,8 +131,8 @@ class AuditService {
       request,
       metadata: {
         operation: 'update',
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   }
 
@@ -146,8 +146,8 @@ class AuditService {
       request,
       metadata: {
         operation: 'delete',
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   }
 
@@ -165,8 +165,8 @@ class AuditService {
       request,
       metadata: {
         workflow_action: action,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   }
 
@@ -184,8 +184,8 @@ class AuditService {
       request,
       metadata: {
         stock_operation: action,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   }
 
@@ -202,16 +202,16 @@ class AuditService {
     status = null,
     dateFrom = null,
     dateTo = null,
-    search = null
+    search = null,
   }) {
     const offset = (page - 1) * limit;
     const whereClause = {};
 
-    if (userId) whereClause.user_id = userId;
-    if (action) whereClause.action = action;
-    if (resourceType) whereClause.entity = resourceType;
-    if (resourceId) whereClause.entity_id = resourceId;
-    if (status) whereClause.status = status;
+    if (userId) {whereClause.user_id = userId;}
+    if (action) {whereClause.action = action;}
+    if (resourceType) {whereClause.entity = resourceType;}
+    if (resourceId) {whereClause.entity_id = resourceId;}
+    if (status) {whereClause.status = status;}
 
     // Date range filtering
     if (dateFrom || dateTo) {
@@ -228,7 +228,7 @@ class AuditService {
     if (search) {
       whereClause[Op.or] = [
         { action: { [Op.like]: `%${search}%` } },
-        { entity: { [Op.like]: `%${search}%` } }
+        { entity: { [Op.like]: `%${search}%` } },
       ];
     }
 
@@ -243,14 +243,14 @@ class AuditService {
             {
               model: require('../../models').Role,
               as: 'role',
-              attributes: ['name']
-            }
-          ]
-        }
+              attributes: ['name'],
+            },
+          ],
+        },
       ],
       order: [['created_at', 'DESC']],
       limit: parseInt(limit),
-      offset: parseInt(offset)
+      offset: parseInt(offset),
     });
 
     return {
@@ -259,8 +259,8 @@ class AuditService {
         current_page: parseInt(page),
         total_pages: Math.ceil(count / limit),
         total_items: count,
-        items_per_page: parseInt(limit)
-      }
+        items_per_page: parseInt(limit),
+      },
     };
   }
 
@@ -269,7 +269,7 @@ class AuditService {
    */
   static async getSystemStats(dateFrom = null, dateTo = null) {
     const whereClause = {};
-    
+
     if (dateFrom || dateTo) {
       whereClause.created_at = {};
       if (dateFrom) {
@@ -287,65 +287,65 @@ class AuditService {
     const actionsByType = await AuditLog.findAll({
       attributes: [
         'action',
-        [AuditLog.sequelize.fn('COUNT', AuditLog.sequelize.col('id')), 'count']
+        [AuditLog.sequelize.fn('COUNT', AuditLog.sequelize.col('id')), 'count'],
       ],
       where: whereClause,
       group: ['action'],
-      order: [[AuditLog.sequelize.fn('COUNT', AuditLog.sequelize.col('id')), 'DESC']]
+      order: [[AuditLog.sequelize.fn('COUNT', AuditLog.sequelize.col('id')), 'DESC']],
     });
 
     // Get actions by resource type
     const actionsByResource = await AuditLog.findAll({
       attributes: [
         'entity',
-        [AuditLog.sequelize.fn('COUNT', AuditLog.sequelize.col('id')), 'count']
+        [AuditLog.sequelize.fn('COUNT', AuditLog.sequelize.col('id')), 'count'],
       ],
       where: whereClause,
       group: ['entity'],
-      order: [[AuditLog.sequelize.fn('COUNT', AuditLog.sequelize.col('id')), 'DESC']]
+      order: [[AuditLog.sequelize.fn('COUNT', AuditLog.sequelize.col('id')), 'DESC']],
     });
 
     // Get actions by status
     const actionsByStatus = await AuditLog.findAll({
       attributes: [
         'status',
-        [AuditLog.sequelize.fn('COUNT', AuditLog.sequelize.col('id')), 'count']
+        [AuditLog.sequelize.fn('COUNT', AuditLog.sequelize.col('id')), 'count'],
       ],
       where: whereClause,
-      group: ['status']
+      group: ['status'],
     });
 
     // Get most active users
     const mostActiveUsers = await AuditLog.findAll({
       attributes: [
         'user_id',
-        [AuditLog.sequelize.fn('COUNT', AuditLog.sequelize.col('id')), 'action_count']
+        [AuditLog.sequelize.fn('COUNT', AuditLog.sequelize.col('id')), 'action_count'],
       ],
       where: {
         ...whereClause,
-        user_id: { [Op.ne]: null }
+        user_id: { [Op.ne]: null },
       },
       include: [
         {
           model: User,
           as: 'auditUser',
-          attributes: ['id', 'full_name', 'email']
-        }
+          attributes: ['id', 'full_name', 'email'],
+        },
       ],
       group: ['user_id', 'auditUser.id', 'auditUser.full_name', 'auditUser.email'],
       order: [[AuditLog.sequelize.fn('COUNT', AuditLog.sequelize.col('id')), 'DESC']],
-      limit: 10
+      limit: 10,
     });
 
     // Get recent activity (last 24 hours)
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     const recentActivity = await AuditLog.count({
       where: {
         ...whereClause,
-        created_at: { [Op.gte]: yesterday }
-      }
+        created_at: { [Op.gte]: yesterday },
+      },
     });
 
     return {
@@ -357,8 +357,8 @@ class AuditService {
       most_active_users: mostActiveUsers,
       date_range: {
         from: dateFrom,
-        to: dateTo
-      }
+        to: dateTo,
+      },
     };
   }
 
@@ -371,8 +371,8 @@ class AuditService {
 
     const deletedCount = await AuditLog.destroy({
       where: {
-        created_at: { [Op.lt]: cutoffDate }
-      }
+        created_at: { [Op.lt]: cutoffDate },
+      },
     });
 
     return deletedCount;

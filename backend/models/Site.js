@@ -5,21 +5,21 @@ const Site = sequelize.define('Site', {
   id: {
     type: DataTypes.BIGINT,
     primaryKey: true,
-    autoIncrement: true
+    autoIncrement: true,
   },
   code: {
     type: DataTypes.STRING(50),
-    unique: true
+    unique: true,
   },
   name: {
     type: DataTypes.STRING(150),
-    allowNull: false
+    allowNull: false,
   },
   location: {
-    type: DataTypes.STRING(255)
-  }
+    type: DataTypes.STRING(255),
+  },
 }, {
-  tableName: 'sites'
+  tableName: 'sites',
 });
 
 module.exports = Site;

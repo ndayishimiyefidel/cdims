@@ -10,7 +10,7 @@ import {
   Heart,
   BookOpen
 } from 'lucide-react';
-import { blogs } from '../../../store/Blogs';
+
 import { useNavigate } from 'react-router-dom';
 
 // Type definitions
@@ -45,7 +45,7 @@ export default function Blog() {
     'Analytics'
   ];
 
-  const blogPosts: BlogPost[] = blogs;
+  const blogPosts: BlogPost[] = [];
   const navigate = useNavigate();
 
   const filteredPosts = blogPosts.filter((post) => {

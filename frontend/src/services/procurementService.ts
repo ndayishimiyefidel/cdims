@@ -1,5 +1,5 @@
-import { type AxiosInstance, type AxiosResponse } from 'axios';
-import api from '../api/api';
+import { type AxiosInstance } from 'axios';
+import { api } from '../api';
 
 // Assuming these interfaces are defined elsewhere or import them
 // For completeness, defining minimal versions here
@@ -167,9 +167,8 @@ class ProcurementService {
    */
   async getSuppliers(): Promise<Supplier[]> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { suppliers: Supplier[] } }> = 
-        await this.api.get('/procurement/suppliers');
-      return response.data.data.suppliers;
+      const result: any = await this.api.get('/procurement/suppliers');
+      return result.suppliers;
     } catch (error: any) {
       console.error('Error fetching suppliers:', error);
       const errorMessage =
@@ -185,9 +184,8 @@ class ProcurementService {
    */
   async createSupplier(supplierData: CreateSupplierInput): Promise<Supplier> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { supplier: Supplier }; message: string }> = 
-        await this.api.post('/procurement/suppliers', supplierData);
-      return response.data.data.supplier;
+      const result: any = await this.api.post('/procurement/suppliers', supplierData);
+      return result.supplier;
     } catch (error: any) {
       console.error('Error creating supplier:', error);
       const errorMessage =
@@ -211,9 +209,8 @@ class ProcurementService {
       if (params?.status) queryParams.append('status', params.status);
       if (params?.supplier_id) queryParams.append('supplier_id', params.supplier_id.toString());
 
-      const response: AxiosResponse<{ success: boolean; data: { purchaseOrders: PurchaseOrder[]; pagination: Pagination } }> = 
-        await this.api.get(`/procurement/purchase-orders?${queryParams.toString()}`);
-      return response.data.data;
+      const result: any = await this.api.get(`/procurement/purchase-orders?${queryParams.toString()}`);
+      return result;
     } catch (error: any) {
       console.error('Error fetching purchase orders:', error);
       const errorMessage =
@@ -229,9 +226,8 @@ class ProcurementService {
    */
   async createPurchaseOrder(purchaseOrderData: CreatePurchaseOrderInput): Promise<PurchaseOrder> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { purchaseOrder: PurchaseOrder }; message: string }> = 
-        await this.api.post('/procurement/purchase-orders', purchaseOrderData);
-      return response.data.data.purchaseOrder;
+      const result: any = await this.api.post('/procurement/purchase-orders', purchaseOrderData);
+      return result.purchaseOrder;
     } catch (error: any) {
       console.error('Error creating purchase order:', error);
       const errorMessage =
@@ -247,9 +243,8 @@ class ProcurementService {
    */
   async getPurchaseOrderById(id: number | string): Promise<PurchaseOrder | null> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { purchaseOrder: PurchaseOrder } }> = 
-        await this.api.get(`/procurement/purchase-orders/${id}`);
-      return response.data.data.purchaseOrder;
+      const result: any = await this.api.get(`/procurement/purchase-orders/${id}`);
+      return result.purchaseOrder || result;
     } catch (error: any) {
       if (error.response?.status === 404) {
         return null;
@@ -269,9 +264,8 @@ class ProcurementService {
    */
   async updatePurchaseOrder(id: number | string, updateData: UpdatePurchaseOrderInput): Promise<PurchaseOrder> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { purchaseOrder: PurchaseOrder }; message: string }> = 
-        await this.api.put(`/procurement/purchase-orders/${id}`, updateData);
-      return response.data.data.purchaseOrder;
+      const result: any = await this.api.put(`/procurement/purchase-orders/${id}`, updateData);
+      return result.purchaseOrder;
     } catch (error: any) {
       console.error('Error updating purchase order:', error);
       const errorMessage =
@@ -287,9 +281,8 @@ class ProcurementService {
    */
   async sendPurchaseOrder(id: number | string): Promise<SuccessResponse> {
     try {
-      const response: AxiosResponse<SuccessResponse> = 
-        await this.api.post(`/procurement/purchase-orders/${id}/send`);
-      return response.data;
+      const result = await this.api.post(`/procurement/purchase-orders/${id}/send`);
+      return result;
     } catch (error: any) {
       console.error('Error sending purchase order:', error);
       const errorMessage =
@@ -312,9 +305,8 @@ class ProcurementService {
       if (params?.limit) queryParams.append('limit', params.limit.toString());
       if (params?.store_id) queryParams.append('store_id', params.store_id.toString());
 
-      const response: AxiosResponse<{ success: boolean; data: { goodsReceipts: GoodsReceipt[]; pagination: Pagination } }> = 
-        await this.api.get(`/procurement/goods-receipts?${queryParams.toString()}`);
-      return response.data.data;
+      const result: any = await this.api.get(`/procurement/goods-receipts?${queryParams.toString()}`);
+      return result;
     } catch (error: any) {
       console.error('Error fetching goods receipts:', error);
       const errorMessage =
@@ -330,9 +322,8 @@ class ProcurementService {
    */
   async createGoodsReceipt(goodsReceiptData: CreateGoodsReceiptInput): Promise<GoodsReceipt> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { goodsReceipt: GoodsReceipt }; message: string }> = 
-        await this.api.post('/procurement/goods-receipts', goodsReceiptData);
-      return response.data.data.goodsReceipt;
+      const result: any = await this.api.post('/procurement/goods-receipts', goodsReceiptData);
+      return result.goodsReceipt;
     } catch (error: any) {
       console.error('Error creating goods receipt:', error);
       const errorMessage =
@@ -348,9 +339,8 @@ class ProcurementService {
    */
   async getGoodsReceiptById(id: number | string): Promise<GoodsReceipt | null> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { goodsReceipt: GoodsReceipt } }> = 
-        await this.api.get(`/procurement/goods-receipts/${id}`);
-      return response.data.data.goodsReceipt;
+      const result: any = await this.api.get(`/procurement/goods-receipts/${id}`);
+      return result.goodsReceipt || result;
     } catch (error: any) {
       if (error.response?.status === 404) {
         return null;

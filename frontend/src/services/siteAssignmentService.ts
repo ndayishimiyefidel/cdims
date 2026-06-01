@@ -1,5 +1,5 @@
-import { type AxiosInstance, type AxiosResponse } from 'axios';
-import api from '../api/api';
+import { type AxiosInstance } from 'axios';
+import { api } from '../api';
 
 // Interface for Site
 export interface Site {
@@ -95,9 +95,8 @@ class SiteAssignmentService {
       if (params?.site_id) queryParams.append('site_id', params.site_id.toString());
       if (params?.status) queryParams.append('status', params.status);
 
-      const response: AxiosResponse<{ success: boolean; data: { assignments: SiteAssignment[]; pagination: Pagination } }> = 
-        await this.api.get(`/site-assignments?${queryParams.toString()}`);
-      return response.data.data;
+      const result: any = await this.api.get(`/site-assignments?${queryParams.toString()}`);
+      return result;
     } catch (error: any) {
       console.error('Error fetching site assignments:', error);
       const errorMessage =
@@ -112,9 +111,8 @@ class SiteAssignmentService {
    */
   async getUserAssignedSites(): Promise<Site[]> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: Site[] }> = 
-        await this.api.get('/site-assignments/my-sites');
-      return response.data.data;
+      const result: any = await this.api.get('/site-assignments/my-sites');
+      return result;
     } catch (error: any) {
       console.error('Error fetching user assigned sites:', error);
       const errorMessage =
@@ -130,9 +128,8 @@ class SiteAssignmentService {
    */
   async assignSiteToUser(assignmentData: CreateSiteAssignmentInput): Promise<SiteAssignment> {
     try {
-      const response: AxiosResponse<{ success: boolean; message: string; data: { assignment: SiteAssignment } }> = 
-        await this.api.post('/site-assignments', assignmentData);
-      return response.data.data.assignment;
+      const result: any = await this.api.post('/site-assignments', assignmentData);
+      return result.assignment;
     } catch (error: any) {
       console.error('Error assigning site to user:', error);
       const errorMessage =
@@ -149,9 +146,8 @@ class SiteAssignmentService {
    */
   async updateSiteAssignment(id: number | string, updateData: UpdateSiteAssignmentInput): Promise<SiteAssignment> {
     try {
-      const response: AxiosResponse<{ success: boolean; message: string; data: { assignment: SiteAssignment } }> = 
-        await this.api.put(`/site-assignments/${id}`, updateData);
-      return response.data.data.assignment;
+      const result: any = await this.api.put(`/site-assignments/${id}`, updateData);
+      return result.assignment;
     } catch (error: any) {
       console.error('Error updating site assignment:', error);
       const errorMessage =
@@ -167,8 +163,8 @@ class SiteAssignmentService {
    */
   async removeSiteAssignment(id: number | string): Promise<DeleteResponse> {
     try {
-      const response: AxiosResponse<DeleteResponse> = await this.api.delete(`/site-assignments/${id}`);
-      return response.data;
+      const result = await this.api.delete(`/site-assignments/${id}`);
+      return result;
     } catch (error: any) {
       console.error('Error removing site assignment:', error);
       const errorMessage =

@@ -21,8 +21,7 @@ import {
 } from 'lucide-react';
 import Quill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
-import applicantService from '../../services/materialsService';
-import jobService from '../../services/siteService';
+import { materialService as applicantService, siteService as jobService } from '../../services';
 import type { Job } from '../../types/model';
 import type { CreateApplicantInput } from '../../services/materialsService';
 import Swal from 'sweetalert2';

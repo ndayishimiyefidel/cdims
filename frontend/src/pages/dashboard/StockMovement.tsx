@@ -16,9 +16,10 @@ import {
   AlignJustify,
   Calendar, // Added Calendar icon
 } from 'lucide-react';
-import stockService, { type StockMovement, type Request, type User, type StockMovementsFilterParams, type Pagination } from '../../services/stockService';
-import materialService, { type Material } from '../../services/materialsService';
-import storeService, { type Store } from '../../services/storeService';
+import { stockService, materialService, storeService } from '../../services';
+import type { StockMovement, Request, User, StockMovementsFilterParams, Pagination, Store as StockStore1 } from '../../services/stockService';
+import type { Material } from '../../services/materialsService';
+import type { Store } from '../../services/storeService';
 import html2pdf from 'html2pdf.js';
 
 interface StockMovement {

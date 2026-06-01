@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import api from '../api/api';
-import type { AxiosResponse } from 'axios';
+import { api } from '../api';
 
 interface Role {
   id: number;
@@ -14,7 +13,7 @@ export interface User {
   phone?: string;
   role: Role;
   active?: boolean;
-  first_login?: boolean; // Add this field
+  first_login?: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -22,7 +21,7 @@ export interface User {
 export interface AuthResponse {
   success: boolean;
   message: string;
-  requires_password_change?: boolean; // Add this field
+  requires_password_change?: boolean;
   data?: {
     token: string;
     user: User;
@@ -47,16 +46,20 @@ class AuthService {
    */
   async login(loginData: LoginData): Promise<AuthResponse> {
     try {
-      const response: AxiosResponse<AuthResponse> = await api.post(
+      const result: any = await api.post(
         '/auth/login',
         loginData
       );
 
-      if (response.data.success && response.data.data?.token) {
-        localStorage.setItem('auth_token', response.data.data.token);
+      if (result?.token) {
+        localStorage.setItem('auth_token', result.token);
       }
 
-      return response.data;
+      return {
+        success: true,
+        message: 'Login successful',
+        data: result,
+      };
     } catch (error: any) {
       const msg =
         error.response?.data?.message ||
@@ -71,17 +74,9 @@ class AuthService {
    */
   async getProfile(): Promise<User | null> {
     try {
-      const token = localStorage.getItem('auth_token');
-      if (!token) return null;
+      const result = await api.get('/auth/profile');
 
-      const response: AxiosResponse<ProfileResponse> = await api.get(
-        '/auth/profile',
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      return response.data.data.user;
+      return result.user;
     } catch (error: any) {
       // Handle 403 for password change required
       if (error.response?.status === 403 && error.response?.data?.requires_password_change) {
@@ -101,13 +96,9 @@ class AuthService {
    */
   async updateProfile(updates: Partial<User>): Promise<User> {
     try {
-      const token = localStorage.getItem('auth_token');
-      const response: AxiosResponse<{ success: boolean; data: { user: User } }> =
-        await api.put('/auth/profile', updates, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+      const result = await api.put('/auth/profile', updates);
 
-      return response.data.data.user;
+      return result.user;
     } catch (error: any) {
       const msg =
         error.response?.data?.message ||
@@ -125,15 +116,12 @@ class AuthService {
     new_password: string
   ): Promise<string> {
     try {
-      const token = localStorage.getItem('auth_token');
-      const response: AxiosResponse<{ success: boolean; message: string }> =
-        await api.put(
-          '/auth/change-password',
-          { current_password, new_password },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+      const result = await api.put(
+        '/auth/change-password',
+        { current_password, new_password }
+      );
 
-      return response.data.message;
+      return result.message;
     } catch (error: any) {
       const msg =
         error.response?.data?.message ||
@@ -148,10 +136,9 @@ class AuthService {
    */
   async resetPassword(email: string): Promise<string> {
     try {
-      const response: AxiosResponse<{ success: boolean; message: string }> =
-        await api.post('/auth/reset-password', { email });
+      const result = await api.post('/auth/reset-password', { email });
 
-      return response.data.message;
+      return result.message;
     } catch (error: any) {
       const msg =
         error.response?.data?.message ||
@@ -166,15 +153,12 @@ class AuthService {
    */
   async deleteAccount(password: string): Promise<string> {
     try {
-      const token = localStorage.getItem('auth_token');
-      const response: AxiosResponse<{ success: boolean; message: string }> =
-        await api.delete('/auth/delete-account', {
-          headers: { Authorization: `Bearer ${token}` },
-          data: { password },
-        });
+      const result = await api.delete('/auth/delete-account', {
+        data: { password },
+      });
 
       localStorage.removeItem('auth_token');
-      return response.data.message;
+      return result.message;
     } catch (error: any) {
       const msg =
         error.response?.data?.message ||
@@ -189,16 +173,10 @@ class AuthService {
    */
   async logout(): Promise<string> {
     try {
-      const token = localStorage.getItem('auth_token');
-      const response: AxiosResponse<{ success: boolean; message: string }> =
-        await api.post(
-          '/auth/logout',
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+      const result = await api.post('/auth/logout', {});
 
       localStorage.removeItem('auth_token');
-      return response.data.message;
+      return result.message;
     } catch (error: any) {
       localStorage.removeItem('auth_token');
       const msg =

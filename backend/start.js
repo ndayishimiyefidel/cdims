@@ -37,7 +37,7 @@ if (!fs.existsSync(nodeModulesPath)) {
 console.log('🔍 Checking database configuration...');
 try {
   require('dotenv').config();
-  
+
   if (!process.env.DB_NAME || !process.env.DB_USER) {
     console.log('⚠️  Database configuration incomplete. Please update your .env file.');
     console.log('Required variables: DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT\n');

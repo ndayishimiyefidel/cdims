@@ -9,8 +9,8 @@ const getAllStock = async (req, res) => {
     const offset = (page - 1) * limit;
 
     const whereClause = {};
-    if (store_id) whereClause.store_id = store_id;
-    if (material_id) whereClause.material_id = material_id;
+    if (store_id) {whereClause.store_id = store_id;}
+    if (material_id) {whereClause.material_id = material_id;}
     if (low_stock === 'true') {
       whereClause.low_stock_alert = true;
     }
@@ -20,7 +20,7 @@ const getAllStock = async (req, res) => {
       include: [
         {
           model: Store,
-          as: 'store'
+          as: 'store',
         },
         {
           model: Material,
@@ -28,18 +28,18 @@ const getAllStock = async (req, res) => {
           include: [
             {
               model: Category,
-              as: 'category'
+              as: 'category',
             },
             {
               model: Unit,
-              as: 'unit'
-            }
-          ]
-        }
+              as: 'unit',
+            },
+          ],
+        },
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['updated_at', 'DESC']]
+      order: [['updated_at', 'DESC']],
     });
 
     res.json({
@@ -50,15 +50,15 @@ const getAllStock = async (req, res) => {
           current_page: parseInt(page),
           total_pages: Math.ceil(count / limit),
           total_items: count,
-          items_per_page: parseInt(limit)
-        }
-      }
+          items_per_page: parseInt(limit),
+        },
+      },
     });
   } catch (error) {
     console.error('Get stock error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -69,13 +69,13 @@ const createStock = async (req, res) => {
 
     // Check if stock record already exists for this material and store
     const existingStock = await Stock.findOne({
-      where: { material_id, store_id }
+      where: { material_id, store_id },
     });
 
     if (existingStock) {
       return res.status(400).json({
         success: false,
-        message: 'Stock record already exists for this material in this store'
+        message: 'Stock record already exists for this material in this store',
       });
     }
 
@@ -91,7 +91,7 @@ const createStock = async (req, res) => {
       qty_on_hand,
       low_stock_threshold: low_stock_threshold || 0,
       low_stock_alert: shouldAlert,
-      unit_price
+      unit_price,
     });
 
     // Create stock history record for the creation
@@ -109,7 +109,7 @@ const createStock = async (req, res) => {
       unit_price_before: null,
       unit_price_after: unit_price,
       notes: `Initial stock creation by ${req.user.role.name} - ${req.user.full_name}`,
-      created_by: req.user.id
+      created_by: req.user.id,
     });
 
     // Fetch the created stock with associations
@@ -117,7 +117,7 @@ const createStock = async (req, res) => {
       include: [
         {
           model: Store,
-          as: 'store'
+          as: 'store',
         },
         {
           model: Material,
@@ -125,27 +125,27 @@ const createStock = async (req, res) => {
           include: [
             {
               model: Category,
-              as: 'category'
+              as: 'category',
             },
             {
               model: Unit,
-              as: 'unit'
-            }
-          ]
-        }
-      ]
+              as: 'unit',
+            },
+          ],
+        },
+      ],
     });
 
     res.status(201).json({
       success: true,
       message: 'Stock record created successfully',
-      data: createdStock
+      data: { stock: createdStock },
     });
   } catch (error) {
     console.error('Create stock error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -158,7 +158,7 @@ const getStockById = async (req, res) => {
       include: [
         {
           model: Store,
-          as: 'store'
+          as: 'store',
         },
         {
           model: Material,
@@ -166,33 +166,33 @@ const getStockById = async (req, res) => {
           include: [
             {
               model: Category,
-              as: 'category'
+              as: 'category',
             },
             {
               model: Unit,
-              as: 'unit'
-            }
-          ]
-        }
-      ]
+              as: 'unit',
+            },
+          ],
+        },
+      ],
     });
 
     if (!stock) {
       return res.status(404).json({
         success: false,
-        message: 'Stock record not found'
+        message: 'Stock record not found',
       });
     }
 
     res.json({
       success: true,
-      data: stock
+      data: { stock: stock },
     });
   } catch (error) {
     console.error('Get stock by ID error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -205,7 +205,7 @@ const getStockByMaterialId = async (req, res) => {
       include: [
         {
           model: Store,
-          as: 'store'
+          as: 'store',
         },
         {
           model: Material,
@@ -213,33 +213,33 @@ const getStockByMaterialId = async (req, res) => {
           include: [
             {
               model: Category,
-              as: 'category'
+              as: 'category',
             },
             {
               model: Unit,
-              as: 'unit'
-            }
-          ]
-        }
-      ]
+              as: 'unit',
+            },
+          ],
+        },
+      ],
     });
 
     if (!stock) {
       return res.status(404).json({
         success: false,
-        message: 'Stock record not found'
+        message: 'Stock record not found',
       });
     }
 
     res.json({
       success: true,
-      data: stock
+      data: { stock: stock },
     });
   } catch (error) {
     console.error('Get stock by ID error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -254,7 +254,7 @@ const updateStock = async (req, res) => {
     if (!stock) {
       return res.status(404).json({
         success: false,
-        message: 'Stock record not found'
+        message: 'Stock record not found',
       });
     }
 
@@ -281,7 +281,7 @@ const updateStock = async (req, res) => {
         reorder_level,
         low_stock_threshold,
         low_stock_alert: shouldAlert || low_stock_alert,
-        unit_price: unit_price !== undefined ? unit_price : stock.unit_price
+        unit_price: unit_price !== undefined ? unit_price : stock.unit_price,
       }, { transaction });
 
       // If unit_price is provided, update ALL existing stock of the same material
@@ -289,10 +289,10 @@ const updateStock = async (req, res) => {
       if (unit_price !== undefined && unit_price !== currentPrice) {
         await Stock.update(
           { unit_price: unit_price },
-          { 
+          {
             where: { material_id: stock.material_id },
-            transaction 
-          }
+            transaction,
+          },
         );
         priceUpdated = true;
       }
@@ -313,7 +313,7 @@ const updateStock = async (req, res) => {
           unit_price_before: currentPrice,
           unit_price_after: unit_price !== undefined ? unit_price : currentPrice,
           notes: notes || `Stock updated by ${req.user.role.name} - ${req.user.full_name}${priceUpdated ? ` with new price ${unit_price}` : ''}`,
-          created_by: req.user.id
+          created_by: req.user.id,
         }, { transaction });
       }
 
@@ -325,8 +325,8 @@ const updateStock = async (req, res) => {
         data: {
           stock: stock,
           price_updated: priceUpdated,
-          quantity_changed: addedQty !== 0
-        }
+          quantity_changed: addedQty !== 0,
+        },
       });
     } catch (error) {
       await transaction.rollback();
@@ -336,7 +336,7 @@ const updateStock = async (req, res) => {
     console.error('Update stock error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -348,14 +348,14 @@ const getLowStockAlerts = async (req, res) => {
     const offset = (page - 1) * limit;
 
     const whereClause = { low_stock_alert: true };
-    if (store_id) whereClause.store_id = store_id;
+    if (store_id) {whereClause.store_id = store_id;}
 
     const { count, rows: lowStockItems } = await Stock.findAndCountAll({
       where: whereClause,
       include: [
         {
           model: Store,
-          as: 'store'
+          as: 'store',
         },
         {
           model: Material,
@@ -363,18 +363,18 @@ const getLowStockAlerts = async (req, res) => {
           include: [
             {
               model: Category,
-              as: 'category'
+              as: 'category',
             },
             {
               model: Unit,
-              as: 'unit'
-            }
-          ]
-        }
+              as: 'unit',
+            },
+          ],
+        },
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['updated_at', 'DESC']]
+      order: [['updated_at', 'DESC']],
     });
 
     res.json({
@@ -385,15 +385,15 @@ const getLowStockAlerts = async (req, res) => {
           current_page: parseInt(page),
           total_pages: Math.ceil(count / limit),
           total_items: count,
-          items_per_page: parseInt(limit)
-        }
-      }
+          items_per_page: parseInt(limit),
+        },
+      },
     });
   } catch (error) {
     console.error('Get low stock alerts error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -407,7 +407,7 @@ const setLowStockThreshold = async (req, res) => {
     if (!stock) {
       return res.status(404).json({
         success: false,
-        message: 'Stock record not found'
+        message: 'Stock record not found',
       });
     }
 
@@ -416,19 +416,19 @@ const setLowStockThreshold = async (req, res) => {
 
     await stock.update({
       low_stock_threshold,
-      low_stock_alert: shouldAlert
+      low_stock_alert: shouldAlert,
     });
 
     res.json({
       success: true,
       message: 'Low stock threshold set successfully',
-      data: stock
+      data: { stock: stock },
     });
   } catch (error) {
     console.error('Set low stock threshold error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -441,7 +441,7 @@ const acknowledgeLowStockAlert = async (req, res) => {
     if (!stock) {
       return res.status(404).json({
         success: false,
-        message: 'Stock record not found'
+        message: 'Stock record not found',
       });
     }
 
@@ -450,13 +450,13 @@ const acknowledgeLowStockAlert = async (req, res) => {
     res.json({
       success: true,
       message: 'Low stock alert acknowledged',
-      data: stock
+      data: { stock: stock },
     });
   } catch (error) {
     console.error('Acknowledge low stock alert error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -467,28 +467,28 @@ const getStockMovements = async (req, res) => {
     const offset = (page - 1) * limit;
 
     const whereClause = {};
-    if (store_id) whereClause.store_id = store_id;
-    if (material_id) whereClause.material_id = material_id;
-    if (type) whereClause.type = type;
+    if (store_id) {whereClause.store_id = store_id;}
+    if (material_id) {whereClause.material_id = material_id;}
+    if (type) {whereClause.type = type;}
 
     const { count, rows: movements } = await StockMovement.findAndCountAll({
       where: whereClause,
       include: [
         {
           model: Store,
-          as: 'store'
+          as: 'store',
         },
         {
            model: Request,
-          as: 'source'
+          as: 'source',
         },
          {
                   model: User,
                   as: 'createdBy',
                   include: [{
                     model: Role,
-                    as: 'role'
-                  }]
+                    as: 'role',
+                  }],
                 },
         {
           model: Material,
@@ -496,14 +496,14 @@ const getStockMovements = async (req, res) => {
           include: [
             {
               model: Unit,
-              as: 'unit'
-            }
-          ]
-        }
+              as: 'unit',
+            },
+          ],
+        },
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['created_at', 'DESC']]
+      order: [['created_at', 'DESC']],
     });
 
     res.json({
@@ -514,15 +514,15 @@ const getStockMovements = async (req, res) => {
           current_page: parseInt(page),
           total_pages: Math.ceil(count / limit),
           total_items: count,
-          items_per_page: parseInt(limit)
-        }
-      }
+          items_per_page: parseInt(limit),
+        },
+      },
     });
   } catch (error) {
     console.error('Get stock movements error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -536,18 +536,18 @@ const getProcurementRecommendations = async (req, res) => {
       [Op.or]: [
         { low_stock_alert: true },
         { qty_on_hand: { [Op.lte]: sequelize.col('reorder_level') } },
-        { qty_on_hand: 0 }
-      ]
+        { qty_on_hand: 0 },
+      ],
     };
 
-    if (store_id) whereClause.store_id = store_id;
+    if (store_id) {whereClause.store_id = store_id;}
 
     const { count, rows: recommendations } = await Stock.findAndCountAll({
       where: whereClause,
       include: [
         {
           model: Store,
-          as: 'store'
+          as: 'store',
         },
         {
           model: Material,
@@ -555,21 +555,21 @@ const getProcurementRecommendations = async (req, res) => {
           include: [
             {
               model: Category,
-              as: 'category'
+              as: 'category',
             },
             {
               model: Unit,
-              as: 'unit'
-            }
-          ]
-        }
+              as: 'unit',
+            },
+          ],
+        },
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
       order: [
         ['low_stock_alert', 'DESC'],
-        ['qty_on_hand', 'ASC']
-      ]
+        ['qty_on_hand', 'ASC'],
+      ],
     });
 
     // Add procurement recommendations
@@ -605,8 +605,8 @@ const getProcurementRecommendations = async (req, res) => {
           reason,
           currentStock,
           reorderLevel,
-          lowStockThreshold
-        }
+          lowStockThreshold,
+        },
       };
     });
 
@@ -618,15 +618,15 @@ const getProcurementRecommendations = async (req, res) => {
           current_page: parseInt(page),
           total_pages: Math.ceil(count / limit),
           total_items: count,
-          items_per_page: parseInt(limit)
-        }
-      }
+          items_per_page: parseInt(limit),
+        },
+      },
     });
   } catch (error) {
     console.error('Get procurement recommendations error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -640,7 +640,7 @@ const issueMaterials = async (req, res) => {
     if (!request_id || !items || !Array.isArray(items)) {
       return res.status(400).json({
         success: false,
-        message: 'Request ID and items array are required'
+        message: 'Request ID and items array are required',
       });
     }
 
@@ -650,11 +650,11 @@ const issueMaterials = async (req, res) => {
         {
           model: RequestItem,
           as: 'items',
-          include: [{ model: Material, as: 'material' }]
+          include: [{ model: Material, as: 'material' }],
         },
         { model: User, as: 'requestedBy' },
-        { model: Site, as: 'site' }
-      ]
+        { model: Site, as: 'site' },
+      ],
     });
 
     if (!request) {
@@ -679,9 +679,9 @@ const issueMaterials = async (req, res) => {
 
         // Find matching request item
         const requestItem = request.items.find(ri => ri.id === request_item_id);
-        if (!requestItem) throw new Error(`Request item ${request_item_id} not found`);
+        if (!requestItem) {throw new Error(`Request item ${request_item_id} not found`);}
 
-        
+
         // Ensure not issuing more than requested
         if (qty_issued > requestItem.qty_requested) {
           throw new Error(`Cannot issue more than requested for ${requestItem.material.name}`);
@@ -691,9 +691,9 @@ const issueMaterials = async (req, res) => {
         const stock = await Stock.findOne({
           where: { material_id: requestItem.material_id, store_id },
           transaction,
-          lock: transaction.LOCK.UPDATE
+          lock: transaction.LOCK.UPDATE,
         });
-        if (!stock) throw new Error(`Stock not found for material ${requestItem.material.name} in store`);
+        if (!stock) {throw new Error(`Stock not found for material ${requestItem.material.name} in store`);}
         if (stock.qty_on_hand < qty_issued) {
           throw new Error(`Insufficient stock for ${requestItem.material.name}. Available: ${stock.qty_on_hand}, Requested: ${qty_issued}`);
         }
@@ -703,23 +703,23 @@ const issueMaterials = async (req, res) => {
         const newQtyIssued = currentQtyIssued + parseFloat(qty_issued);
         await requestItem.update(
           { qty_issued: newQtyIssued, issued_at: new Date(), issued_by: req.user.id },
-          { transaction }
+          { transaction },
         );
 
         // Update remaining approved quantity
        const qtyApproved = parseFloat(
   Number(requestItem.qty_remaining) > 0 ? requestItem.qty_remaining :
   Number(requestItem.qty_approved) > 0 ? requestItem.qty_approved :
-  requestItem.qty_requested
+  requestItem.qty_requested,
 );
 
         const remainingApproved = qtyApproved - parseFloat(qty_issued);
            console.log('\n \n ');
-        console.log('**** this the item ****: ',item);  
+        console.log('**** this the item ****: ',item);
         console.log(' \n ********* quantity issued :',newQtyIssued);
-              
-        console.log('\n **** this the qty approved ****: ',qtyApproved);        
-        console.log('\n **** this the new qty ****: ',remainingApproved);        
+
+        console.log('\n **** this the qty approved ****: ',qtyApproved);
+        console.log('\n **** this the new qty ****: ',remainingApproved);
         console.log('\n \n ');
         await requestItem.update({ qty_remaining: remainingApproved }, { transaction });
 
@@ -738,7 +738,7 @@ const issueMaterials = async (req, res) => {
           qty: qty_issued,
           unit_price: null,
           notes: notes || `Issued to ${request.requestedBy.full_name} for ${request.site.name}`,
-          created_by: req.user.id
+          created_by: req.user.id,
         }, { transaction });
 
         issuedItems.push({ request_item_id, material_name: requestItem.material.name, qty_issued, store_id });
@@ -748,26 +748,26 @@ const issueMaterials = async (req, res) => {
       // 4. Update overall request status
       const updatedRequest = await Request.findByPk(request_id, {
         include: [{ model: RequestItem, as: 'items' }],
-        transaction
+        transaction,
       });
 
      // Convert values to numbers to avoid type issues
 const allItemsIssued = updatedRequest.items.every(item =>
-  Number(item.qty_issued || 0) >= Number(item.qty_approved || item.qty_requested || 0)
+  Number(item.qty_issued || 0) >= Number(item.qty_approved || item.qty_requested || 0),
 );
 
 const someItemsIssued = updatedRequest.items.some(item =>
-  Number(item.qty_issued || 0) > 0
+  Number(item.qty_issued || 0) > 0,
 );
 
 // Update request status
 let newStatus = 'APPROVED';
-if (allItemsIssued) newStatus = 'ISSUED';
-else if (someItemsIssued) newStatus = 'PARTIALLY_ISSUED';
+if (allItemsIssued) {newStatus = 'ISSUED';}
+else if (someItemsIssued) {newStatus = 'PARTIALLY_ISSUED';}
 
 await request.update(
   { status: newStatus, issued_at: new Date(), issued_by: req.user.id },
-  { transaction }
+  { transaction },
 );
 
 
@@ -781,8 +781,8 @@ await request.update(
           request_id,
           issued_items: issuedItems,
           stock_movements: stockMovements,
-          request_status: allItemsIssued ? 'ISSUED' : 'PARTIALLY_ISSUED'
-        }
+          request_status: allItemsIssued ? 'ISSUED' : 'PARTIALLY_ISSUED',
+        },
       });
     } catch (err) {
       await transaction.rollback();
@@ -792,7 +792,7 @@ await request.update(
     console.error('Issue materials error:', error);
     return res.status(500).json({
       success: false,
-      message: error.message || 'Internal server error'
+      message: error.message || 'Internal server error',
     });
   }
 };
@@ -807,11 +807,11 @@ const getIssuableRequests = async (req, res) => {
 
     const whereClause = {
       status: {
-        [Op.in]: ['APPROVED', 'PARTIALLY_ISSUED','RECEIVED']
-      }
+        [Op.in]: ['APPROVED', 'PARTIALLY_ISSUED','RECEIVED'],
+      },
     };
 
-    if (site_id) whereClause.site_id = site_id;
+    if (site_id) {whereClause.site_id = site_id;}
 
     const { count, rows: requests } = await Request.findAndCountAll({
       where: whereClause,
@@ -822,25 +822,25 @@ const getIssuableRequests = async (req, res) => {
           where: {
             [Op.or]: [
               { qty_remaining: { [Op.gt]: 0 } }, // partially issued
-              { qty_issued: 0 }                 // not yet issued
-            ]
+              { qty_issued: 0 },                 // not yet issued
+            ],
           },
           include: [
             {
               model: Material,
               as: 'material',
               include: [
-                { model: Unit, as: 'unit' }
-              ]
-            }
-          ]
+                { model: Unit, as: 'unit' },
+              ],
+            },
+          ],
         },
         { model: User, as: 'requestedBy' },
-        { model: Site, as: 'site' }
+        { model: Site, as: 'site' },
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['created_at', 'ASC']]
+      order: [['created_at', 'ASC']],
     });
 
     res.json({
@@ -851,15 +851,15 @@ const getIssuableRequests = async (req, res) => {
           current_page: parseInt(page),
           total_pages: Math.ceil(count / limit),
           total_items: count,
-          items_per_page: parseInt(limit)
-        }
-      }
+          items_per_page: parseInt(limit),
+        },
+      },
     });
   } catch (error) {
     console.error('Get issuable requests error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -875,7 +875,7 @@ const getIssuedMaterials = asyncHandler(async (req, res) => {
   }
 
   const whereClause = { movement_type: 'OUT' };
-  if (request_id) whereClause.source_id = request_id;
+  if (request_id) {whereClause.source_id = request_id;}
   if (date_from || date_to) {
     whereClause.created_at = {};
     if (date_from) {
@@ -903,23 +903,23 @@ const getIssuedMaterials = asyncHandler(async (req, res) => {
         include: [
           {
             model: Unit,
-            as: 'unit'
-          }
-        ]
+            as: 'unit',
+          },
+        ],
       },
       {
         model: Store,
-        as: 'store'
+        as: 'store',
       },
       {
         model: User,
         as: 'createdBy',
-        attributes: ['id', 'full_name', 'email']
-      }
+        attributes: ['id', 'full_name', 'email'],
+      },
     ],
     limit: parseInt(limit),
     offset: parseInt(offset),
-    order: [['created_at', 'DESC']]
+    order: [['created_at', 'DESC']],
   });
 
   // If site_id is provided, filter by site through the request
@@ -932,9 +932,9 @@ const getIssuedMaterials = asyncHandler(async (req, res) => {
       const requests = await Request.findAll({
         where: {
           id: { [Op.in]: requestIds },
-          site_id: site_id
+          site_id: site_id,
         },
-        attributes: ['id']
+        attributes: ['id'],
       });
       const validRequestIds = requests.map(r => r.id);
       filteredMovements = movements.filter(m => validRequestIds.includes(m.source_id));
@@ -953,9 +953,9 @@ const getIssuedMaterials = asyncHandler(async (req, res) => {
         current_page: parseInt(page),
         total_pages: Math.ceil(filteredCount / limit),
         total_items: filteredCount,
-        items_per_page: parseInt(limit)
-      }
-    }
+        items_per_page: parseInt(limit),
+      },
+    },
   });
 });
 
@@ -968,7 +968,7 @@ const addStockQuantity = async (req, res) => {
     if (!qty_to_add || qty_to_add <= 0) {
       return res.status(400).json({
         success: false,
-        message: 'Quantity to add must be greater than 0'
+        message: 'Quantity to add must be greater than 0',
       });
     }
 
@@ -976,7 +976,7 @@ const addStockQuantity = async (req, res) => {
     if (!stock) {
       return res.status(404).json({
         success: false,
-        message: 'Stock record not found'
+        message: 'Stock record not found',
       });
     }
 
@@ -993,17 +993,17 @@ const addStockQuantity = async (req, res) => {
       await stock.update({
         qty_on_hand: newQty,
         low_stock_alert: shouldAlert,
-        unit_price: unit_price || stock.unit_price
+        unit_price: unit_price || stock.unit_price,
       }, { transaction });
 
       // If unit_price is provided, update ALL existing stock of the same material
       if (unit_price) {
         await Stock.update(
           { unit_price: unit_price },
-          { 
+          {
             where: { material_id: stock.material_id },
-            transaction 
-          }
+            transaction,
+          },
         );
       }
 
@@ -1020,7 +1020,7 @@ const addStockQuantity = async (req, res) => {
         qty_after: newQty,
         unit_price: unit_price,
         notes: notes || `Stock added by storekeeper${unit_price ? ` with new price ${unit_price}` : ''}`,
-        created_by: req.user.id
+        created_by: req.user.id,
       }, { transaction });
 
       // Also create stock movement record for backward compatibility
@@ -1033,7 +1033,7 @@ const addStockQuantity = async (req, res) => {
         qty: addedQty,
         unit_price: unit_price,
         notes: notes || `Stock added by storekeeper${unit_price ? ` with new price ${unit_price}` : ''}`,
-        created_by: req.user.id
+        created_by: req.user.id,
       }, { transaction });
 
       await transaction.commit();
@@ -1050,11 +1050,11 @@ const addStockQuantity = async (req, res) => {
             added_qty: qty_to_add,
             new_qty: newQty,
             low_stock_alert: shouldAlert,
-            unit_price: unit_price || stock.unit_price
+            unit_price: unit_price || stock.unit_price,
           },
           stock_movement: stockMovement,
-          price_updated: !!unit_price
-        }
+          price_updated: !!unit_price,
+        },
       });
     } catch (error) {
       await transaction.rollback();
@@ -1064,7 +1064,7 @@ const addStockQuantity = async (req, res) => {
     console.error('Add stock quantity error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -1073,29 +1073,29 @@ const addStockQuantity = async (req, res) => {
 // Get stock history with date range filtering
 const getStockHistory = async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 10, 
-      stock_id, 
-      material_id, 
-      store_id, 
+    const {
+      page = 1,
+      limit = 10,
+      stock_id,
+      material_id,
+      store_id,
       movement_type,
-      date_from, 
-      date_to 
+      date_from,
+      date_to,
     } = req.query;
-    
+
     const offset = (page - 1) * limit;
 
     const whereClause = {};
-    if (stock_id) whereClause.stock_id = stock_id;
-    if (material_id) whereClause.material_id = material_id;
-    if (store_id) whereClause.store_id = store_id;
-    if (movement_type) whereClause.movement_type = movement_type;
-    
+    if (stock_id) {whereClause.stock_id = stock_id;}
+    if (material_id) {whereClause.material_id = material_id;}
+    if (store_id) {whereClause.store_id = store_id;}
+    if (movement_type) {whereClause.movement_type = movement_type;}
+
     if (date_from || date_to) {
       whereClause.created_at = {};
-      if (date_from) whereClause.created_at[Op.gte] = new Date(date_from);
-      if (date_to) whereClause.created_at[Op.lte] = new Date(date_to);
+      if (date_from) {whereClause.created_at[Op.gte] = new Date(date_from);}
+      if (date_to) {whereClause.created_at[Op.lte] = new Date(date_to);}
     }
 
     const { count, rows: history } = await StockHistory.findAndCountAll({
@@ -1107,23 +1107,23 @@ const getStockHistory = async (req, res) => {
           include: [
             {
               model: Unit,
-              as: 'unit'
-            }
-          ]
+              as: 'unit',
+            },
+          ],
         },
         {
           model: Store,
-          as: 'store'
+          as: 'store',
         },
         {
           model: User,
           as: 'createdBy',
-          attributes: ['id', 'full_name', 'email']
-        }
+          attributes: ['id', 'full_name', 'email'],
+        },
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['created_at', 'DESC']]
+      order: [['created_at', 'DESC']],
     });
 
     res.json({
@@ -1134,15 +1134,15 @@ const getStockHistory = async (req, res) => {
           current_page: parseInt(page),
           total_pages: Math.ceil(count / limit),
           total_items: count,
-          items_per_page: parseInt(limit)
-        }
-      }
+          items_per_page: parseInt(limit),
+        },
+      },
     });
   } catch (error) {
     console.error('Get stock history error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -1162,7 +1162,7 @@ module.exports = {
   getStockByMaterialId,
   getIssuedMaterials,
   addStockQuantity,
-  getStockHistory
+  getStockHistory,
 };
 
 

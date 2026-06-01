@@ -8,9 +8,11 @@ import {
     AsYouType,
     type CountryCode
 } from 'libphonenumber-js';
-import userService, { type CreateUserInput } from '../../../services/userService';
-import roleService, { type Role } from '../../../services/roleService';
-import { formatRole } from '../../../utils/dateUtils';
+import { userService } from '../../../services';
+import type { CreateUserInput } from '../../../services/userService';
+import { roleService } from '../../../services';
+import type { Role } from '../../../services/roleService';
+import { formatRole } from '../../../utils';
 
 interface AddEmployeeModalProps {
     isOpen: boolean;

@@ -5,48 +5,48 @@ const Approval = sequelize.define('Approval', {
   id: {
     type: DataTypes.BIGINT,
     primaryKey: true,
-    autoIncrement: true
+    autoIncrement: true,
   },
   request_id: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'requests',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   level: {
     type: DataTypes.ENUM('DSE', 'PADIRI'),
-    allowNull: false
+    allowNull: false,
   },
   reviewer_id: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'users',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   action: {
     type: DataTypes.ENUM('APPROVED', 'REJECTED', 'VERIFIED','MODIFIED'),
-    allowNull: false
+    allowNull: false,
   },
   comment: {
-    type: DataTypes.TEXT
+    type: DataTypes.TEXT,
   },
   created_at: {
     type: DataTypes.DATE,
     allowNull: false,
-    defaultValue: DataTypes.NOW
-  }
+    defaultValue: DataTypes.NOW,
+  },
 }, {
   tableName: 'approvals',
   timestamps: false,
   indexes: [
     {
-      fields: ['request_id', 'level']
-    }
-  ]
+      fields: ['request_id', 'level'],
+    },
+  ],
 });
 
 module.exports = Approval;

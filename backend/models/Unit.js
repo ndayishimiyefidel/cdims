@@ -6,19 +6,19 @@ const Unit = sequelize.define('Unit', {
   id: {
     type: DataTypes.BIGINT,
     primaryKey: true,
-    autoIncrement: true
+    autoIncrement: true,
   },
   code: {
     type: DataTypes.STRING(20),
     allowNull: false,
-    unique: true
+    unique: true,
   },
   name: {
     type: DataTypes.STRING(100),
-    allowNull: false
-  }
+    allowNull: false,
+  },
 }, {
-  tableName: 'units'
+  tableName: 'units',
 });
 
-module.exports = Unit;  
+module.exports = Unit;

@@ -4,27 +4,27 @@ const { sequelize } = require('../../src/config/database');
 
 const getAllRequests = async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 10, 
-      status, 
-      site_id, 
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      site_id,
       requested_by,
       date_from,
       date_to,
       material_id,
       store_id,
       ref_no,
-      search
+      search,
     } = req.query;
     const offset = (page - 1) * limit;
 
     const whereClause = {};
-    if (status) whereClause.status = status;
-    if (site_id) whereClause.site_id = site_id;
-    if (requested_by) whereClause.requested_by = requested_by;
-    if (ref_no) whereClause.ref_no = { [Op.like]: `%${ref_no}%` };
-    
+    if (status) {whereClause.status = status;}
+    if (site_id) {whereClause.site_id = site_id;}
+    if (requested_by) {whereClause.requested_by = requested_by;}
+    if (ref_no) {whereClause.ref_no = { [Op.like]: `%${ref_no}%` };}
+
     // Date range filtering
     if (date_from || date_to) {
       whereClause.created_at = {};
@@ -41,15 +41,15 @@ const getAllRequests = async (req, res) => {
       include: [
         {
           model: Site,
-          as: 'site'
+          as: 'site',
         },
         {
           model: User,
           as: 'requestedBy',
           include: [{
             model: Role,
-            as: 'role'
-          }]
+            as: 'role',
+          }],
         },
          {
 model: Approval,
@@ -60,10 +60,10 @@ model: Approval,
               as: 'reviewer',
               include: [{
                 model: Role,
-                as: 'role'
-              }]
-            }
-          ]
+                as: 'role',
+              }],
+            },
+          ],
         },
         {
           model: RequestItem,
@@ -75,24 +75,24 @@ model: Approval,
               include: [
                 {
                   model: Unit,
-                  as: 'unit'
-                }
-              ]
+                  as: 'unit',
+                },
+              ],
             },
             {
               model: Unit,
-              as: 'unit'
-            }
+              as: 'unit',
+            },
           ],
           // Filter by material if specified
           ...(material_id && {
-            where: { material_id: material_id }
-          })
-        }
+            where: { material_id: material_id },
+          }),
+        },
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['created_at', 'DESC']]
+      order: [['created_at', 'DESC']],
     });
 
     res.json({
@@ -103,39 +103,39 @@ model: Approval,
           current_page: parseInt(page),
           total_pages: Math.ceil(count / limit),
           total_items: count,
-          items_per_page: parseInt(limit)
-        }
-      }
+          items_per_page: parseInt(limit),
+        },
+      },
     });
   } catch (error) {
     console.error('Get all requests error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
 
 const getMyRequests = async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 10, 
-      status, 
+    const {
+      page = 1,
+      limit = 10,
+      status,
       site_id,
       date_from,
       date_to,
       material_id,
-      ref_no
+      ref_no,
     } = req.query;
     const offset = (page - 1) * limit;
     const userId = req.user.id;
 
     const whereClause = { requested_by: userId };
-    if (status) whereClause.status = status;
-    if (site_id) whereClause.site_id = site_id;
-    if (ref_no) whereClause.ref_no = { [Op.like]: `%${ref_no}%` };
-    
+    if (status) {whereClause.status = status;}
+    if (site_id) {whereClause.site_id = site_id;}
+    if (ref_no) {whereClause.ref_no = { [Op.like]: `%${ref_no}%` };}
+
     // Date range filtering
     if (date_from || date_to) {
       whereClause.created_at = {};
@@ -152,15 +152,15 @@ const getMyRequests = async (req, res) => {
       include: [
         {
           model: Site,
-          as: 'site'
+          as: 'site',
         },
         {
           model: User,
           as: 'requestedBy',
           include: [{
             model: Role,
-            as: 'role'
-          }]
+            as: 'role',
+          }],
         },
         {
           model: RequestItem,
@@ -168,13 +168,13 @@ const getMyRequests = async (req, res) => {
           include: [
             {
               model: Material,
-              as: 'material'
+              as: 'material',
             },
             {
               model: Unit,
-              as: 'unit'
-            }
-          ]
+              as: 'unit',
+            },
+          ],
         },
         {
           model: Approval,
@@ -185,15 +185,15 @@ const getMyRequests = async (req, res) => {
               as: 'reviewer',
               include: [{
                 model: Role,
-                as: 'role'
-              }]
-            }
-          ]
-        }
+                as: 'role',
+              }],
+            },
+          ],
+        },
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['created_at', 'DESC']]
+      order: [['created_at', 'DESC']],
     });
 
     res.json({
@@ -204,15 +204,15 @@ const getMyRequests = async (req, res) => {
           current_page: parseInt(page),
           total_pages: Math.ceil(count / limit),
           total_items: count,
-          items_per_page: parseInt(limit)
-        }
-      }
+          items_per_page: parseInt(limit),
+        },
+      },
     });
   } catch (error) {
     console.error('Get my requests error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -220,32 +220,32 @@ const getMyRequests = async (req, res) => {
 // Enhanced function for Site Engineers with comprehensive filtering
 const getSiteEngineerRequests = async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 10, 
-      status, 
-      site_id, 
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      site_id,
       date_from,
       date_to,
       material_id,
       ref_no,
-      search
+      search,
     } = req.query;
     const offset = (page - 1) * limit;
     const userId = req.user.id;
     const userRole = req.user.role.name;
 
     // Build where clause based on user role
-    let whereClause = {};
-    
+    const whereClause = {};
+
     if (userRole === 'SITE_ENGINEER') {
       // Site Engineers can only see their assigned sites
       const assignments = await SiteAssignment.findAll({
         where: { user_id: userId, status: 'ACTIVE' },
-        attributes: ['site_id']
+        attributes: ['site_id'],
       });
       const assignedSiteIds = assignments.map(a => a.site_id);
-      
+
       if (assignedSiteIds.length === 0) {
         return res.json({
           success: true,
@@ -255,22 +255,22 @@ const getSiteEngineerRequests = async (req, res) => {
               current_page: parseInt(page),
               total_pages: 0,
               total_items: 0,
-              items_per_page: parseInt(limit)
-            }
-          }
+              items_per_page: parseInt(limit),
+            },
+          },
         });
       }
-      
+
       whereClause.site_id = { [Op.in]: assignedSiteIds };
     } else {
       // Admin, Padiri, DSE can see all requests
-      if (site_id) whereClause.site_id = site_id;
+      if (site_id) {whereClause.site_id = site_id;}
     }
 
     // Apply additional filters
-    if (status) whereClause.status = status;
-    if (ref_no) whereClause.ref_no = { [Op.like]: `%${ref_no}%` };
-    
+    if (status) {whereClause.status = status;}
+    if (ref_no) {whereClause.ref_no = { [Op.like]: `%${ref_no}%` };}
+
     // Date range filtering
     if (date_from || date_to) {
       whereClause.created_at = {};
@@ -287,15 +287,15 @@ const getSiteEngineerRequests = async (req, res) => {
       include: [
         {
           model: Site,
-          as: 'site'
+          as: 'site',
         },
         {
           model: User,
           as: 'requestedBy',
           include: [{
             model: Role,
-            as: 'role'
-          }]
+            as: 'role',
+          }],
         },
         {
           model: RequestItem,
@@ -307,19 +307,19 @@ const getSiteEngineerRequests = async (req, res) => {
               include: [
                 {
                   model: Unit,
-                  as: 'unit'
-                }
-              ]
+                  as: 'unit',
+                },
+              ],
             },
             {
               model: Unit,
-              as: 'unit'
-            }
+              as: 'unit',
+            },
           ],
           // Filter by material if specified
           ...(material_id && {
-            where: { material_id: material_id }
-          })
+            where: { material_id: material_id },
+          }),
         },
         {
           model: Approval,
@@ -330,16 +330,16 @@ const getSiteEngineerRequests = async (req, res) => {
               as: 'reviewer',
               include: [{
                 model: Role,
-                as: 'role'
-              }]
-            }
+                as: 'role',
+              }],
+            },
           ],
-          order: [['created_at', 'DESC']]
-        }
+          order: [['created_at', 'DESC']],
+        },
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['created_at', 'DESC']]
+      order: [['created_at', 'DESC']],
     });
 
     // Enhanced response with detailed item information
@@ -351,7 +351,7 @@ const getSiteEngineerRequests = async (req, res) => {
           name: item.material.name,
           code: item.material.code,
           specification: item.material.specification,
-          unit: item.material.unit
+          unit: item.material.unit,
         },
         unit: item.unit,
         qty_requested: parseFloat(item.qty_requested),
@@ -368,7 +368,7 @@ const getSiteEngineerRequests = async (req, res) => {
         issued_at: item.issued_at,
         issued_by: item.issued_by,
         received_at: item.received_at,
-        received_by: item.received_by
+        received_by: item.received_by,
       }));
 
       return {
@@ -383,9 +383,9 @@ const getSiteEngineerRequests = async (req, res) => {
           total_qty_received: enhancedItems.reduce((sum, item) => sum + item.qty_received, 0),
           fully_issued_items: enhancedItems.filter(item => item.is_fully_issued).length,
           fully_received_items: enhancedItems.filter(item => item.is_fully_received).length,
-          completion_percentage: enhancedItems.length > 0 ? 
-            Math.round((enhancedItems.filter(item => item.is_fully_received).length / enhancedItems.length) * 100) : 0
-        }
+          completion_percentage: enhancedItems.length > 0 ?
+            Math.round((enhancedItems.filter(item => item.is_fully_received).length / enhancedItems.length) * 100) : 0,
+        },
       };
     });
 
@@ -397,7 +397,7 @@ const getSiteEngineerRequests = async (req, res) => {
           current_page: parseInt(page),
           total_pages: Math.ceil(count / limit),
           total_items: count,
-          items_per_page: parseInt(limit)
+          items_per_page: parseInt(limit),
         },
         filters_applied: {
           status,
@@ -405,15 +405,15 @@ const getSiteEngineerRequests = async (req, res) => {
           date_from,
           date_to,
           material_id,
-          ref_no
-        }
-      }
+          ref_no,
+        },
+      },
     });
   } catch (error) {
     console.error('Get site engineer requests error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -426,15 +426,15 @@ const getRequestById = async (req, res) => {
       include: [
         {
           model: Site,
-          as: 'site'
+          as: 'site',
         },
         {
           model: User,
           as: 'requestedBy',
           include: [{
             model: Role,
-            as: 'role'
-          }]
+            as: 'role',
+          }],
         },
         {
 model: Approval,
@@ -445,10 +445,10 @@ model: Approval,
               as: 'reviewer',
               include: [{
                 model: Role,
-                as: 'role'
-              }]
-            }
-          ]
+                as: 'role',
+              }],
+            },
+          ],
         },
         {
           model: RequestItem,
@@ -460,35 +460,35 @@ model: Approval,
               include: [
                 {
                   model: Unit,
-                  as: 'unit'
-                }
-              ]
+                  as: 'unit',
+                },
+              ],
             },
             {
               model: Unit,
-              as: 'unit'
-            }
-          ]
-        }
-      ]
+              as: 'unit',
+            },
+          ],
+        },
+      ],
     });
 
     if (!request) {
       return res.status(404).json({
         success: false,
-        message: 'Request not found'
+        message: 'Request not found',
       });
     }
 
     res.json({
       success: true,
-      data: { request }
+      data: { request },
     });
   } catch (error) {
     console.error('Get request by ID error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -502,24 +502,24 @@ const createRequest = async (req, res) => {
     if (!site_id || !items || items.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Site ID and items are required'
+        message: 'Site ID and items are required',
       });
     }
 
     // Validate site access for SITE_ENGINEER
     if (userRole === 'SITE_ENGINEER') {
       const siteAssignment = await SiteAssignment.findOne({
-        where: { 
-          user_id: requested_by, 
-          site_id: site_id, 
-          status: 'ACTIVE' 
-        }
+        where: {
+          user_id: requested_by,
+          site_id: site_id,
+          status: 'ACTIVE',
+        },
       });
 
       if (!siteAssignment) {
         return res.status(403).json({
           success: false,
-          message: 'You are not assigned to this site. Please select a site you are assigned to.'
+          message: 'You are not assigned to this site. Please select a site you are assigned to.',
         });
       }
     }
@@ -529,7 +529,7 @@ const createRequest = async (req, res) => {
     if (!site) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid site ID'
+        message: 'Invalid site ID',
       });
     }
 
@@ -537,7 +537,7 @@ const createRequest = async (req, res) => {
       site_id,
       requested_by,
       notes,
-      status: 'PENDING'
+      status: 'PENDING',
     });
 
     // Create request items
@@ -548,15 +548,15 @@ const createRequest = async (req, res) => {
         if (!material) {
           throw new Error(`Material with ID ${item.material_id} not found`);
         }
-        
+
         return RequestItem.create({
           request_id: request.id,
           material_id: item.material_id,
           unit_id: item.unit_id || material.unit_id,
           qty_requested: item.qty_requested,
-          notes: item.notes || null
+          notes: item.notes || null,
         });
-      })
+      }),
     );
 
     // Fetch complete request with items
@@ -564,15 +564,15 @@ const createRequest = async (req, res) => {
       include: [
         {
           model: Site,
-          as: 'site'
+          as: 'site',
         },
         {
           model: User,
           as: 'requestedBy',
           include: [{
             model: Role,
-            as: 'role'
-          }]
+            as: 'role',
+          }],
         },
         {
           model: RequestItem,
@@ -580,27 +580,27 @@ const createRequest = async (req, res) => {
           include: [
             {
               model: Material,
-              as: 'material'
+              as: 'material',
             },
             {
               model: Unit,
-              as: 'unit'
-            }
-          ]
-        }
-      ]
+              as: 'unit',
+            },
+          ],
+        },
+      ],
     });
 
     res.status(201).json({
       success: true,
       data: { request: completeRequest },
-      message: 'Request created successfully'
+      message: 'Request created successfully',
     });
   } catch (error) {
     console.error('Create request error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -616,7 +616,7 @@ const updateRequest = async (req, res) => {
     if (!request) {
       return res.status(404).json({
         success: false,
-        message: 'Request not found'
+        message: 'Request not found',
       });
     }
 
@@ -624,7 +624,7 @@ const updateRequest = async (req, res) => {
     if (userRole === 'SITE_ENGINEER' && request.requested_by !== userId) {
       return res.status(403).json({
         success: false,
-        message: 'You can only modify your own requests'
+        message: 'You can only modify your own requests',
       });
     }
 
@@ -632,17 +632,17 @@ const updateRequest = async (req, res) => {
     if (site_id && site_id !== request.site_id) {
       if (userRole === 'SITE_ENGINEER') {
         const siteAssignment = await SiteAssignment.findOne({
-          where: { 
-            user_id: userId, 
-            site_id: site_id, 
-            status: 'ACTIVE' 
-          }
+          where: {
+            user_id: userId,
+            site_id: site_id,
+            status: 'ACTIVE',
+          },
         });
 
         if (!siteAssignment) {
           return res.status(403).json({
             success: false,
-            message: 'You are not assigned to this site. Please select a site you are assigned to.'
+            message: 'You are not assigned to this site. Please select a site you are assigned to.',
           });
         }
       }
@@ -652,7 +652,7 @@ const updateRequest = async (req, res) => {
       if (!site) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid site ID'
+          message: 'Invalid site ID',
         });
       }
 
@@ -660,24 +660,24 @@ const updateRequest = async (req, res) => {
     }
 
     // Update request fields
-    if (notes !== undefined) request.notes = notes;
+    if (notes !== undefined) {request.notes = notes;}
     await request.save();
 
     // Update items if provided
     if (items) {
       // Delete existing items
       await RequestItem.destroy({ where: { request_id: id } });
-      
+
       // Create new items
       await Promise.all(
-        items.map(item => 
+        items.map(item =>
           RequestItem.create({
             request_id: id,
             material_id: item.material_id,
             unit_id: item.unit_id,
-            qty_requested: item.qty_requested
-          })
-        )
+            qty_requested: item.qty_requested,
+          }),
+        ),
       );
     }
 
@@ -686,15 +686,15 @@ const updateRequest = async (req, res) => {
       include: [
         {
           model: Site,
-          as: 'site'
+          as: 'site',
         },
         {
           model: User,
           as: 'requestedBy',
           include: [{
             model: Role,
-            as: 'role'
-          }]
+            as: 'role',
+          }],
         },
                         {
 model: Approval,
@@ -705,10 +705,10 @@ model: Approval,
               as: 'reviewer',
               include: [{
                 model: Role,
-                as: 'role'
-              }]
-            }
-          ]
+                as: 'role',
+              }],
+            },
+          ],
         },
         {
           model: RequestItem,
@@ -716,27 +716,27 @@ model: Approval,
           include: [
             {
               model: Material,
-              as: 'material'
+              as: 'material',
             },
             {
               model: Unit,
-              as: 'unit'
-            }
-          ]
-        }
-      ]
+              as: 'unit',
+            },
+          ],
+        },
+      ],
     });
 
     res.json({
       success: true,
       data: { request: updatedRequest },
-      message: 'Request updated successfully'
+      message: 'Request updated successfully',
     });
   } catch (error) {
     console.error('Update request error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -749,14 +749,14 @@ const submitRequest = async (req, res) => {
     if (!request) {
       return res.status(404).json({
         success: false,
-        message: 'Request not found'
+        message: 'Request not found',
       });
     }
 
     if (request.status !== 'PENDING') {
       return res.status(400).json({
         success: false,
-        message: 'Only PENDING requests can be submitted'
+        message: 'Only PENDING requests can be submitted',
       });
     }
 
@@ -765,26 +765,26 @@ const submitRequest = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Request submitted successfully'
+      message: 'Request submitted successfully',
     });
   } catch (error) {
     console.error('Submit request error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
 const approveRequest = async (req, res) => {
   try {
     const { id } = req.params;
-    const { 
-      level, 
-      comment, 
-      item_modifications, 
-      items_to_add, 
-      items_to_remove, 
-      modification_reason 
+    const {
+      level,
+      comment,
+      item_modifications,
+      items_to_add,
+      items_to_remove,
+      modification_reason,
     } = req.body;
     const reviewer_id = req.user.id;
 
@@ -795,36 +795,36 @@ const approveRequest = async (req, res) => {
           as: 'items',
           include: [
             { model: Material, as: 'material' },
-            { model: Unit, as: 'unit' }
-          ]
-        }
-      ]
+            { model: Unit, as: 'unit' },
+          ],
+        },
+      ],
     });
 
     if (!request) {
       return res.status(404).json({
         success: false,
-        message: 'Request not found'
+        message: 'Request not found',
       });
     }
 
-  
-    
+
+
     // Check if user has permission to modify items
     const canModifyItems = ['ADMIN', 'PADIRI', 'DIOCESAN_SITE_ENGINEER'].includes(req.user.role.name);
-    
+
     if (canModifyItems && (item_modifications || items_to_add || items_to_remove)) {
       // Start transaction for item modifications
       const transaction = await sequelize.transaction();
 
-   
-      
+
+
       try {
         // Remove items if specified
         if (items_to_remove && items_to_remove.length > 0) {
           await RequestItem.destroy({
             where: { id: items_to_remove },
-            transaction
+            transaction,
           });
         }
 
@@ -837,7 +837,7 @@ const approveRequest = async (req, res) => {
               qty_requested: item.qty_requested,
               qty_approved: item.qty_approved || item.qty_requested,
               notes: item.notes,
-              unit_id: item.unit_id
+              unit_id: item.unit_id,
             }, { transaction });
           }
         }
@@ -847,19 +847,19 @@ const approveRequest = async (req, res) => {
         for (const modification of item_modifications) {
   const updateData = {};
 
-  if (modification.qty_requested != null) updateData.qty_requested = modification.qty_requested;
-  if (modification.qty_approved != null) updateData.qty_approved = modification.qty_approved;
-  if (modification.material_id != null) updateData.material_id = modification.material_id;
-  if (modification.notes != null) updateData.notes = modification.notes;
-  if (modification.unit_id != null) updateData.unit_id = modification.unit_id;
+  if (modification.qty_requested != null) {updateData.qty_requested = modification.qty_requested;}
+  if (modification.qty_approved != null) {updateData.qty_approved = modification.qty_approved;}
+  if (modification.material_id != null) {updateData.material_id = modification.material_id;}
+  if (modification.notes != null) {updateData.notes = modification.notes;}
+  if (modification.unit_id != null) {updateData.unit_id = modification.unit_id;}
 
- 
 
-  if (Object.keys(updateData).length === 0) continue; // skip empty
+
+  if (Object.keys(updateData).length === 0) {continue;} // skip empty
 
   const [updatedRows] = await RequestItem.update(updateData, {
     where: { id: modification.request_item_id },
-    transaction
+    transaction,
   });
 
 
@@ -878,7 +878,7 @@ const approveRequest = async (req, res) => {
         if (item.qty_approved === null || item.qty_approved === undefined) {
           await RequestItem.update(
             { qty_approved: item.qty_requested },
-            { where: { id: item.id } }
+            { where: { id: item.id } },
           );
         }
       }
@@ -886,10 +886,10 @@ const approveRequest = async (req, res) => {
 
     // Prevent duplicate approvals by same user & level
     const existingApproval = await Approval.findOne({
-      where: { request_id: id, level, reviewer_id }
+      where: { request_id: id, level, reviewer_id },
     });
 
-    
+
 
     // Update request status
     if (req.user.role.name === 'DIOCESAN_SITE_ENGINEER') {
@@ -900,7 +900,7 @@ const approveRequest = async (req, res) => {
         level,
         reviewer_id,
         action: 'VERIFIED',
-        comment
+        comment,
       });
     }
     } else if (req.user.role.name === 'PADIRI' || req.user.role.name === 'ADMIN') {
@@ -911,7 +911,7 @@ const approveRequest = async (req, res) => {
         level,
         reviewer_id,
         action: 'APPROVED',
-        comment
+        comment,
       });
     }
     }
@@ -924,7 +924,7 @@ const approveRequest = async (req, res) => {
         {
           model: User,
           as: 'requestedBy',
-          include: [{ model: Role, as: 'role' }]
+          include: [{ model: Role, as: 'role' }],
         },
                 {
 model: Approval,
@@ -935,32 +935,32 @@ model: Approval,
               as: 'reviewer',
               include: [{
                 model: Role,
-                as: 'role'
-              }]
-            }
-          ]
+                as: 'role',
+              }],
+            },
+          ],
         },
         {
           model: RequestItem,
           as: 'items',
           include: [
             { model: Material, as: 'material' },
-            { model: Unit, as: 'unit' }
-          ]
-        }
-      ]
+            { model: Unit, as: 'unit' },
+          ],
+        },
+      ],
     });
 
     res.json({
       success: true,
       data: { request: updatedRequest },
-      message: `Request approved by ${level} and forwarded to next level`
+      message: `Request approved by ${level} and forwarded to next level`,
     });
   } catch (error) {
     console.error('Approve request error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -975,7 +975,7 @@ const rejectRequest = async (req, res) => {
     if (!request) {
       return res.status(404).json({
         success: false,
-        message: 'Request not found'
+        message: 'Request not found',
       });
     }
 
@@ -985,7 +985,7 @@ const rejectRequest = async (req, res) => {
       level: level,
       reviewer_id: reviewer_id,
       action: 'REJECTED',
-      comment: comment
+      comment: comment,
     });
 
     // Update request status to rejected
@@ -998,7 +998,7 @@ const rejectRequest = async (req, res) => {
         {
           model: User,
           as: 'requestedBy',
-          include: [{ model: Role, as: 'role' }]
+          include: [{ model: Role, as: 'role' }],
         },
                 {
 model: Approval,
@@ -1009,34 +1009,34 @@ model: Approval,
               as: 'reviewer',
               include: [{
                 model: Role,
-                as: 'role'
-              }]
-            }
-          ]
+                as: 'role',
+              }],
+            },
+          ],
         },
         {
           model: RequestItem,
           as: 'items',
           include: [
             { model: Material, as: 'material' },
-            { model: Unit, as: 'unit' }
-          ]
-        }
-      ]
+            { model: Unit, as: 'unit' },
+          ],
+        },
+      ],
     });
 
 
     res.json({
       success: true,
-     
+
       data: { request: updatedRequest },
-      message: `Request rejected by ${level}. Site Engineer and Diocesan Site Engineer will be notified.`
+      message: `Request rejected by ${level}. Site Engineer and Diocesan Site Engineer will be notified.`,
     });
   } catch (error) {
     console.error('Reject request error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -1046,14 +1046,14 @@ const getRequestComments = async (req, res) => {
   res.json({
     success: true,
     data: { comments: [] },
-    message: 'Comments feature coming soon'
+    message: 'Comments feature coming soon',
   });
 };
 
 const addComment = async (req, res) => {
   res.json({
     success: true,
-    message: 'Comments feature coming soon'
+    message: 'Comments feature coming soon',
   });
 };
 
@@ -1061,26 +1061,26 @@ const getRequestAttachments = async (req, res) => {
   res.json({
     success: true,
     data: { attachments: [] },
-    message: 'Attachments feature coming soon'
+    message: 'Attachments feature coming soon',
   });
 };
 
 const uploadAttachment = async (req, res) => {
   res.json({
     success: true,
-    message: 'File upload feature coming soon'
+    message: 'File upload feature coming soon',
   });
 };
 
 const modifyRequest = async (req, res) => {
   try {
     const { id } = req.params;
-    const { 
-      notes, 
-      item_modifications, 
-      items_to_add, 
+    const {
+      notes,
+      item_modifications,
+      items_to_add,
       items_to_remove,
-      modification_reason 
+      modification_reason,
     } = req.body;
     const modifier_id = req.user.id;
     const userRole = req.user.role.name;
@@ -1092,16 +1092,16 @@ const modifyRequest = async (req, res) => {
           as: 'items',
           include: [
             { model: Material, as: 'material' },
-            { model: Unit, as: 'unit' }
-          ]
-        }
-      ]
+            { model: Unit, as: 'unit' },
+          ],
+        },
+      ],
     });
 
     if (!request) {
       return res.status(404).json({
         success: false,
-        message: 'Request not found'
+        message: 'Request not found',
       });
     }
 
@@ -1110,7 +1110,7 @@ const modifyRequest = async (req, res) => {
     if (!canModify.allowed) {
       return res.status(403).json({
         success: false,
-        message: canModify.reason
+        message: canModify.reason,
       });
     }
 
@@ -1127,26 +1127,26 @@ const modifyRequest = async (req, res) => {
       if (item_modifications && item_modifications.length > 0) {
         for (const modification of item_modifications) {
           const updateData = {};
-          
+
           if (modification.qty_requested !== undefined) {
             updateData.qty_requested = modification.qty_requested;
           }
-          
+
           if (modification.qty_approved !== undefined) {
             updateData.qty_approved = modification.qty_approved;
           }
-          
+
           if (modification.material_id !== undefined) {
             updateData.material_id = modification.material_id;
           }
-          
+
           if (modification.unit_id !== undefined) {
             updateData.unit_id = modification.unit_id;
           }
 
           await RequestItem.update(updateData, {
             where: { id: modification.request_item_id },
-            transaction
+            transaction,
           });
         }
       }
@@ -1161,7 +1161,7 @@ const modifyRequest = async (req, res) => {
             qty_requested: newItem.qty_requested,
             qty_approved: newItem.qty_approved || newItem.qty_requested,
             qty_issued: 0,
-            qty_received: 0
+            qty_received: 0,
           }, { transaction });
         }
       }
@@ -1171,16 +1171,16 @@ const modifyRequest = async (req, res) => {
         await RequestItem.destroy({
           where: {
             id: { [Op.in]: items_to_remove },
-            request_id: id
+            request_id: id,
           },
-          transaction
+          transaction,
         });
       }
 
       // 4. Update request status based on who modified it
       let newStatus = request.status;
       let level = 'DSE';
-      
+
       if (userRole === 'ADMIN' || userRole === 'PADIRI') {
         // Admin/Padiri can modify at any stage and reset to appropriate status
         if (request.status === 'VERIFIED' || request.status === 'APPROVED') {
@@ -1202,7 +1202,7 @@ const modifyRequest = async (req, res) => {
         level: level,
         reviewer_id: modifier_id,
         action: 'MODIFIED',
-        comment: modification_reason || `Request modified by ${userRole}`
+        comment: modification_reason || `Request modified by ${userRole}`,
       }, { transaction });
 
       await transaction.commit();
@@ -1214,15 +1214,15 @@ const modifyRequest = async (req, res) => {
           {
             model: User,
             as: 'requestedBy',
-            include: [{ model: Role, as: 'role' }]
+            include: [{ model: Role, as: 'role' }],
           },
           {
             model: RequestItem,
             as: 'items',
             include: [
               { model: Material, as: 'material' },
-              { model: Unit, as: 'unit' }
-            ]
+              { model: Unit, as: 'unit' },
+            ],
           },
           {
             model: Approval,
@@ -1231,12 +1231,12 @@ const modifyRequest = async (req, res) => {
               {
                 model: User,
                 as: 'reviewer',
-                include: [{ model: Role, as: 'role' }]
-              }
+                include: [{ model: Role, as: 'role' }],
+              },
             ],
-            order: [['created_at', 'DESC']]
-          }
-        ]
+            order: [['created_at', 'DESC']],
+          },
+        ],
       });
 
       res.json({
@@ -1248,9 +1248,9 @@ const modifyRequest = async (req, res) => {
             items_modified: item_modifications?.length || 0,
             items_added: items_to_add?.length || 0,
             items_removed: items_to_remove?.length || 0,
-            new_status: newStatus
-          }
-        }
+            new_status: newStatus,
+          },
+        },
       });
 
     } catch (error) {
@@ -1262,7 +1262,7 @@ const modifyRequest = async (req, res) => {
     console.error('Modify request error:', error);
     res.status(500).json({
       success: false,
-      message: error.message || 'Internal server error'
+      message: error.message || 'Internal server error',
     });
   }
 };
@@ -1273,22 +1273,22 @@ const checkModificationPermissions = (requestStatus, userRole) => {
   if (userRole === 'ADMIN' || userRole === 'PADIRI') {
     return { allowed: true };
   }
-  
+
   // DSE can modify during review stages
   if (userRole === 'DIOCESAN_SITE_ENGINEER') {
     const allowedStatuses = ['DSE_REVIEW', 'VERIFIED', 'WAITING_PADIRI_REVIEW','PENDING'];
     if (allowedStatuses.includes(requestStatus)) {
       return { allowed: true };
     }
-    return { 
-      allowed: false, 
-      reason: 'DSE can only modify requests during review stages' 
+    return {
+      allowed: false,
+      reason: 'DSE can only modify requests during review stages',
     };
   }
-  
-  return { 
-    allowed: false, 
-    reason: 'Insufficient permissions to modify this request' 
+
+  return {
+    allowed: false,
+    reason: 'Insufficient permissions to modify this request',
   };
 };
 
@@ -1302,14 +1302,14 @@ const approveForStorekeeper = async (req, res) => {
     if (!request) {
       return res.status(404).json({
         success: false,
-        message: 'Request not found'
+        message: 'Request not found',
       });
     }
 
     if (request.status !== 'WAITING_PADIRI_REVIEW') {
       return res.status(400).json({
         success: false,
-        message: 'Only requests in WAITING_PADIRI_REVIEW status can be approved for storekeeper'
+        message: 'Only requests in WAITING_PADIRI_REVIEW status can be approved for storekeeper',
       });
     }
 
@@ -1319,7 +1319,7 @@ const approveForStorekeeper = async (req, res) => {
       level: 'PADIRI',
       reviewer_id: approver_id,
       action: 'APPROVED',
-      comment: comment
+      comment: comment,
     });
 
     // Update request status to approved (ready for storekeeper)
@@ -1328,13 +1328,13 @@ const approveForStorekeeper = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Request approved and sent to storekeeper for material issuance'
+      message: 'Request approved and sent to storekeeper for material issuance',
     });
   } catch (error) {
     console.error('Approve for storekeeper error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -1346,22 +1346,22 @@ const getRequestsBySite = async (req, res) => {
     const offset = (page - 1) * limit;
 
     const whereClause = { site_id };
-    if (status) whereClause.status = status;
+    if (status) {whereClause.status = status;}
 
     const { count, rows: requests } = await Request.findAndCountAll({
       where: whereClause,
       include: [
         {
           model: Site,
-          as: 'site'
+          as: 'site',
         },
         {
           model: User,
           as: 'requestedBy',
           include: [{
             model: Role,
-            as: 'role'
-          }]
+            as: 'role',
+          }],
         },
         {
           model: RequestItem,
@@ -1369,13 +1369,13 @@ const getRequestsBySite = async (req, res) => {
           include: [
             {
               model: Material,
-              as: 'material'
+              as: 'material',
             },
             {
               model: Unit,
-              as: 'unit'
-            }
-          ]
+              as: 'unit',
+            },
+          ],
         },
         {
           model: Approval,
@@ -1386,15 +1386,15 @@ const getRequestsBySite = async (req, res) => {
               as: 'reviewer',
               include: [{
                 model: Role,
-                as: 'role'
-              }]
-            }
-          ]
-        }
+                as: 'role',
+              }],
+            },
+          ],
+        },
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['created_at', 'DESC']]
+      order: [['created_at', 'DESC']],
     });
 
     res.json({
@@ -1405,15 +1405,15 @@ const getRequestsBySite = async (req, res) => {
           current_page: parseInt(page),
           total_pages: Math.ceil(count / limit),
           total_items: count,
-          items_per_page: parseInt(limit)
-        }
-      }
+          items_per_page: parseInt(limit),
+        },
+      },
     });
   } catch (error) {
     console.error('Get requests by site error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -1432,27 +1432,27 @@ const getAvailableSites = async (req, res) => {
         include: [
           {
             model: Site,
-            as: 'site'
-          }
-        ]
+            as: 'site',
+          },
+        ],
       });
       sites = assignments.map(assignment => assignment.site);
     } else {
       // Get all sites for other roles
       sites = await Site.findAll({
-        order: [['name', 'ASC']]
+        order: [['name', 'ASC']],
       });
     }
 
     res.json({
       success: true,
-      data: sites
+      data: sites,
     });
   } catch (error) {
     console.error('Get available sites error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -1471,14 +1471,14 @@ const closeRequisition = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Request not found' });
     }
 
-   
-    
+
+
 
     // Only allow closing if status is ISSUED
     if (request.status !== 'ISSUED') {
       return res.status(400).json({
         success: false,
-        message: 'Requisition must be in ISSUED status to be closed'
+        message: 'Requisition must be in ISSUED status to be closed',
       });
     }
 
@@ -1486,7 +1486,7 @@ const closeRequisition = async (req, res) => {
     await request.update({
       status: 'CLOSED',
       closed_by: req.user.id,
-      closed_at: new Date()
+      closed_at: new Date(),
     });
 
     return res.json({
@@ -1494,14 +1494,14 @@ const closeRequisition = async (req, res) => {
       message: 'Requisition has been closed successfully',
       data: {
         request_id: request.id,
-        status: request.status
-      }
+        status: request.status,
+      },
     });
   } catch (err) {
     console.error('Close requisition error:', err);
     return res.status(500).json({
       success: false,
-      message: err.message || 'Internal server error'
+      message: err.message || 'Internal server error',
     });
   }
 };
@@ -1516,7 +1516,7 @@ const receiveMaterials = async (req, res) => {
     if (!items || !Array.isArray(items)) {
       return res.status(400).json({
         success: false,
-        message: 'Items array is required'
+        message: 'Items array is required',
       });
     }
 
@@ -1528,12 +1528,12 @@ const receiveMaterials = async (req, res) => {
           as: 'items',
           include: [
             { model: Material, as: 'material' },
-            { model: Unit, as: 'unit' }
-          ]
+            { model: Unit, as: 'unit' },
+          ],
         },
         { model: User, as: 'requestedBy' },
-        { model: Site, as: 'site' }
-      ]
+        { model: Site, as: 'site' },
+      ],
     });
 
     if (!request) {
@@ -1544,20 +1544,20 @@ const receiveMaterials = async (req, res) => {
     if (!['ISSUED', 'PARTIALLY_ISSUED'].includes(request.status)) {
       return res.status(400).json({
         success: false,
-        message: 'Request must be issued before materials can be received'
+        message: 'Request must be issued before materials can be received',
       });
     }
 
     // Load stock movements (for store traceability)
     const stockMovement = await StockMovement.findAll({
       where: { source_id: id },
-      include: [{ model: Request, as: 'source' }]
+      include: [{ model: Request, as: 'source' }],
     });
 
     if (!stockMovement || stockMovement.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Stock movements not found for this request'
+        message: 'Stock movements not found for this request',
       });
     }
 
@@ -1580,7 +1580,7 @@ const receiveMaterials = async (req, res) => {
         // Validate received quantity (can be 0 if materials are lost/damaged)
         if (qty_received > requestItem.qty_issued) {
           throw new Error(
-            `Cannot receive more than issued for ${requestItem.material.name}. Issued: ${requestItem.qty_issued}, Received: ${qty_received}`
+            `Cannot receive more than issued for ${requestItem.material.name}. Issued: ${requestItem.qty_issued}, Received: ${qty_received}`,
           );
         }
         if (qty_received < 0) {
@@ -1592,7 +1592,7 @@ const receiveMaterials = async (req, res) => {
         const hasLoss = damage_notes && damage_notes.toLowerCase().includes('lost');
         const qtyLost = hasLoss ? Math.max(0, requestItem.qty_issued - qty_received) : 0;
 
-        const foundMaterial = stockMovement.find(s => s.material_id == requestItem.material_id);
+        const foundMaterial = stockMovement.find(s => s.material_id === requestItem.material_id);
         if (!foundMaterial) {
           throw new Error(`Could not find stock movement for material ${requestItem.material.name}`);
         }
@@ -1600,7 +1600,7 @@ const receiveMaterials = async (req, res) => {
         const stock = await Stock.findOne({
           where: { material_id: requestItem.material_id, store_id: foundMaterial.store_id },
           transaction,
-          lock: transaction.LOCK.UPDATE
+          lock: transaction.LOCK.UPDATE,
         });
 
         // Update received & remaining quantities
@@ -1610,11 +1610,11 @@ const receiveMaterials = async (req, res) => {
         await requestItem.update(
           {
             qty_received: newQtyReceived,
-           
+
             received_at: new Date(),
-            received_by
+            received_by,
           },
-          { transaction }
+          { transaction },
         );
 
         // Create comprehensive notes for stock history
@@ -1641,7 +1641,7 @@ const receiveMaterials = async (req, res) => {
           qty_change: qty_received,
           qty_after: newQtyReceived,
           notes: historyNotes,
-          created_by: received_by
+          created_by: received_by,
         }, { transaction });
 
         receivedItems.push({
@@ -1654,7 +1654,7 @@ const receiveMaterials = async (req, res) => {
           qty_remaining: requestItem.qty_remaining,
           has_loss: hasLoss,
           receipt_notes: receipt_notes || null,
-          damage_notes: damage_notes || null
+          damage_notes: damage_notes || null,
         });
 
         stockHistoryRecords.push(stockHistory);
@@ -1662,7 +1662,7 @@ const receiveMaterials = async (req, res) => {
 
       // ✅ Double check: are all items fully received?
       const allItemsReceived = request.items.every(item =>
-        (Number(item.qty_issued) || 0) === 0 || (Number(item.qty_remaining) || 0) === 0
+        (Number(item.qty_issued) || 0) === 0 || (Number(item.qty_remaining) || 0) === 0,
       );
 
       // Update request status
@@ -1673,18 +1673,18 @@ const receiveMaterials = async (req, res) => {
             received_at: new Date(),
             received_by,
             closed_at: new Date(),
-            closed_by: received_by
+            closed_by: received_by,
           },
-          { transaction }
+          { transaction },
         );
       } else {
         await request.update(
           {
             status: 'RECEIVED',
             received_at: new Date(),
-            received_by
+            received_by,
           },
-          { transaction }
+          { transaction },
         );
       }
 
@@ -1699,8 +1699,8 @@ const receiveMaterials = async (req, res) => {
           received_items: receivedItems,
           stock_history: stockHistoryRecords,
           request_status: allItemsReceived ? 'CLOSED' : 'RECEIVED',
-          all_items_received: allItemsReceived
-        }
+          all_items_received: allItemsReceived,
+        },
       });
     } catch (err) {
       await transaction.rollback();
@@ -1710,7 +1710,7 @@ const receiveMaterials = async (req, res) => {
     console.error('Receive materials error:', error);
     return res.status(500).json({
       success: false,
-      message: error.message || 'Internal server error'
+      message: error.message || 'Internal server error',
     });
   }
 };
@@ -1730,12 +1730,12 @@ const getReceiptHistory = async (req, res) => {
           as: 'items',
           include: [
             { model: Material, as: 'material' },
-            { model: Unit, as: 'unit' }
-          ]
+            { model: Unit, as: 'unit' },
+          ],
         },
         { model: User, as: 'requestedBy' },
-        { model: Site, as: 'site' }
-      ]
+        { model: Site, as: 'site' },
+      ],
     });
 
     if (!request) {
@@ -1761,28 +1761,28 @@ const getReceiptHistory = async (req, res) => {
         source_id: id,
         [Op.or]: [
           { source_type: 'RECEIVE' },
-          { 
+          {
             source_type: '',
-            notes: { [Op.like]: '%Received by%' }
-          }
+            notes: { [Op.like]: '%Received by%' },
+          },
         ],
-        ...dateFilter
+        ...dateFilter,
       },
       include: [
         {
           model: Material,
           as: 'material',
-          include: [{ model: Unit, as: 'unit' }]
+          include: [{ model: Unit, as: 'unit' }],
         },
         {
           model: User,
           as: 'createdBy',
-          attributes: ['id', 'full_name', 'email']
-        }
+          attributes: ['id', 'full_name', 'email'],
+        },
       ],
       order: [['created_at', 'DESC']],
       limit: parseInt(limit),
-      offset: parseInt(offset)
+      offset: parseInt(offset),
     });
 
     // Group receipts by date for better tracking
@@ -1797,13 +1797,13 @@ const getReceiptHistory = async (req, res) => {
           receipts: [],
           total_items: 0,
           total_qty_received: 0,
-          has_losses: false
+          has_losses: false,
         };
       }
-      
+
       const qtyReceived = parseFloat(receipt.qty_change || 0);
       const hasLoss = receipt.movement_type === 'LOSS';
-      
+
       receiptsByDate[date].receipts.push({
         id: receipt.id,
         material_name: receipt.material.name,
@@ -1814,9 +1814,9 @@ const getReceiptHistory = async (req, res) => {
         has_loss: hasLoss,
         notes: receipt.notes,
         received_by: receipt.createdBy.full_name,
-        received_at: createdDate
+        received_at: createdDate,
       });
-      
+
       receiptsByDate[date].total_items += 1;
       receiptsByDate[date].total_qty_received += qtyReceived;
       if (hasLoss) {
@@ -1825,14 +1825,14 @@ const getReceiptHistory = async (req, res) => {
     });
 
     // Convert to array and sort by date
-    const receiptHistoryByDate = Object.values(receiptsByDate).sort((a, b) => 
-      new Date(b.date) - new Date(a.date)
+    const receiptHistoryByDate = Object.values(receiptsByDate).sort((a, b) =>
+      new Date(b.date) - new Date(a.date),
     );
 
     // Calculate summary statistics
     const totalReceipts = receiptHistory.length;
-    const totalQtyReceived = receiptHistory.reduce((sum, receipt) => 
-      sum + parseFloat(receipt.qty_change || 0), 0
+    const totalQtyReceived = receiptHistory.reduce((sum, receipt) =>
+      sum + parseFloat(receipt.qty_change || 0), 0,
     );
     const totalLosses = receiptHistory.filter(r => r.movement_type === 'LOSS').length;
     const hasAnyLosses = totalLosses > 0;
@@ -1845,7 +1845,7 @@ const getReceiptHistory = async (req, res) => {
           ref_no: request.ref_no,
           site_name: request.site.name,
           requested_by: request.requestedBy.full_name,
-          status: request.status
+          status: request.status,
         },
         receipt_history: receiptHistoryByDate,
         summary: {
@@ -1855,22 +1855,22 @@ const getReceiptHistory = async (req, res) => {
           has_any_losses: hasAnyLosses,
           date_range: {
             from: date_from || null,
-            to: date_to || null
-          }
+            to: date_to || null,
+          },
         },
         pagination: {
           current_page: parseInt(page),
           total_pages: Math.ceil(count / limit),
           total_items: count,
-          items_per_page: parseInt(limit)
-        }
-      }
+          items_per_page: parseInt(limit),
+        },
+      },
     });
   } catch (error) {
     console.error('Get receipt history error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -1878,15 +1878,15 @@ const getReceiptHistory = async (req, res) => {
 // Get receipt history by site (for ADMIN, PADIRI, DIOCESAN_SITE_ENGINEER)
 const getSiteReceiptHistory = async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 10, 
-      site_id, 
-      site_engineer_id, 
-      date_from, 
+    const {
+      page = 1,
+      limit = 10,
+      site_id,
+      site_engineer_id,
+      date_from,
       date_to,
       material_id,
-      has_losses
+      has_losses,
     } = req.query;
     const offset = (page - 1) * limit;
 
@@ -1894,11 +1894,11 @@ const getSiteReceiptHistory = async (req, res) => {
     const whereClause = {
       [Op.or]: [
         { source_type: 'RECEIVE' },
-        { 
+        {
           source_type: '',
-          notes: { [Op.like]: '%Received by%' }
-        }
-      ]
+          notes: { [Op.like]: '%Received by%' },
+        },
+      ],
     };
 
     if (date_from || date_to) {
@@ -1926,7 +1926,7 @@ const getSiteReceiptHistory = async (req, res) => {
         {
           model: Material,
           as: 'material',
-          include: [{ model: Unit, as: 'unit' }]
+          include: [{ model: Unit, as: 'unit' }],
         },
         {
           model: User,
@@ -1936,28 +1936,28 @@ const getSiteReceiptHistory = async (req, res) => {
             {
               model: Role,
               as: 'role',
-              attributes: ['id', 'name']
-            }
-          ]
-        }
+              attributes: ['id', 'name'],
+            },
+          ],
+        },
       ],
       order: [['created_at', 'DESC']],
       limit: parseInt(limit),
-      offset: parseInt(offset)
+      offset: parseInt(offset),
     });
 
     // Filter by site_engineer_id if provided
     let filteredHistory = receiptHistory;
     if (site_engineer_id) {
-      filteredHistory = filteredHistory.filter(receipt => 
-        receipt.created_by == site_engineer_id
+      filteredHistory = filteredHistory.filter(receipt =>
+        receipt.created_by == site_engineer_id,
       );
     }
 
     // Fetch request data for receipts that have source_id
     const requestIds = [...new Set(filteredHistory.map(receipt => receipt.source_id).filter(Boolean))];
     const requests = {};
-    
+
     if (requestIds.length > 0) {
       const requestData = await Request.findAll({
         where: { id: requestIds },
@@ -1966,11 +1966,11 @@ const getSiteReceiptHistory = async (req, res) => {
           {
             model: Site,
             as: 'site',
-            attributes: ['id', 'name', 'location']
-          }
-        ]
+            attributes: ['id', 'name', 'location'],
+          },
+        ],
       });
-      
+
       requestData.forEach(request => {
         requests[request.id] = request;
       });
@@ -1979,7 +1979,7 @@ const getSiteReceiptHistory = async (req, res) => {
     // Filter by site_id if provided (after we have request data)
     if (site_id) {
       filteredHistory = filteredHistory.filter(receipt => {
-        if (!receipt.source_id) return false; // Skip if no source request
+        if (!receipt.source_id) {return false;} // Skip if no source request
         const requestData = requests[receipt.source_id];
         return requestData && parseInt(requestData.site_id) === parseInt(site_id);
       });
@@ -1991,7 +1991,7 @@ const getSiteReceiptHistory = async (req, res) => {
       // Handle cases where created_at might be undefined
       const createdDate = receipt.created_at || receipt.createdAt || new Date();
       const date = createdDate.toISOString().split('T')[0];
-      
+
       if (!receiptsByDate[date]) {
         receiptsByDate[date] = {
           date: date,
@@ -1999,18 +1999,18 @@ const getSiteReceiptHistory = async (req, res) => {
           total_items: 0,
           total_qty_received: 0,
           has_losses: false,
-          unique_materials: new Set() // Track unique materials
+          unique_materials: new Set(), // Track unique materials
         };
       }
 
       const qtyReceived = parseFloat(receipt.qty_change || 0);
       const hasLoss = receipt.movement_type === 'LOSS';
-      
+
       // Get request data if available
       const requestData = receipt.source_id ? requests[receipt.source_id] : null;
       const requestRef = requestData ? requestData.ref_no : 'N/A';
       const requestDate = requestData ? requestData.created_at : null;
-      
+
       receiptsByDate[date].receipts.push({
         id: receipt.id,
         request_id: receipt.source_id || null,
@@ -2025,9 +2025,9 @@ const getSiteReceiptHistory = async (req, res) => {
         notes: receipt.notes,
         received_by: receipt.createdBy.full_name,
         received_by_role: receipt.createdBy.role ? receipt.createdBy.role.name : 'Unknown',
-        received_at: createdDate
+        received_at: createdDate,
       });
-      
+
       // Track unique materials instead of counting all receipts
       receiptsByDate[date].unique_materials.add(receipt.material_id);
       receiptsByDate[date].total_qty_received += qtyReceived;
@@ -2041,15 +2041,15 @@ const getSiteReceiptHistory = async (req, res) => {
     });
 
     // Convert receiptsByDate object to array format for frontend compatibility
-    const receiptsByDateArray = Object.values(receiptsByDate).sort((a, b) => 
-      new Date(b.date) - new Date(a.date)
+    const receiptsByDateArray = Object.values(receiptsByDate).sort((a, b) =>
+      new Date(b.date) - new Date(a.date),
     );
 
     // Get site information for the filtered results
     let siteInfo = {
       site_id: 0,
       site_name: 'All Sites',
-      site_location: 'Multiple Locations'
+      site_location: 'Multiple Locations',
     };
 
     // If filtering by specific site, get the site info from the database
@@ -2059,7 +2059,7 @@ const getSiteReceiptHistory = async (req, res) => {
         siteInfo = {
           site_id: site.id,
           site_name: site.name,
-          site_location: site.location || 'Unknown Location'
+          site_location: site.location || 'Unknown Location',
         };
       }
     }
@@ -2073,7 +2073,7 @@ const getSiteReceiptHistory = async (req, res) => {
       total_receipts: filteredHistory.length,
       total_qty_received: filteredHistory.reduce((sum, receipt) => sum + parseFloat(receipt.qty_change || 0), 0),
       total_losses: filteredHistory.filter(receipt => receipt.movement_type === 'LOSS').length,
-      site_engineers: [...new Set(filteredHistory.map(receipt => receipt.createdBy.full_name).filter(Boolean))]
+      site_engineers: [...new Set(filteredHistory.map(receipt => receipt.createdBy.full_name).filter(Boolean))],
     }];
 
     // Calculate summary statistics
@@ -2092,21 +2092,21 @@ const getSiteReceiptHistory = async (req, res) => {
           total_sites: totalSites,
           total_receipts: totalReceipts,
           total_qty_received: totalQtyReceived,
-          total_losses: totalLosses
+          total_losses: totalLosses,
         },
         pagination: {
           current_page: parseInt(page),
           total_pages: Math.ceil(count / limit),
           total_items: count,
-          items_per_page: parseInt(limit)
-        }
-      }
+          items_per_page: parseInt(limit),
+        },
+      },
     });
   } catch (error) {
     console.error('Get site receipt history error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -2133,5 +2133,5 @@ module.exports = {
   closeRequisition,
   receiveMaterials,
   getReceiptHistory,
-  getSiteReceiptHistory
+  getSiteReceiptHistory,
 };

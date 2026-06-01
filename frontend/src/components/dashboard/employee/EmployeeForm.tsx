@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, User, FileText, Briefcase, Upload, X, Eye, Calendar, Plus, Trash2, Save, Check } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import employeeService from '../../../services/storeService';
-import departmentService from '../../../services/reportService';
-import { API_URL } from '../../../api/api';
+import { storeService as employeeService, reportService as departmentService } from '../../../services';
+import { API_URL } from '../../../api';
 import Swal from 'sweetalert2';
 
 const MARITAL_STATUS = ['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED'] as const;

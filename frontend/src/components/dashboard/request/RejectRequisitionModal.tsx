@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, AlertCircle } from 'lucide-react';
-import requisitionService, { type MaterialRequisition } from '../../../services/requestService';
-import useAuth from '../../../context/AuthContext';
+import { requisitionService } from '../../../services';
+import type { MaterialRequisition } from '../../../services/requestService';
+import { useAuth } from '../../../context';
 
 interface RejectRequisitionModalProps {
   isOpen: boolean;

@@ -5,71 +5,71 @@ module.exports = (sequelize) => {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
-      autoIncrement: true
+      autoIncrement: true,
     },
     key: {
       type: DataTypes.STRING(100),
       allowNull: false,
       unique: true,
-      comment: 'Configuration key'
+      comment: 'Configuration key',
     },
     value: {
       type: DataTypes.TEXT,
       allowNull: true,
-      comment: 'Configuration value (JSON or string)'
+      comment: 'Configuration value (JSON or string)',
     },
     type: {
       type: DataTypes.ENUM('STRING', 'NUMBER', 'BOOLEAN', 'JSON', 'ARRAY'),
       allowNull: false,
       defaultValue: 'STRING',
-      comment: 'Data type of the configuration value'
+      comment: 'Data type of the configuration value',
     },
     category: {
       type: DataTypes.STRING(50),
       allowNull: false,
       defaultValue: 'GENERAL',
-      comment: 'Configuration category'
+      comment: 'Configuration category',
     },
     description: {
       type: DataTypes.TEXT,
       allowNull: true,
-      comment: 'Description of what this configuration does'
+      comment: 'Description of what this configuration does',
     },
     is_editable: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,
-      comment: 'Whether this configuration can be edited via API'
+      comment: 'Whether this configuration can be edited via API',
     },
     is_public: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
-      comment: 'Whether this configuration is visible to non-admin users'
+      comment: 'Whether this configuration is visible to non-admin users',
     },
     validation_rules: {
       type: DataTypes.JSON,
       allowNull: true,
-      comment: 'Validation rules for the configuration value'
+      comment: 'Validation rules for the configuration value',
     },
     created_by: {
       type: DataTypes.BIGINT,
       allowNull: true,
       references: {
         model: 'users',
-        key: 'id'
+        key: 'id',
       },
-      comment: 'User who created this configuration'
+      comment: 'User who created this configuration',
     },
     updated_by: {
       type: DataTypes.BIGINT,
       allowNull: true,
       references: {
         model: 'users',
-        key: 'id'
+        key: 'id',
       },
-      comment: 'User who last updated this configuration'
-    }
+      comment: 'User who last updated this configuration',
+    },
   }, {
     tableName: 'system_configs',
     timestamps: true,
@@ -77,17 +77,17 @@ module.exports = (sequelize) => {
     updatedAt: 'updated_at',
     indexes: [
       {
-        fields: ['key']
+        fields: ['key'],
       },
       {
-        fields: ['category']
+        fields: ['category'],
       },
       {
-        fields: ['is_public']
+        fields: ['is_public'],
       },
       {
-        fields: ['is_editable']
-      }
+        fields: ['is_editable'],
+      },
     ],
     hooks: {
       beforeUpdate: (config) => {
@@ -109,18 +109,18 @@ module.exports = (sequelize) => {
         } else if (config.type === 'BOOLEAN') {
           config.value = config.value === 'true' || config.value === true ? 'true' : 'false';
         }
-      }
-    }
+      },
+    },
   });
 
   SystemConfig.associate = (models) => {
     SystemConfig.belongsTo(models.User, {
       foreignKey: 'created_by',
-      as: 'creator'
+      as: 'creator',
     });
     SystemConfig.belongsTo(models.User, {
       foreignKey: 'updated_by',
-      as: 'updater'
+      as: 'updater',
     });
   };
 
@@ -128,7 +128,7 @@ module.exports = (sequelize) => {
   SystemConfig.getConfig = async function(key, defaultValue = null) {
     try {
       const config = await this.findOne({ where: { key } });
-      if (!config) return defaultValue;
+      if (!config) {return defaultValue;}
 
       // Parse value based on type
       switch (config.type) {
@@ -162,8 +162,8 @@ module.exports = (sequelize) => {
 
       // Validate value based on validation rules
       if (config.validation_rules) {
-        const rules = typeof config.validation_rules === 'string' 
-          ? JSON.parse(config.validation_rules) 
+        const rules = typeof config.validation_rules === 'string'
+          ? JSON.parse(config.validation_rules)
           : config.validation_rules;
 
         if (config.type === 'NUMBER') {
@@ -180,7 +180,7 @@ module.exports = (sequelize) => {
       // Update configuration
       await config.update({
         value: typeof value === 'object' ? JSON.stringify(value) : value.toString(),
-        updated_by: userId
+        updated_by: userId,
       });
 
       return config;

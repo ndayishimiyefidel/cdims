@@ -10,9 +10,9 @@ import {
   Package,
   X,
 } from 'lucide-react';
-import stockService, { type StockMovement, type Pagination, type Material, type Store } from '../../services/stockService';
-import materialService from '../../services/materialsService';
-import storeService from '../../services/storeService';
+import { stockService, materialService, storeService } from '../../services';
+import type { StockMovement, Pagination, Material, Store } from '../../services/stockService';
+import type { Material as InventoryMaterial } from '../../services/materialsService';
 import { useSearchParams } from 'react-router-dom';
 
 interface StockHistoryFilterParams {

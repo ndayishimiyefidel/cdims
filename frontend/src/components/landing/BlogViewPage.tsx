@@ -20,7 +20,6 @@ import {
   Star
 } from 'lucide-react';
 
-import { blogs } from '../../store/Blogs';
 import HeaderBanner from './HeaderBanner';
 
 
@@ -57,19 +56,11 @@ const BlogViewPage: React.FC = () => {
 
   useEffect(() => {
     // Find the current blog
-    const currentBlog = blogs.find((b:Blog) => b.id === parseInt(id || '0'));
+    const currentBlog = null as Blog | null;
     setBlog(currentBlog ?? null);
     
     if (currentBlog) {
       setLikes(currentBlog.likes);
-      
-      // Get latest blogs excluding the current one
-      const filteredBlogs = blogs
-        .filter((b:Blog) => b.id !== parseInt(id || '0'))
-        .sort((a:Blog, b:Blog) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime())
-        .slice(0, 5);
-      
-      setLatestBlogs(filteredBlogs);
     }
   }, [id]);
 

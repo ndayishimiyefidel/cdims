@@ -32,11 +32,12 @@ import {
     UserSquare
 } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
-import userService, { type CreateUserInput, type UpdateUserInput } from '../../services/userService';
+import { userService } from '../../services';
+import type { CreateUserInput, UpdateUserInput } from '../../services/userService';
 import AddUserModal from '../../components/dashboard/client/AddClientModal';
 import EditUserModal from '../../components/dashboard/client/EditClientModal';
 import DeleteUserModal from '../../components/dashboard/client/DeleteClientModal';
-import { formatRole } from '../../utils/dateUtils';
+import { formatRole } from '../../utils';
 
 interface User {
     role_name: any;

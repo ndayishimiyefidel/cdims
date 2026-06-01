@@ -63,6 +63,9 @@ typings/
 
 # dotenv environment variables file
 .env
+
+# Sequelize config files with credentials
+config/config.json
 .env.test
 .env.local
 .env.production
@@ -150,6 +153,9 @@ typings/
 
 # dotenv environment variables file
 .env
+
+# Sequelize config files with credentials
+config/config.json
 .env.test
 .env.production
 .env.development

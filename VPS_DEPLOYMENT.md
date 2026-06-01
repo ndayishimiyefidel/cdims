@@ -1,321 +1,135 @@
 # CDIMS VPS Deployment Guide
 
-## 🚀 VPS Setup Commands
+This file is the quick production deployment guide.
+For full architecture and complete runbook, read `PROJECT_DOCUMENTATION.md`.
 
-### 1. Connect to Your VPS
+## 1) Server Setup
+
 ```bash
-# SSH into your VPS
-ssh root@your-vps-ip
-
-# Or if you have a specific user
-ssh username@your-vps-ip
-```
-
-### 2. Update System
-```bash
-# Update package lists
 apt update && apt upgrade -y
-
-# Install essential packages
-apt install -y curl wget git nginx mysql-server nodejs npm
+apt install -y nginx mysql-server git curl
+curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
+apt install -y nodejs
+npm install -g pm2
 ```
 
-### 3. Install Node.js (Latest LTS)
+## 2) Clone Project
+
 ```bash
-# Install Node.js 18.x
-curl -fsSL https://deb.nodesource.com/setup_22.19 | sudo -E bash -
-apt-get install -y nodejs
-
-# Verify installation
-node --version
-npm --version
-```
-
-### 4. Setup MySQL Database
-```bash
-# Secure MySQL installation
-mysql_secure_installation
-
-# Login to MySQL
-mysql -u root -p
-
-# Create database and user
-CREATE DATABASE cdims;
-CREATE USER 'cdims_user'@'localhost' IDENTIFIED BY 'your_secure_password';
-GRANT ALL PRIVILEGES ON cdims.* TO 'cdims_user'@'localhost';
-FLUSH PRIVILEGES;
-EXIT;
-```
-
-### 5. Clone and Setup Application
-```bash
-# Clone your repository
+mkdir -p /var/www
+cd /var/www
 git clone https://github.com/ndayishimiyefidel/cdims.git
 cd cdims
-
-# Setup backend
-cd backend
-npm install
 ```
 
-### 6. Configure Environment Variables
+## 3) Configure Backend
+
 ```bash
-# Create .env file
+cd /var/www/cdims/backend
+npm install
 nano .env
 ```
 
-**Add this content to .env:**
+Use this template (replace placeholders):
+
 ```env
 DB_HOST=localhost
-DB_USER=cdims_user
-DB_PASSWORD=your_secure_password
+DB_PORT=3306
 DB_NAME=cdims
-JWT_SECRET=your_super_secure_jwt_secret_key_here
+DB_USER=cdims_user
+DB_PASSWORD=CHANGE_ME
+JWT_SECRET=CHANGE_ME_TO_A_LONG_RANDOM_SECRET
 PORT=3000
 NODE_ENV=production
+FRONTEND_URL=https://cyangugudims.com
 ```
 
-### 7. Setup Database
+Run migrations and start app:
+
 ```bash
-# Run migrations
 npm run migrate
-
-# Seed initial data
 npm run seed
-```
-
-### 8. Setup Frontend
-```bash
-# Go to frontend directory
-cd ../frontend
-
-# Install dependencies
-npm install
-
-# Build for production
-npm run build
-```
-
-### 9. Install PM2 (Process Manager)
-```bash
-# Install PM2 globally
-npm install -g pm2
-
-# Create PM2 ecosystem file
-cd ../backend
-nano ecosystem.config.js
-```
-
-**Create ecosystem.config.js:**
-```javascript
-module.exports = {
-  apps: [{
-    name: 'cdims-backend',
-    script: 'src/app.js',
-    instances: 1,
-    autorestart: true,
-    watch: false,
-    max_memory_restart: '1G',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 3000
-    }
-  }]
-};
-```
-
-### 10. Start Application with PM2
-```bash
-# Start backend with PM2
-pm2 start ecosystem.config.js
-
-# Save PM2 configuration
+pm2 start src/app.js --name cdims-backend
 pm2 save
-
-# Setup PM2 to start on boot
 pm2 startup
 ```
 
-### 11. Configure Nginx
+## 4) Configure Frontend
+
 ```bash
-# Create Nginx configuration
-nano /etc/nginx/sites-available/cdims
+cd /var/www/cdims/frontend
+printf "VITE_API_URL=https://cyangugudims.com/api\n" > .env
+npm install
+npm run build
 ```
 
-**Add this Nginx configuration:**
+## 5) Configure Nginx
+
+Create `/etc/nginx/sites-available/cdims`:
+
 ```nginx
 server {
     listen 80;
-    server_name your-domain.com www.your-domain.com;
+    server_name cyangugudims.com www.cyangugudims.com;
 
-    # Frontend (React build)
-    location / {
-        root /root/cdims/frontend/dist;
-        index index.html;
-        try_files $uri $uri/ /index.html;
-    }
+    root /var/www/cdims/frontend/dist;
+    index index.html;
 
-    # Backend API
-    location /api {
-        proxy_pass http://localhost:3000;
+    location /api/ {
+        proxy_pass http://127.0.0.1:3000/;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
+    }
+
+    location /backend/ {
+        proxy_pass http://127.0.0.1:3000/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
     }
 }
 ```
 
-### 12. Enable Nginx Configuration
+Enable and reload:
+
 ```bash
-# Enable the site
-ln -s /etc/nginx/sites-available/cdims /etc/nginx/sites-enabled/
-
-# Remove default site
-rm /etc/nginx/sites-enabled/default
-
-# Test Nginx configuration
+ln -sf /etc/nginx/sites-available/cdims /etc/nginx/sites-enabled/cdims
 nginx -t
-
-# Restart Nginx
-systemctl restart nginx
-systemctl enable nginx
-```
-
-### 13. Setup SSL Certificate (Let's Encrypt)
-```bash
-# Install Certbot
-apt install certbot python3-certbot-nginx -y
-
-# Get SSL certificate
-certbot --nginx -d your-domain.com -d www.your-domain.com
-
-# Auto-renewal
-crontab -e
-# Add this line:
-# 0 12 * * * /usr/bin/certbot renew --quiet
-```
-
-### 14. Firewall Configuration
-```bash
-# Configure UFW firewall
-ufw allow ssh
-ufw allow 'Nginx Full'
-ufw allow 3000
-ufw --force enable
-```
-
-### 15. Monitoring and Logs
-```bash
-# Check PM2 status
-pm2 status
-
-# View logs
-pm2 logs cdims-backend
-
-# Monitor resources
-pm2 monit
-
-# Check Nginx logs
-tail -f /var/log/nginx/access.log
-tail -f /var/log/nginx/error.log
-```
-
-## 🔧 Maintenance Commands
-
-### Update Application
-```bash
-# Pull latest changes
-cd /root/cdims
-git pull origin main
-
-# Update backend
-cd backend
-npm install
-npm run migrate
-pm2 restart cdims-backend
-
-# Update frontend
-cd ../frontend
-npm install
-npm run build
 systemctl reload nginx
 ```
 
-### Database Backup
-```bash
-# Create backup
-mysqldump -u cdims_user -p cdims > backup_$(date +%Y%m%d_%H%M%S).sql
+## 6) SSL
 
-# Restore backup
-mysql -u cdims_user -p cdims < backup_file.sql
+```bash
+apt install -y certbot python3-certbot-nginx
+certbot --nginx -d cyangugudims.com -d www.cyangugudims.com
 ```
 
-### Health Checks
+## 7) Verification
+
 ```bash
-# Check if services are running
-systemctl status nginx
 pm2 status
-systemctl status mysql
-
-# Test API endpoint
-curl http://localhost:3000/health
-
-# Test frontend
-curl http://localhost
+curl -i http://127.0.0.1:3000/api/health
+curl -i https://cyangugudims.com/api/health
 ```
 
-## 🚨 Troubleshooting
+## 8) Common Issues
 
-### Common Issues
-```bash
-# If PM2 process dies
-pm2 restart cdims-backend
+- `500` on frontend route refresh: wrong `root` path or missing `dist` build.
+- `502` on `/api/health`: Nginx upstream port mismatch (must match backend `PORT`).
+- Login request fails: invalid `VITE_API_URL` or backend not reachable.
 
-# If Nginx fails
-nginx -t
-systemctl restart nginx
+## 9) Security Notes
 
-# If database connection fails
-mysql -u cdims_user -p
-SHOW DATABASES;
-
-# Check disk space
-df -h
-
-# Check memory usage
-free -h
-```
-
-### Log Locations
-- **Application logs**: `pm2 logs cdims-backend`
-- **Nginx logs**: `/var/log/nginx/`
-- **MySQL logs**: `/var/log/mysql/`
-- **System logs**: `journalctl -u nginx`
-
-## 📋 Quick Deployment Checklist
-
-- [ ] VPS access established
-- [ ] System updated
-- [ ] Node.js installed
-- [ ] MySQL configured
-- [ ] Repository cloned
-- [ ] Environment variables set
-- [ ] Database migrated and seeded
-- [ ] Frontend built
-- [ ] PM2 configured
-- [ ] Nginx configured
-- [ ] SSL certificate installed
-- [ ] Firewall configured
-- [ ] Application tested
-
-## 🌐 Access URLs After Deployment
-
-- **Frontend**: `https://your-domain.com`
-- **Backend API**: `https://your-domain.com/api`
-- **Health Check**: `https://your-domain.com/api/health`
-- **Admin Login**: `admin@cdims.rw` / `admin123`
+- Never commit real secrets to repository files.
+- Rotate DB password, JWT secret, and admin password after deployment.
+- Do not clone with access tokens inside repository URLs.

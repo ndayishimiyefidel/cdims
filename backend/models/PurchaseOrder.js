@@ -5,33 +5,33 @@ const PurchaseOrder = sequelize.define('PurchaseOrder', {
   id: {
     type: DataTypes.BIGINT,
     primaryKey: true,
-    autoIncrement: true
+    autoIncrement: true,
   },
   po_no: {
     type: DataTypes.STRING(50),
-    unique: true
+    unique: true,
   },
   supplier_id: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'suppliers',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   status: {
     type: DataTypes.ENUM('DRAFT', 'SENT', 'PARTIALLY_RECEIVED', 'RECEIVED', 'CANCELLED'),
     allowNull: false,
-    defaultValue: 'DRAFT'
+    defaultValue: 'DRAFT',
   },
   created_by: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'users',
-      key: 'id'
-    }
-  }
+      key: 'id',
+    },
+  },
 }, {
   tableName: 'purchase_orders',
   hooks: {
@@ -41,8 +41,8 @@ const PurchaseOrder = sequelize.define('PurchaseOrder', {
         const count = await PurchaseOrder.count();
         po.po_no = `PO-${year}-${String(count + 1).padStart(4, '0')}`;
       }
-    }
-  }
+    },
+  },
 });
 
 module.exports = PurchaseOrder;

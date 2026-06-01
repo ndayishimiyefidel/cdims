@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { X, User, Mail, Phone, Plus, RefreshCw, UserCheck } from 'lucide-react';
 import { parsePhoneNumberFromString, isValidPhoneNumber, AsYouType, getCountryCallingCode, type CountryCode } from 'libphonenumber-js';
-import userService, { type UpdateUserInput, type User as UserType } from '../../../services/userService';
-import roleService, { type Role } from '../../../services/roleService';
+import { userService } from '../../../services';
+import type { UpdateUserInput, User as UserType } from '../../../services/userService';
+import { roleService } from '../../../services';
+import type { Role } from '../../../services/roleService';
 import { formatRole } from '../../../utils/dateUtils';
 
 interface EditUserModalProps {

@@ -1,7 +1,7 @@
 import React, { type ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import useAdminAuth from '../../context/AuthContext';
+import { useAuth as useAdminAuth } from '../../context';
 
 interface ProtectPrivateAdminRouteProps {
   children: ReactNode;

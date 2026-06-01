@@ -14,7 +14,7 @@ class DatabaseService {
 
       // Get table sizes and row counts
       const tables = ['users', 'sites', 'materials', 'requests', 'request_items', 'stock', 'audit_logs'];
-      
+
       for (const table of tables) {
         try {
           const [countResult] = await sequelize.query(`SELECT COUNT(*) as count FROM ${table}`);
@@ -25,10 +25,10 @@ class DatabaseService {
             WHERE table_schema = DATABASE() 
             AND table_name = '${table}'
           `);
-          
+
           stats[table] = {
             row_count: countResult[0].count,
-            size_mb: sizeResult[0]?.size_mb || 0
+            size_mb: sizeResult[0]?.size_mb || 0,
           };
         } catch (error) {
           console.error(`Error getting stats for table ${table}:`, error);
@@ -53,7 +53,7 @@ class DatabaseService {
         total_size_mb: totalSizeResult[0].total_size_mb,
         version: versionResult[0].version,
         uptime_seconds: parseInt(statusResult[0].Value),
-        last_checked: new Date().toISOString()
+        last_checked: new Date().toISOString(),
       };
     } catch (error) {
       console.error('Error getting database stats:', error);
@@ -88,7 +88,7 @@ class DatabaseService {
       const backupData = {
         timestamp: new Date().toISOString(),
         database: dbName,
-        tables: {}
+        tables: {},
       };
 
       // Export key tables
@@ -111,7 +111,7 @@ class DatabaseService {
         backup_file: backupFileName,
         backup_path: backupPath,
         size_mb: (await fs.stat(backupPath)).size / (1024 * 1024),
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       };
     } catch (error) {
       console.error('Error creating backup:', error);
@@ -125,7 +125,7 @@ class DatabaseService {
   static async listBackups() {
     try {
       const backupsDir = path.join(process.cwd(), 'backups');
-      
+
       try {
         await fs.access(backupsDir);
       } catch {
@@ -139,12 +139,12 @@ class DatabaseService {
         if (file.endsWith('.sql') || file.endsWith('.json')) {
           const filePath = path.join(backupsDir, file);
           const stats = await fs.stat(filePath);
-          
+
           backups.push({
             filename: file,
             size_mb: (stats.size / (1024 * 1024)).toFixed(2),
             created_at: stats.birthtime.toISOString(),
-            modified_at: stats.mtime.toISOString()
+            modified_at: stats.mtime.toISOString(),
           });
         }
       }
@@ -164,7 +164,7 @@ class DatabaseService {
       const {
         auditLogsDays = 90,
         oldBackupsDays = 30,
-        emptyTables = false
+        emptyTables = false,
       } = options;
 
       const results = {};
@@ -176,8 +176,8 @@ class DatabaseService {
 
         const deletedAuditLogs = await AuditLog.destroy({
           where: {
-            created_at: { [Op.lt]: cutoffDate }
-          }
+            created_at: { [Op.lt]: cutoffDate },
+          },
         });
 
         results.audit_logs_deleted = deletedAuditLogs;
@@ -196,7 +196,7 @@ class DatabaseService {
           for (const file of files) {
             const filePath = path.join(backupsDir, file);
             const stats = await fs.stat(filePath);
-            
+
             if (stats.birthtime < cutoffDate) {
               await fs.unlink(filePath);
               deletedBackups++;
@@ -220,7 +220,7 @@ class DatabaseService {
       return {
         success: true,
         results,
-        cleaned_at: new Date().toISOString()
+        cleaned_at: new Date().toISOString(),
       };
     } catch (error) {
       console.error('Error cleaning up old data:', error);
@@ -249,7 +249,7 @@ class DatabaseService {
       return {
         success: true,
         results,
-        optimized_at: new Date().toISOString()
+        optimized_at: new Date().toISOString(),
       };
     } catch (error) {
       console.error('Error optimizing tables:', error);
@@ -268,7 +268,7 @@ class DatabaseService {
         active_connections: 0,
         slow_queries: 0,
         table_locks: 0,
-        issues: []
+        issues: [],
       };
 
       // Test database connection and response time
@@ -328,7 +328,7 @@ class DatabaseService {
   static async restoreFromBackup(backupFileName) {
     try {
       const backupPath = path.join(process.cwd(), 'backups', backupFileName);
-      
+
       // Check if backup file exists
       try {
         await fs.access(backupPath);
@@ -359,8 +359,8 @@ class DatabaseService {
           if (tableData.length > 0) {
             // Get column names from first row
             const columns = Object.keys(tableData[0]);
-            const values = tableData.map(row => 
-              columns.map(col => row[col])
+            const values = tableData.map(row =>
+              columns.map(col => row[col]),
             );
 
             // Insert data
@@ -368,10 +368,10 @@ class DatabaseService {
               const placeholders = row.map(() => '?').join(', ');
               await sequelize.query(
                 `INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${placeholders})`,
-                { 
+                {
                   replacements: row,
-                  transaction 
-                }
+                  transaction,
+                },
               );
             }
           }
@@ -382,7 +382,7 @@ class DatabaseService {
         return {
           success: true,
           restored_tables: tables,
-          restored_at: new Date().toISOString()
+          restored_at: new Date().toISOString(),
         };
       } catch (error) {
         await transaction.rollback();

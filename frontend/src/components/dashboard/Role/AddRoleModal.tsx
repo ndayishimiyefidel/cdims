@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
 import { X, Plus } from 'lucide-react';
-import { type CreateRoleInput } from '../../../services/roleService';
+import type { CreateRoleInput } from '../../../services/roleService';
 
 interface AddRoleModalProps {
   isOpen: boolean;

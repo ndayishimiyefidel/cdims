@@ -1,5 +1,5 @@
-import { type AxiosInstance, type AxiosResponse } from 'axios';
-import api from '../api/api'; // Adjust the import path as needed
+import { type AxiosInstance } from 'axios';
+import { api } from '../api'; // Adjust the import path as needed
 
 // Interface for Stock
 export interface Stock {
@@ -236,9 +236,8 @@ class StockService {
       if (params?.material_id) queryParams.append('material_id', params.material_id.toString());
       if (params?.low_stock !== undefined) queryParams.append('low_stock', params.low_stock.toString());
 
-      const response: AxiosResponse<{ success: boolean; data: { stock: Stock[]; pagination: Pagination } }> =
-        await this.api.get(`/stock?${queryParams.toString()}`);
-      return response.data.data;
+      const result: any = await this.api.get(`/stock?${queryParams.toString()}`);
+      return result;
     } catch (error: any) {
       console.error('Error fetching stock:', error);
       const errorMessage =
@@ -254,9 +253,8 @@ class StockService {
    */
   async getStockById(id: number | string): Promise<Stock | null> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { stock: Stock } }> =
-        await this.api.get(`/stock/${id}`);
-      return response.data.data.stock;
+      const result: any = await this.api.get(`/stock/${id}`);
+      return result.stock || result;
     } catch (error: any) {
       if (error.response?.status === 404) {
         return null;
@@ -275,9 +273,8 @@ class StockService {
    */
   async createStock(stockData: CreateStockInput): Promise<Stock> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { stock: Stock }; message: string }> =
-        await this.api.post('/stock', stockData);
-      return response.data.data.stock;
+      const result: any = await this.api.post('/stock', stockData);
+      return result.stock || result;
     } catch (error: any) {
       console.error('Error creating stock:', error);
       const errorMessage =
@@ -294,9 +291,8 @@ class StockService {
    */
   async updateStock(id: number | string, updateData: UpdateStockInput): Promise<Stock> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { stock: Stock }; message: string }> =
-        await this.api.put(`/stock/${id}`, updateData);
-      return response.data.data.stock;
+      const result: any = await this.api.put(`/stock/${id}`, updateData);
+      return result.stock || result;
     } catch (error: any) {
       console.error('Error updating stock:', error);
       const errorMessage =
@@ -313,9 +309,8 @@ class StockService {
    */
   async setLowStockThreshold(id: number | string, thresholdData: SetLowStockThresholdInput): Promise<Stock> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { stock: Stock }; message: string }> =
-        await this.api.put(`/stock/${id}/threshold`, thresholdData);
-      return response.data.data.stock;
+      const result: any = await this.api.put(`/stock/${id}/threshold`, thresholdData);
+      return result.stock || result;
     } catch (error: any) {
       console.error('Error setting low stock threshold:', error);
       const errorMessage =
@@ -331,9 +326,8 @@ class StockService {
    */
   async acknowledgeLowStockAlert(id: number | string): Promise<Stock> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { stock: Stock }; message: string }> =
-        await this.api.put(`/stock/${id}/acknowledge-alert`);
-      return response.data.data.stock;
+      const result: any = await this.api.put(`/stock/${id}/acknowledge-alert`);
+      return result.stock || result;
     } catch (error: any) {
       console.error('Error acknowledging low stock alert:', error);
       const errorMessage =
@@ -354,9 +348,8 @@ class StockService {
       if (params?.limit) queryParams.append('limit', params.limit.toString());
       if (params?.store_id) queryParams.append('store_id', params.store_id.toString());
 
-      const response: AxiosResponse<{ success: boolean; data: { lowStockItems: Stock[]; pagination: Pagination } }> =
-        await this.api.get(`/stock/alerts/low-stock?${queryParams.toString()}`);
-      return response.data.data;
+      const result: any = await this.api.get(`/stock/alerts/low-stock?${queryParams.toString()}`);
+      return result;
     } catch (error: any) {
       console.error('Error fetching low stock alerts:', error);
       const errorMessage =
@@ -379,9 +372,8 @@ class StockService {
       if (params?.material_id) queryParams.append('material_id', params.material_id.toString());
       if (params?.type) queryParams.append('type', params.type);
 
-      const response: AxiosResponse<{ success: boolean; data: { movements: StockMovement[]; pagination: Pagination } }> =
-        await this.api.get(`/stock/movements?${queryParams.toString()}`);
-      return response.data.data;
+      const result: any = await this.api.get(`/stock/movements?${queryParams.toString()}`);
+      return result;
     } catch (error: any) {
       console.error('Error fetching stock movements:', error);
       const errorMessage =
@@ -402,9 +394,8 @@ class StockService {
       if (params?.limit) queryParams.append('limit', params.limit.toString());
       if (params?.store_id) queryParams.append('store_id', params.store_id.toString());
 
-      const response: AxiosResponse<{ success: boolean; data: { recommendations: (Stock & { procurementRecommendation: ProcurementRecommendation })[]; pagination: Pagination } }> =
-        await this.api.get(`/stock/procurement-recommendations?${queryParams.toString()}`);
-      return response.data.data;
+      const result: any = await this.api.get(`/stock/procurement-recommendations?${queryParams.toString()}`);
+      return result;
     } catch (error: any) {
       console.error('Error fetching procurement recommendations:', error);
       const errorMessage =
@@ -425,17 +416,8 @@ class StockService {
     request_status: 'ISSUED' | 'PARTIALLY_ISSUED';
   }> {
     try {
-      const response: AxiosResponse<{
-        success: boolean;
-        data: {
-          request_id: number;
-          issued_items: { request_item_id: number; material_name: string; qty_issued: number; store_id: number }[];
-          stock_movements: StockMovement[];
-          request_status: 'ISSUED' | 'PARTIALLY_ISSUED';
-        };
-        message: string;
-      }> = await this.api.post('/stock/issue-materials', issueData);
-      return response.data.data;
+      const result: any = await this.api.post('/stock/issue-materials', issueData);
+      return result;
     } catch (error: any) {
       console.error('Error issuing materials:', error);
       const errorMessage =
@@ -456,9 +438,8 @@ class StockService {
       if (params?.limit) queryParams.append('limit', params.limit.toString());
       if (params?.site_id) queryParams.append('site_id', params.site_id.toString());
 
-      const response: AxiosResponse<{ success: boolean; data: { requests: Request[]; pagination: Pagination } }> =
-        await this.api.get(`/stock/issuable-requests?${queryParams.toString()}`);
-      return response.data.data;
+      const result: any = await this.api.get(`/stock/issuable-requests?${queryParams.toString()}`);
+      return result;
     } catch (error: any) {
       console.error('Error fetching issuable requests:', error);
       const errorMessage =
@@ -482,9 +463,8 @@ class StockService {
       if (params?.date_from) queryParams.append('date_from', params.date_from);
       if (params?.date_to) queryParams.append('date_to', params.date_to);
 
-      const response: AxiosResponse<{ success: boolean; data: { issued_materials: StockMovement[]; pagination: Pagination } }> =
-        await this.api.get(`/stock/issued-materials?${queryParams.toString()}`);
-      return response.data.data;
+      const result: any = await this.api.get(`/stock/issued-materials?${queryParams.toString()}`);
+      return result;
     } catch (error: any) {
       console.error('Error fetching issued materials:', error);
       const errorMessage =
@@ -510,13 +490,50 @@ class StockService {
       if (params?.date_from) queryParams.append('date_from', params.date_from);
       if (params?.date_to) queryParams.append('date_to', params.date_to);
 
-      const response: AxiosResponse<{ success: boolean; data: { history: StockMovement[]; pagination: Pagination } }> =
-        await this.api.get(`/stock/history?${queryParams.toString()}`);
-      return response.data.data;
+      const result: any = await this.api.get(`/stock/history?${queryParams.toString()}`);
+      return result;
     } catch (error: any) {
       console.error('Error fetching stock history:', error);
       const errorMessage =
         error.response?.data?.message || error.message || 'Failed to fetch stock history';
+      throw new Error(errorMessage);
+    }
+  }
+
+  /**
+   * Get stock by material ID
+   * @param id - Material ID
+   * @returns Stock or null if not found
+   */
+  async getStockByMaterialId(id: number | string): Promise<Stock | null> {
+    try {
+      const result: any = await this.api.get(`/stock/material/${id}`);
+      return result.stock || result;
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        return null;
+      }
+      console.error('Error fetching stock by material ID:', error);
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Failed to fetch stock by material';
+      throw new Error(errorMessage);
+    }
+  }
+
+  /**
+   * Add quantity to existing stock (additive, not replacing)
+   * @param id - Stock ID
+   * @param addData - Object with qty_to_add and optional unit_price
+   * @returns Updated stock
+   */
+  async addStockQuantity(id: number | string, addData: { qty_to_add: number; unit_price?: number; notes?: string }): Promise<Stock> {
+    try {
+      const result: any = await this.api.post(`/stock/${id}/add-quantity`, addData);
+      return result.stock || result;
+    } catch (error: any) {
+      console.error('Error adding stock quantity:', error);
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Failed to add stock quantity';
       throw new Error(errorMessage);
     }
   }
@@ -600,4 +617,7 @@ export const {
   getIssuedMaterials,
   validateStockData,
   validateIssueMaterialsData,
+  getStockByMaterialId,
+  addStockQuantity,
+  getStockHistory,
 } = stockService;

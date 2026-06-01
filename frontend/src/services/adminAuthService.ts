@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import api from '../api/api';
-import { type AxiosInstance, type AxiosResponse } from 'axios';
+import { api } from '../api';
+import { type AxiosInstance } from 'axios';
 
 interface Role {
   id: number;
@@ -46,12 +46,13 @@ class AdminAuthService {
         password: loginData.password,
       };
 
-      const response: AxiosResponse<AuthResponse> = await this.api.post(
+      const result = await this.api.post(
         '/auth/login',
         payload
       );
 
-      return response.data;
+      return result as unknown as AuthResponse;
+      // Note: interceptor returns { token, user }, not full AuthResponse — unused currently
     } catch (error: any) {
       const msg =
         error.response?.data?.message ||
@@ -66,17 +67,11 @@ class AdminAuthService {
    */
   async getAdminProfile(): Promise<User | null> {
     try {
-      const token = localStorage.getItem('auth_token');
-      if (!token) return null;
+      const result = await this.api.get('/auth/profile');
 
-      const response: AxiosResponse<{ success: boolean; data: { user: User } }> =
-        await this.api.get('/auth/profile', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-      return response.data.data.user;
+      return result.user;
     } catch (error: any) {
-      if (error.response?.status === 404) return null;
+      if (error.response?.status === 404 || error.response?.status === 401) return null;
       const msg =
         error.response?.data?.message ||
         error.message ||
@@ -90,11 +85,9 @@ class AdminAuthService {
    */
   async logout(): Promise<{ message: string }> {
     try {
-      const response: AxiosResponse<{ message: string }> = await this.api.post(
-        '/auth/logout'
-      );
+      const result = await this.api.post('/auth/logout');
       localStorage.removeItem('auth_token');
-      return response.data;
+      return result as { message: string };
     } catch (error: any) {
       const msg =
         error.response?.data?.message ||

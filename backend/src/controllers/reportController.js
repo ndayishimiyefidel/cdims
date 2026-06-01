@@ -6,12 +6,12 @@ const getRequestReports = async (req, res) => {
     const { site_id, status, date_from, date_to, format = 'json' } = req.query;
 
     const whereClause = {};
-    if (site_id) whereClause.site_id = site_id;
-    if (status) whereClause.status = status;
+    if (site_id) {whereClause.site_id = site_id;}
+    if (status) {whereClause.status = status;}
     if (date_from || date_to) {
       whereClause.created_at = {};
-      if (date_from) whereClause.created_at[Op.gte] = new Date(date_from);
-      if (date_to) whereClause.created_at[Op.lte] = new Date(date_to);
+      if (date_from) {whereClause.created_at[Op.gte] = new Date(date_from);}
+      if (date_to) {whereClause.created_at[Op.lte] = new Date(date_to);}
     }
 
     const requests = await Request.findAll({
@@ -23,20 +23,20 @@ const getRequestReports = async (req, res) => {
           include: [
             {
               model: Material,
-              as: 'material'
-            }
-          ]
+              as: 'material',
+            },
+          ],
         },
         {
           model: User,
-          as:'requestedBy'
+          as:'requestedBy',
         },
         {
           model: Site,
-          as:'site'
+          as:'site',
         },
       ],
-      order: [['created_at', 'DESC']]
+      order: [['created_at', 'DESC']],
     });
 
     // Calculate summary statistics
@@ -52,21 +52,21 @@ const getRequestReports = async (req, res) => {
       status_breakdown: requests.reduce((acc, req) => {
         acc[req.status] = (acc[req.status] || 0) + 1;
         return acc;
-      }, {})
+      }, {}),
     };
 
     res.json({
       success: true,
       data: {
         requests,
-        summary
-      }
+        summary,
+      },
     });
   } catch (error) {
     console.error('Get request reports error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -89,17 +89,17 @@ const getInventoryReports = async (req, res) => {
     const stock = await Stock.findAll({
       where: whereClause,
       attributes: [
-        'id', 'store_id', 'material_id', 'qty_on_hand', 'reorder_level', 
+        'id', 'store_id', 'material_id', 'qty_on_hand', 'reorder_level',
         'low_stock_threshold', 'low_stock_alert', 'unit_price',
-        'created_at', 'updated_at'
+        'created_at', 'updated_at',
       ],
       include: [
         {
           model: Material,
-          as: 'material'
-        }
+          as: 'material',
+        },
       ],
-      order: [['qty_on_hand', 'ASC']]
+      order: [['qty_on_hand', 'ASC']],
     });
 
     console.log('Found stock items:', stock.length);
@@ -108,15 +108,15 @@ const getInventoryReports = async (req, res) => {
     // Filter low stock items if requested
     let filteredStock = stock;
     if (low_stock_only === 'true') {
-      filteredStock = stock.filter(item => 
-        item.qty_on_hand <= item.reorder_level
+      filteredStock = stock.filter(item =>
+        item.qty_on_hand <= item.reorder_level,
       );
     }
 
     // Process stock data to ensure proper date formatting
     const processedStock = filteredStock.map(item => {
       const stockItem = item.toJSON();
-      
+
       // Handle date fields properly with better validation
       if (stockItem.created_at && stockItem.created_at !== 'Invalid Date' && stockItem.created_at !== '0000-00-00 00:00:00') {
         try {
@@ -132,7 +132,7 @@ const getInventoryReports = async (req, res) => {
       } else {
         stockItem.created_at = null;
       }
-      
+
       if (stockItem.updated_at && stockItem.updated_at !== 'Invalid Date' && stockItem.updated_at !== '0000-00-00 00:00:00') {
         try {
           const updatedDate = new Date(stockItem.updated_at);
@@ -147,7 +147,7 @@ const getInventoryReports = async (req, res) => {
       } else {
         stockItem.updated_at = null;
       }
-      
+
       return stockItem;
     });
 
@@ -157,26 +157,26 @@ const getInventoryReports = async (req, res) => {
       total_value: processedStock.reduce((sum, item) => {
         return sum + (item.qty_on_hand * (item.unit_price || 0));
       }, 0),
-      low_stock_items: processedStock.filter(item => 
-        item.qty_on_hand <= item.reorder_level
+      low_stock_items: processedStock.filter(item =>
+        item.qty_on_hand <= item.reorder_level,
       ).length,
-      out_of_stock_items: processedStock.filter(item => 
-        item.qty_on_hand === 0
-      ).length
+      out_of_stock_items: processedStock.filter(item =>
+        item.qty_on_hand === 0,
+      ).length,
     };
 
     res.json({
       success: true,
       data: {
         stock: processedStock,
-        summary
-      }
+        summary,
+      },
     });
   } catch (error) {
     console.error('Get inventory reports error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -187,13 +187,13 @@ const getStockMovementReports = async (req, res) => {
     const { store_id, material_id, movement_type, date_from, date_to } = req.query;
 
     const whereClause = {};
-    if (store_id) whereClause.store_id = store_id;
-    if (material_id) whereClause.material_id = material_id;
-    if (movement_type) whereClause.movement_type = movement_type;
+    if (store_id) {whereClause.store_id = store_id;}
+    if (material_id) {whereClause.material_id = material_id;}
+    if (movement_type) {whereClause.movement_type = movement_type;}
     if (date_from || date_to) {
       whereClause.created_at = {};
-      if (date_from) whereClause.created_at[Op.gte] = new Date(date_from);
-      if (date_to) whereClause.created_at[Op.lte] = new Date(date_to);
+      if (date_from) {whereClause.created_at[Op.gte] = new Date(date_from);}
+      if (date_to) {whereClause.created_at[Op.lte] = new Date(date_to);}
     }
 
     const movements = await StockMovement.findAll({
@@ -201,10 +201,10 @@ const getStockMovementReports = async (req, res) => {
       include: [
         {
           model: Material,
-          as: 'material'
-        }
+          as: 'material',
+        },
       ],
-      order: [['created_at', 'DESC']]
+      order: [['created_at', 'DESC']],
     });
 
     // Calculate summary statistics
@@ -212,21 +212,21 @@ const getStockMovementReports = async (req, res) => {
       total_movements: movements.length,
       total_in: movements.filter(m => m.movement_type === 'IN').length,
       total_out: movements.filter(m => m.movement_type === 'OUT').length,
-      total_adjustments: movements.filter(m => m.movement_type === 'ADJUSTMENT').length
+      total_adjustments: movements.filter(m => m.movement_type === 'ADJUSTMENT').length,
     };
 
     res.json({
       success: true,
       data: {
         movements,
-        summary
-      }
+        summary,
+      },
     });
   } catch (error) {
     console.error('Get stock movement reports error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -236,12 +236,12 @@ const getProcurementReports = async (req, res) => {
     const { supplier_id, status, date_from, date_to } = req.query;
 
     const whereClause = {};
-    if (supplier_id) whereClause.supplier_id = supplier_id;
-    if (status) whereClause.status = status;
+    if (supplier_id) {whereClause.supplier_id = supplier_id;}
+    if (status) {whereClause.status = status;}
     if (date_from || date_to) {
       whereClause.created_at = {};
-      if (date_from) whereClause.created_at[Op.gte] = new Date(date_from);
-      if (date_to) whereClause.created_at[Op.lte] = new Date(date_to);
+      if (date_from) {whereClause.created_at[Op.gte] = new Date(date_from);}
+      if (date_to) {whereClause.created_at[Op.lte] = new Date(date_to);}
     }
 
     const purchaseOrders = await PurchaseOrder.findAll({
@@ -253,12 +253,12 @@ const getProcurementReports = async (req, res) => {
           include: [
             {
               model: Material,
-              as: 'material'
-            }
-          ]
-        }
+              as: 'material',
+            },
+          ],
+        },
       ],
-      order: [['created_at', 'DESC']]
+      order: [['created_at', 'DESC']],
     });
 
     // Calculate summary statistics
@@ -272,21 +272,21 @@ const getProcurementReports = async (req, res) => {
       status_breakdown: purchaseOrders.reduce((acc, po) => {
         acc[po.status] = (acc[po.status] || 0) + 1;
         return acc;
-      }, {})
+      }, {}),
     };
 
     res.json({
       success: true,
       data: {
         purchaseOrders,
-        summary
-      }
+        summary,
+      },
     });
   } catch (error) {
     console.error('Get procurement reports error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -296,11 +296,11 @@ const getUserActivityReports = async (req, res) => {
     const { user_id, date_from, date_to } = req.query;
 
     const whereClause = {};
-    if (user_id) whereClause.user_id = user_id;
+    if (user_id) {whereClause.user_id = user_id;}
     if (date_from || date_to) {
       whereClause.created_at = {};
-      if (date_from) whereClause.created_at[Op.gte] = new Date(date_from);
-      if (date_to) whereClause.created_at[Op.lte] = new Date(date_to);
+      if (date_from) {whereClause.created_at[Op.gte] = new Date(date_from);}
+      if (date_to) {whereClause.created_at[Op.lte] = new Date(date_to);}
     }
 
     // Get user activity from requests
@@ -310,32 +310,32 @@ const getUserActivityReports = async (req, res) => {
         {
           model: User,
           as: 'requestedBy',
-          attributes: ['id', 'full_name', 'email']
-        }
+          attributes: ['id', 'full_name', 'email'],
+        },
       ],
-      order: [['created_at', 'DESC']]
+      order: [['created_at', 'DESC']],
     });
 
     // Calculate user activity summary
     const userActivity = requests.reduce((acc, req) => {
       const userId = req.requested_by;
       const userName = req.requestedBy?.full_name || 'Unknown User';
-      
+
       if (!acc[userId]) {
         acc[userId] = {
           user_name: userName,
           total_requests: 0,
           approved_requests: 0,
           rejected_requests: 0,
-          pending_requests: 0
+          pending_requests: 0,
         };
       }
 
       acc[userId].total_requests += 1;
-      
-      if (req.status === 'APPROVED') acc[userId].approved_requests += 1;
-      else if (req.status === 'REJECTED') acc[userId].rejected_requests += 1;
-      else acc[userId].pending_requests += 1;
+
+      if (req.status === 'APPROVED') {acc[userId].approved_requests += 1;}
+      else if (req.status === 'REJECTED') {acc[userId].rejected_requests += 1;}
+      else {acc[userId].pending_requests += 1;}
 
       return acc;
     }, {});
@@ -345,14 +345,14 @@ const getUserActivityReports = async (req, res) => {
       data: {
         userActivity,
         total_users: Object.keys(userActivity).length,
-        total_requests: requests.length
-      }
+        total_requests: requests.length,
+      },
     });
   } catch (error) {
     console.error('Get user activity reports error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -362,11 +362,11 @@ const getSitePerformanceReports = async (req, res) => {
     const { site_id, date_from, date_to } = req.query;
 
     const whereClause = {};
-    if (site_id) whereClause.site_id = site_id;
+    if (site_id) {whereClause.site_id = site_id;}
     if (date_from || date_to) {
       whereClause.created_at = {};
-      if (date_from) whereClause.created_at[Op.gte] = new Date(date_from);
-      if (date_to) whereClause.created_at[Op.lte] = new Date(date_to);
+      if (date_from) {whereClause.created_at[Op.gte] = new Date(date_from);}
+      if (date_to) {whereClause.created_at[Op.lte] = new Date(date_to);}
     }
 
     const requests = await Request.findAll({
@@ -375,7 +375,7 @@ const getSitePerformanceReports = async (req, res) => {
         {
           model: Site,
           as: 'site',
-          attributes: ['id', 'name', 'location']
+          attributes: ['id', 'name', 'location'],
         },
         {
           model: RequestItem,
@@ -383,19 +383,19 @@ const getSitePerformanceReports = async (req, res) => {
           include: [
             {
               model: Material,
-              as: 'material'
-            }
-          ]
-        }
+              as: 'material',
+            },
+          ],
+        },
       ],
-      order: [['created_at', 'DESC']]
+      order: [['created_at', 'DESC']],
     });
 
     // Calculate site performance
     const sitePerformance = requests.reduce((acc, req) => {
       const siteId = req.site_id;
       const siteName = req.site?.name || 'Unknown Site';
-      
+
       if (!acc[siteId]) {
         acc[siteId] = {
           site_name: siteName,
@@ -404,15 +404,15 @@ const getSitePerformanceReports = async (req, res) => {
           approved_requests: 0,
           rejected_requests: 0,
           pending_requests: 0,
-          average_processing_time: 0
+          average_processing_time: 0,
         };
       }
 
       acc[siteId].total_requests += 1;
-      
-      if (req.status === 'APPROVED') acc[siteId].approved_requests += 1;
-      else if (req.status === 'REJECTED') acc[siteId].rejected_requests += 1;
-      else acc[siteId].pending_requests += 1;
+
+      if (req.status === 'APPROVED') {acc[siteId].approved_requests += 1;}
+      else if (req.status === 'REJECTED') {acc[siteId].rejected_requests += 1;}
+      else {acc[siteId].pending_requests += 1;}
 
       // Calculate total value
       req.items.forEach(item => {
@@ -428,14 +428,14 @@ const getSitePerformanceReports = async (req, res) => {
       data: {
         sitePerformance,
         total_sites: Object.keys(sitePerformance).length,
-        total_requests: requests.length
-      }
+        total_requests: requests.length,
+      },
     });
   } catch (error) {
     console.error('Get site performance reports error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -446,5 +446,5 @@ module.exports = {
   getStockMovementReports,
   getProcurementReports,
   getUserActivityReports,
-  getSitePerformanceReports
+  getSitePerformanceReports,
 };

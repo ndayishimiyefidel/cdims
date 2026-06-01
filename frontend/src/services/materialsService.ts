@@ -1,5 +1,5 @@
-import { type AxiosInstance, type AxiosResponse } from 'axios'; // Type-only imports for verbatimModuleSyntax
-import api from '../api/api'; // Adjust the import path as needed
+import { type AxiosInstance } from 'axios'; // Type-only imports for verbatimModuleSyntax
+import { api } from '../api'; // Adjust the import path as needed
 
 // Interface for Material
 export interface Material {
@@ -97,9 +97,8 @@ class MaterialService {
       if (params?.category_id) queryParams.append('category_id', params.category_id.toString());
       if (params?.active !== undefined) queryParams.append('active', params.active.toString());
 
-      const response: AxiosResponse<{ success: boolean; data: { materials: Material[] } }> = 
-        await this.api.get(`/materials?${queryParams.toString()}`);
-      return response.data.data.materials;
+      const result: any = await this.api.get(`/materials?${queryParams.toString()}`);
+      return result.materials;
     } catch (error:unknown) {
       console.error('Error fetching materials:', error);
       const errorMessage =
@@ -116,9 +115,8 @@ class MaterialService {
    */
   async getMaterialById(id: number | string): Promise<Material | null> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { material: Material } }> = 
-        await this.api.get(`/materials/${id}`);
-      return response.data.data.material;
+      const result: any = await this.api.get(`/materials/${id}`);
+      return result.material || result;
     } catch (error: unknown) {
       if ((error as { response?: { status?: number } }).response?.status === 404) {
         return null;
@@ -138,9 +136,8 @@ class MaterialService {
    */
   async createMaterial(materialData: CreateMaterialInput): Promise<Material> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { material: Material }; message: string }> = 
-        await this.api.post('/materials', materialData);
-      return response.data.data.material;
+      const result: any = await this.api.post('/materials', materialData);
+      return result.material || result;
     } catch (error: unknown) {
       console.error('Error creating material:', error);
       const errorMessage =
@@ -158,9 +155,8 @@ class MaterialService {
    */
   async updateMaterial(id: number | string, updateData: UpdateMaterialInput): Promise<Material> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { material: Material }; message: string }> = 
-        await this.api.put(`/materials/${id}`, updateData);
-      return response.data.data.material;
+      const result: any = await this.api.put(`/materials/${id}`, updateData);
+      return result.material || result;
     } catch (error: unknown) {
       console.error('Error updating material:', error);
       const errorMessage =
@@ -177,8 +173,8 @@ class MaterialService {
    */
   async deleteMaterial(id: number | string): Promise<DeleteResponse> {
     try {
-      const response: AxiosResponse<DeleteResponse> = await this.api.delete(`/materials/${id}`);
-      return response.data;
+      const result = await this.api.delete(`/materials/${id}`);
+      return result;
     } catch (error: unknown) {
       console.error('Error deleting material:', error);
       const errorMessage =
@@ -195,9 +191,8 @@ class MaterialService {
    */
   async getMaterialPrices(id: number | string): Promise<MaterialPrice[]> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: MaterialPrice[] }> = 
-        await this.api.get(`/materials/${id}/prices`);
-      return response.data.data;
+      const result: any = await this.api.get(`/materials/${id}/prices`);
+      return result;
     } catch (error: unknown) {
       if ((error as { response?: { status?: number } }).response?.status === 404) {
         return [];
@@ -218,9 +213,8 @@ class MaterialService {
    */
   async addMaterialPrice(id: number | string, priceData: CreateMaterialPriceInput): Promise<MaterialPrice> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { price: MaterialPrice }; message: string }> = 
-        await this.api.post(`/materials/${id}/prices`, priceData);
-      return response.data.data.price;
+      const result: any = await this.api.post(`/materials/${id}/prices`, priceData);
+      return result.price || result;
     } catch (error: unknown) {
       console.error('Error adding material price:', error);
       const errorMessage =
@@ -238,9 +232,8 @@ class MaterialService {
    */
   async getAllCategories(): Promise<Category[]> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { categories: Category[] } }> = 
-        await this.api.get('/materials/categories');
-      return response.data.data.categories;
+      const result: any = await this.api.get('/materials/categories');
+      return result.categories;
     } catch (error: unknown) {
       console.error('Error fetching categories:', error);
       const errorMessage =
@@ -257,9 +250,8 @@ class MaterialService {
    */
   async getCategoryById(id: number | string): Promise<Category | null> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { category: Category } }> = 
-        await this.api.get(`/materials/categories/${id}`);
-      return response.data.data.category;
+      const result: any = await this.api.get(`/materials/categories/${id}`);
+      return result.category || result;
     } catch (error: unknown) {
       if ((error as { response?: { status?: number } }).response?.status === 404) {
         return null;
@@ -279,9 +271,8 @@ class MaterialService {
    */
   async createCategory(categoryData: CreateCategoryInput): Promise<Category> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { category: Category }; message: string }> = 
-        await this.api.post('/materials/categories', categoryData);
-      return response.data.data.category;
+      const result: any = await this.api.post('/materials/categories', categoryData);
+      return result.category || result;
     } catch (error: unknown) {
       console.error('Error creating category:', error);
       const errorMessage =
@@ -299,9 +290,8 @@ class MaterialService {
    */
   async updateCategory(id: number | string, updateData: UpdateCategoryInput): Promise<Category> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { category: Category }; message: string }> = 
-        await this.api.put(`/materials/categories/${id}`, updateData);
-      return response.data.data.category;
+      const result: any = await this.api.put(`/materials/categories/${id}`, updateData);
+      return result.category || result;
     } catch (error: unknown) {
       console.error('Error updating category:', error);
       const errorMessage =
@@ -318,8 +308,8 @@ class MaterialService {
    */
   async deleteCategory(id: number | string): Promise<DeleteResponse> {
     try {
-      const response: AxiosResponse<DeleteResponse> = await this.api.delete(`/materials/categories/${id}`);
-      return response.data;
+      const result = await this.api.delete(`/materials/categories/${id}`);
+      return result;
     } catch (error: unknown) {
       console.error('Error deleting category:', error);
       const errorMessage =
@@ -337,9 +327,8 @@ class MaterialService {
    */
   async getAllUnits(): Promise<Unit[]> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { units: Unit[] } }> = 
-        await this.api.get('/materials/units');
-      return response.data.data.units;
+      const result: any = await this.api.get('/materials/units');
+      return result.units;
     } catch (error: unknown) {
       console.error('Error fetching units:', error);
       const errorMessage =
@@ -356,9 +345,8 @@ class MaterialService {
    */
   async getUnitById(id: number | string): Promise<Unit | null> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { unit: Unit } }> = 
-        await this.api.get(`/materials/units/${id}`);
-      return response.data.data.unit;
+      const result: any = await this.api.get(`/materials/units/${id}`);
+      return result.unit || result;
     } catch (error: unknown) {
       if ((error as { response?: { status?: number } }).response?.status === 404) {
         return null;
@@ -378,9 +366,8 @@ class MaterialService {
    */
   async createUnit(unitData: CreateUnitInput): Promise<Unit> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { unit: Unit }; message: string }> = 
-        await this.api.post('/materials/units', unitData);
-      return response.data.data.unit;
+      const result: any = await this.api.post('/materials/units', unitData);
+      return result.unit || result;
     } catch (error: unknown) {
       console.error('Error creating unit:', error);
       const errorMessage =
@@ -398,9 +385,8 @@ class MaterialService {
    */
   async updateUnit(id: number | string, updateData: UpdateUnitInput): Promise<Unit> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { unit: Unit }; message: string }> = 
-        await this.api.put(`/materials/units/${id}`, updateData);
-      return response.data.data.unit;
+      const result: any = await this.api.put(`/materials/units/${id}`, updateData);
+      return result.unit || result;
     } catch (error: unknown) {
       console.error('Error updating unit:', error);
       const errorMessage =
@@ -417,8 +403,8 @@ class MaterialService {
    */
   async deleteUnit(id: number | string): Promise<DeleteResponse> {
     try {
-      const response: AxiosResponse<DeleteResponse> = await this.api.delete(`/materials/units/${id}`);
-      return response.data;
+      const result = await this.api.delete(`/materials/units/${id}`);
+      return result;
     } catch (error: unknown) {
       console.error('Error deleting unit:', error);
       const errorMessage =

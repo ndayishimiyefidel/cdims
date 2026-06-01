@@ -7,24 +7,24 @@ const Category = sequelize.define('Category', {
   id: {
     type: DataTypes.BIGINT,
     primaryKey: true,
-    autoIncrement: true
+    autoIncrement: true,
   },
   name: {
     type: DataTypes.STRING(150),
-    allowNull: false
+    allowNull: false,
   },
   parent_id: {
     type: DataTypes.BIGINT,
     allowNull: true,
     references: {
       model: 'categories',
-      key: 'id'
+      key: 'id',
     },
     onDelete: 'SET NULL',
-    onUpdate: 'CASCADE'
-  }
+    onUpdate: 'CASCADE',
+  },
 }, {
-  tableName: 'categories'
+  tableName: 'categories',
 });
 
 module.exports = Category;

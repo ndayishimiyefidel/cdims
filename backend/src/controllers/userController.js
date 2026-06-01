@@ -6,18 +6,18 @@ const getAllUsers = async (req, res) => {
     const offset = (page - 1) * limit;
 
     const whereClause = {};
-    if (role) whereClause.role_id = role;
-    if (active !== undefined) whereClause.active = active === 'true';
+    if (role) {whereClause.role_id = role;}
+    if (active !== undefined) {whereClause.active = active === 'true';}
 
     const { count, rows: users } = await User.findAndCountAll({
       where: whereClause,
       include: [{
         model: Role,
-        as: 'role'
+        as: 'role',
       }],
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['created_at', 'DESC']]
+      order: [['created_at', 'DESC']],
     });
 
     res.json({
@@ -28,15 +28,15 @@ const getAllUsers = async (req, res) => {
           current_page: parseInt(page),
           total_pages: Math.ceil(count / limit),
           total_items: count,
-          items_per_page: parseInt(limit)
-        }
-      }
+          items_per_page: parseInt(limit),
+        },
+      },
     });
   } catch (error) {
     console.error('Get all users error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -48,26 +48,26 @@ const getUserById = async (req, res) => {
     const user = await User.findByPk(id, {
       include: [{
         model: Role,
-        as: 'role'
-      }]
+        as: 'role',
+      }],
     });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
     }
 
     res.json({
       success: true,
-      data: { user }
+      data: { user },
     });
   } catch (error) {
     console.error('Get user by ID error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -79,7 +79,7 @@ const createUser = async (req, res) => {
     if (!role_id || !full_name || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Role ID, full name, email, and password are required'
+        message: 'Role ID, full name, email, and password are required',
       });
     }
 
@@ -88,7 +88,7 @@ const createUser = async (req, res) => {
     if (existingUser) {
       return res.status(409).json({
         success: false,
-        message: 'Email already exists'
+        message: 'Email already exists',
       });
     }
 
@@ -97,27 +97,27 @@ const createUser = async (req, res) => {
       full_name,
       email,
       phone,
-      password_hash: password
+      password_hash: password,
     });
 
     // Fetch user with role
     const userWithRole = await User.findByPk(user.id, {
       include: [{
         model: Role,
-        as: 'role'
-      }]
+        as: 'role',
+      }],
     });
 
     res.status(201).json({
       success: true,
       data: { user: userWithRole },
-      message: 'User created successfully'
+      message: 'User created successfully',
     });
   } catch (error) {
     console.error('Create user error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -131,7 +131,7 @@ const updateUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
     }
 
@@ -141,17 +141,17 @@ const updateUser = async (req, res) => {
       if (existingUser) {
         return res.status(409).json({
           success: false,
-          message: 'Email already exists'
+          message: 'Email already exists',
         });
       }
     }
 
     // Update user fields
-    if (role_id) user.role_id = role_id;
-    if (full_name) user.full_name = full_name;
-    if (email) user.email = email;
-    if (phone) user.phone = phone;
-    if (active !== undefined) user.active = active;
+    if (role_id) {user.role_id = role_id;}
+    if (full_name) {user.full_name = full_name;}
+    if (email) {user.email = email;}
+    if (phone) {user.phone = phone;}
+    if (active !== undefined) {user.active = active;}
 
     await user.save();
 
@@ -159,20 +159,20 @@ const updateUser = async (req, res) => {
     const updatedUser = await User.findByPk(user.id, {
       include: [{
         model: Role,
-        as: 'role'
-      }]
+        as: 'role',
+      }],
     });
 
     res.json({
       success: true,
       data: { user: updatedUser },
-      message: 'User updated successfully'
+      message: 'User updated successfully',
     });
   } catch (error) {
     console.error('Update user error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -185,7 +185,7 @@ const deleteUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
     }
 
@@ -194,13 +194,13 @@ const deleteUser = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'User deleted successfully'
+      message: 'User deleted successfully',
     });
   } catch (error) {
     console.error('Delete user error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -213,7 +213,7 @@ const toggleUserStatus = async (req, res) => {
     if (active === undefined) {
       return res.status(400).json({
         success: false,
-        message: 'Active status is required'
+        message: 'Active status is required',
       });
     }
 
@@ -221,7 +221,7 @@ const toggleUserStatus = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
     }
 
@@ -233,20 +233,20 @@ const toggleUserStatus = async (req, res) => {
     const updatedUser = await User.findByPk(user.id, {
       include: [{
         model: Role,
-        as: 'role'
-      }]
+        as: 'role',
+      }],
     });
 
     res.json({
       success: true,
       data: { user: updatedUser },
-      message: `User ${active ? 'activated' : 'deactivated'} successfully`
+      message: `User ${active ? 'activated' : 'deactivated'} successfully`,
     });
   } catch (error) {
     console.error('Toggle user status error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -254,18 +254,18 @@ const toggleUserStatus = async (req, res) => {
 const getRoles = async (req, res) => {
   try {
     const roles = await Role.findAll({
-      order: [['id', 'ASC']]
+      order: [['id', 'ASC']],
     });
 
     res.json({
       success: true,
-      data: { roles }
+      data: { roles },
     });
   } catch (error) {
     console.error('Get roles error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -277,5 +277,5 @@ module.exports = {
   updateUser,
   deleteUser,
   toggleUserStatus,
-  getRoles
+  getRoles,
 };

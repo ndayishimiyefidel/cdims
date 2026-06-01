@@ -16,14 +16,11 @@ import {
   Map,
   Users,
 } from 'lucide-react';
-import materialService, { type Material } from '../../services/materialsService';
-import requisitionService, { type MaterialRequisition } from '../../services/requestService';
-import siteService, { type Site } from '../../services/siteService';
-import siteAssignmentService, { type SiteAssignment } from '../../services/siteAssignmentService';
-import stockService, { type Stock, type StockMovement } from '../../services/stockService';
-import storeService, { type Store } from '../../services/storeService';
-import userService, { type User } from '../../services/userService';
-import useAuth from '../../context/AuthContext';
+import { materialService, requisitionService, siteService, siteAssignmentService, stockService, storeService, userService } from '../../services';
+import { useAuth } from '../../context';
+import type { Material, MaterialRequisition, Site, SiteAssignment, Stock, StockMovement, Store, User } from '../../services/userService';
+import type { Site as AssignedSite } from '../../services/siteAssignmentService';
+import type { Store as StockStore } from '../../services/stockService';
 import { useNavigate } from 'react-router-dom';
 import AccessRestricted from '../../components/dashboard/AccessRestricted';
 

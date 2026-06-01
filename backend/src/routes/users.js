@@ -119,7 +119,7 @@ router.get('/', authenticate, authorize('ADMIN', 'PADIRI','DIOCESAN_SITE_ENGINEE
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/roles', authenticate, authorize('ADMIN', 'PADIRI',), userController.getRoles);
+router.get('/roles', authenticate, authorize('ADMIN', 'PADIRI'), userController.getRoles);
 
 /**
  * @swagger

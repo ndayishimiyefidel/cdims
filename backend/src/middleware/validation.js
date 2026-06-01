@@ -10,8 +10,8 @@ const handleValidationErrors = (req, res, next) => {
       errors: errors.array().map(error => ({
         field: error.path,
         message: error.msg,
-        value: error.value
-      }))
+        value: error.value,
+      })),
     });
   }
   next();
@@ -21,12 +21,12 @@ const handleValidationErrors = (req, res, next) => {
 const paginationValidation = [
   query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
   query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
-  handleValidationErrors
+  handleValidationErrors,
 ];
 
 const idValidation = [
   param('id').isInt({ min: 1 }).withMessage('ID must be a positive integer'),
-  handleValidationErrors
+  handleValidationErrors,
 ];
 
 // Stock validation rules
@@ -37,15 +37,15 @@ const stockValidation = {
     body('qty_on_hand').isFloat({ min: 0 }).withMessage('Quantity on hand must be a non-negative number'),
     body('reorder_level').optional().isFloat({ min: 0 }).withMessage('Reorder level must be a non-negative number'),
     body('low_stock_threshold').optional().isFloat({ min: 0 }).withMessage('Low stock threshold must be a non-negative number'),
-    handleValidationErrors
+    handleValidationErrors,
   ],
-  
+
   update: [
     body('qty_on_hand').optional().isFloat({ min: 0 }).withMessage('Quantity on hand must be a non-negative number'),
     body('reorder_level').optional().isFloat({ min: 0 }).withMessage('Reorder level must be a non-negative number'),
     body('low_stock_threshold').optional().isFloat({ min: 0 }).withMessage('Low stock threshold must be a non-negative number'),
     body('low_stock_alert').optional().isBoolean().withMessage('Low stock alert must be a boolean'),
-    handleValidationErrors
+    handleValidationErrors,
   ],
 
   issueMaterials: [
@@ -55,8 +55,8 @@ const stockValidation = {
     body('items.*.qty_issued').isFloat({ min: 0.01 }).withMessage('Quantity issued must be a positive number'),
     body('items.*.store_id').isInt({ min: 1 }).withMessage('Store ID is required and must be a positive integer'),
     body('items.*.notes').optional().isString().isLength({ max: 500 }).withMessage('Notes must be a string with maximum 500 characters'),
-    handleValidationErrors
-  ]
+    handleValidationErrors,
+  ],
 };
 
 // Material validation rules
@@ -69,7 +69,7 @@ const materialValidation = {
     body('category_id').isInt({ min: 1 }).withMessage('Category ID is required and must be a positive integer'),
     body('unit_id').isInt({ min: 1 }).withMessage('Unit ID is required and must be a positive integer'),
     body('unit_price').isFloat({ min: 0 }).withMessage('Unit price must be a non-negative number'),
-    handleValidationErrors
+    handleValidationErrors,
   ],
 
   update: [
@@ -80,8 +80,8 @@ const materialValidation = {
     body('category_id').optional().isInt({ min: 1 }).withMessage('Category ID must be a positive integer'),
     body('unit_id').optional().isInt({ min: 1 }).withMessage('Unit ID must be a positive integer'),
     body('unit_price').optional().isFloat({ min: 0 }).withMessage('Unit price must be a non-negative number'),
-    handleValidationErrors
-  ]
+    handleValidationErrors,
+  ],
 };
 
 // User validation rules
@@ -92,7 +92,7 @@ const userValidation = {
     body('phone').optional().isString().isLength({ max: 20 }).withMessage('Phone must be a string with maximum 20 characters'),
     body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
     body('role_id').isInt({ min: 1 }).withMessage('Role ID is required and must be a positive integer'),
-    handleValidationErrors
+    handleValidationErrors,
   ],
 
   update: [
@@ -100,7 +100,7 @@ const userValidation = {
     body('email').optional().isEmail().normalizeEmail().withMessage('Valid email is required'),
     body('phone').optional().isString().isLength({ max: 20 }).withMessage('Phone must be a string with maximum 20 characters'),
     body('role_id').optional().isInt({ min: 1 }).withMessage('Role ID must be a positive integer'),
-    handleValidationErrors
+    handleValidationErrors,
   ],
 
   changePassword: [
@@ -112,8 +112,8 @@ const userValidation = {
       }
       return true;
     }),
-    handleValidationErrors
-  ]
+    handleValidationErrors,
+  ],
 };
 
 // Request validation rules
@@ -124,7 +124,7 @@ const requestValidation = {
     body('items').isArray({ min: 1 }).withMessage('Items array is required and must not be empty'),
     body('items.*.material_id').isInt({ min: 1 }).withMessage('Material ID is required and must be a positive integer'),
     body('items.*.qty_requested').isFloat({ min: 0.01 }).withMessage('Quantity requested must be a positive number'),
-    handleValidationErrors
+    handleValidationErrors,
   ],
 
   update: [
@@ -133,8 +133,8 @@ const requestValidation = {
     body('items').optional().isArray({ min: 1 }).withMessage('Items array must not be empty'),
     body('items.*.material_id').optional().isInt({ min: 1 }).withMessage('Material ID must be a positive integer'),
     body('items.*.qty_requested').optional().isFloat({ min: 0.01 }).withMessage('Quantity requested must be a positive number'),
-    handleValidationErrors
-  ]
+    handleValidationErrors,
+  ],
 };
 
 // Site validation rules
@@ -142,14 +142,14 @@ const siteValidation = {
   create: [
     body('name').trim().isLength({ min: 1, max: 255 }).withMessage('Name is required and must be between 1 and 255 characters'),
     body('location').trim().isLength({ min: 1, max: 255 }).withMessage('Location is required and must be between 1 and 255 characters'),
-    handleValidationErrors
+    handleValidationErrors,
   ],
 
   update: [
     body('name').optional().trim().isLength({ min: 1, max: 255 }).withMessage('Name must be between 1 and 255 characters'),
     body('location').optional().trim().isLength({ min: 1, max: 255 }).withMessage('Location must be between 1 and 255 characters'),
-    handleValidationErrors
-  ]
+    handleValidationErrors,
+  ],
 };
 
 // Store validation rules
@@ -161,7 +161,7 @@ const storeValidation = {
     body('manager_name').optional().isString().isLength({ max: 255 }).withMessage('Manager name must be a string with maximum 255 characters'),
     body('contact_phone').optional().isString().isLength({ max: 20 }).withMessage('Contact phone must be a string with maximum 20 characters'),
     body('contact_email').optional().isEmail().normalizeEmail().withMessage('Valid contact email is required'),
-    handleValidationErrors
+    handleValidationErrors,
   ],
 
   update: [
@@ -171,8 +171,8 @@ const storeValidation = {
     body('manager_name').optional().isString().isLength({ max: 255 }).withMessage('Manager name must be a string with maximum 255 characters'),
     body('contact_phone').optional().isString().isLength({ max: 20 }).withMessage('Contact phone must be a string with maximum 20 characters'),
     body('contact_email').optional().isEmail().normalizeEmail().withMessage('Valid contact email is required'),
-    handleValidationErrors
-  ]
+    handleValidationErrors,
+  ],
 };
 
 module.exports = {
@@ -184,5 +184,5 @@ module.exports = {
   userValidation,
   requestValidation,
   siteValidation,
-  storeValidation
+  storeValidation,
 };

@@ -1,10 +1,8 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-let sequelize;
-
 // Use MySQL for both development and production
-sequelize = new Sequelize(
+const sequelize = new Sequelize(
   process.env.DB_NAME || 'cdims',
   process.env.DB_USER || 'root',
   process.env.DB_PASSWORD || '',
@@ -17,14 +15,14 @@ sequelize = new Sequelize(
       max: 10,
       min: 0,
       acquire: 30000,
-      idle: 10000
+      idle: 10000,
     },
     define: {
       timestamps: true,
       underscored: true,
-      freezeTableName: true
-    }
-  }
+      freezeTableName: true,
+    },
+  },
 );
 
 // Test database connection

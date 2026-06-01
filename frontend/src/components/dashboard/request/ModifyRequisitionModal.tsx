@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, FileText, Package, Plus, Trash2, AlertCircle } from 'lucide-react';
-import requisitionService, { type MaterialRequisition } from '../../../services/requestService';
-import materialService, { type Material, type Unit } from '../../../services/materialsService';
-import useAuth from '../../../context/AuthContext';
+import { requisitionService } from '../../../services';
+import type { MaterialRequisition } from '../../../services/requestService';
+import { materialService } from '../../../services';
+import type { Material, Unit } from '../../../services/materialsService';
+import { useAuth } from '../../../context';
 
 interface ModifyRequisitionInput {
   notes: string;

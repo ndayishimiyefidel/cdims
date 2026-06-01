@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Shield, Power } from 'lucide-react';
-import  useAuth ,{ type AuthContextType } from '../../../../context/AuthContext';
+import { useAuth } from '../../../../context';
+import type { AuthContextType } from '../../../../context';
 import Swal from 'sweetalert2';
-import authService from '../../../../services/authService';
+import { authService } from '../../../../services';
 import ChangePasswordModal from './security/ChangePasswordModal';
-import { logout } from '../../../../services/adminAuthService';
+import { logout } from '../../../../services';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 interface DeleteAccountModalProps {

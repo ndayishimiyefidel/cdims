@@ -30,7 +30,7 @@ import {
 import DOMPurify from "dompurify";
 import applicantService from "../../../services/materialsService";
 import { useSocketEvent } from "../../../context/SocketContext";
-import { API_URL } from "../../../api/api";
+import { API_URL } from "../../../api";
 
 // Define union types instead of enums
 type ApplicationStage = "APPLIED" | "SHORTLISTED" | "INTERVIEWED" | "HIRED" | "REJECTED";

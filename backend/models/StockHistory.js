@@ -5,107 +5,107 @@ const StockHistory = sequelize.define('StockHistory', {
   id: {
     type: DataTypes.BIGINT,
     primaryKey: true,
-    autoIncrement: true
+    autoIncrement: true,
   },
   stock_id: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'stock',
-      key: 'id'
+      key: 'id',
     },
     onUpdate: 'CASCADE',
-    onDelete: 'CASCADE'
+    onDelete: 'CASCADE',
   },
   material_id: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'materials',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   store_id: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'stores',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   movement_type: {
     type: DataTypes.ENUM('IN', 'OUT', 'ADJUSTMENT', 'LOSS', 'PRICE_UPDATE'),
-    allowNull: false
+    allowNull: false,
   },
   source_type: {
     type: DataTypes.ENUM('GRN', 'ISSUE', 'ADJUSTMENT', 'RECEIVE', 'CREATION', 'PRICE_UPDATE'),
-    allowNull: false
+    allowNull: false,
   },
   source_id: {
     type: DataTypes.BIGINT,
     allowNull: true,
-    comment: 'ID of the source record (request, purchase order, etc.)'
+    comment: 'ID of the source record (request, purchase order, etc.)',
   },
   qty_before: {
     type: DataTypes.DECIMAL(12, 3),
     allowNull: false,
-    comment: 'Quantity before the movement'
+    comment: 'Quantity before the movement',
   },
   qty_change: {
     type: DataTypes.DECIMAL(12, 3),
     allowNull: false,
-    comment: 'Quantity change (positive for IN, negative for OUT)'
+    comment: 'Quantity change (positive for IN, negative for OUT)',
   },
   qty_after: {
     type: DataTypes.DECIMAL(12, 3),
     allowNull: false,
-    comment: 'Quantity after the movement'
+    comment: 'Quantity after the movement',
   },
   unit_price: {
     type: DataTypes.DECIMAL(12, 2),
     allowNull: true,
-    comment: 'Unit price at the time of movement'
+    comment: 'Unit price at the time of movement',
   },
   unit_price_before: {
     type: DataTypes.DECIMAL(12, 2),
     allowNull: true,
-    comment: 'Unit price before the movement'
+    comment: 'Unit price before the movement',
   },
   unit_price_after: {
     type: DataTypes.DECIMAL(12, 2),
     allowNull: true,
-    comment: 'Unit price after the movement'
+    comment: 'Unit price after the movement',
   },
   notes: {
     type: DataTypes.TEXT,
     allowNull: true,
-    comment: 'Additional notes about the movement'
+    comment: 'Additional notes about the movement',
   },
   created_by: {
     type: DataTypes.BIGINT,
     allowNull: true,
     references: {
       model: 'users',
-      key: 'id'
+      key: 'id',
     },
     onUpdate: 'CASCADE',
-    onDelete: 'SET NULL'
-  }
+    onDelete: 'SET NULL',
+  },
 }, {
   tableName: 'stock_history',
   timestamps: true,   // ✅ createdAt & updatedAt handled by Sequelize
   underscored: true,  // ✅ snake_case (created_at, updated_at)
   indexes: [
     {
-      fields: ['stock_id', 'created_at']
+      fields: ['stock_id', 'created_at'],
     },
     {
-      fields: ['material_id', 'store_id', 'created_at']
+      fields: ['material_id', 'store_id', 'created_at'],
     },
     {
-      fields: ['movement_type', 'created_at']
-    }
-  ]
+      fields: ['movement_type', 'created_at'],
+    },
+  ],
 });
 
 module.exports = StockHistory;

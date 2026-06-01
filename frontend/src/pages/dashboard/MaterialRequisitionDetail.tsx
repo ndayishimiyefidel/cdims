@@ -18,9 +18,10 @@ import {
   Shield,
   DollarSign
 } from 'lucide-react';
-import requisitionService, { type MaterialRequisition } from '../../services/requestService'; // Adjust path as needed
-import { formatPrice, formatRole } from '../../utils/dateUtils';
-import useAuth from '../../context/AuthContext';
+import { requisitionService } from '../../services';
+import type { MaterialRequisition } from '../../services/requestService'; // Adjust path as needed
+import { formatPrice, formatRole } from '../../utils';
+import { useAuth } from '../../context';
 
 // Receipt History Section Component
 const ReceiptHistorySection: React.FC<{ requestId: string | undefined }> = ({ requestId }) => {
@@ -203,7 +204,7 @@ const RequestDetailView: React.FC = () => {
 
       try {
         const data = await requisitionService.getRequisitionById(id);
-        setRequest(data.data.request);
+        setRequest(data);
         setLoading(false);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch requisition details');

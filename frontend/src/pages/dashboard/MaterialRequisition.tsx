@@ -34,12 +34,13 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import html2pdf from 'html2pdf.js';
-import requisitionService, {
-    type MaterialRequisition,
-    type CreateRequisitionInput,
-    type UpdateRequisitionInput,
-    type ReceiveMaterialItem,
-    type ReceiveMaterialsResponse
+import { requisitionService } from '../../services';
+import type {
+    MaterialRequisition,
+    CreateRequisitionInput,
+    UpdateRequisitionInput,
+    ReceiveMaterialItem,
+    ReceiveMaterialsResponse
 } from '../../services/requestService';
 import AddRequisitionModal from '../../components/dashboard/MaterialRequest/AddClientModal';
 import EditRequisitionModal from '../../components/dashboard/MaterialRequest/EditClientModal';
@@ -49,7 +50,7 @@ import ApproveRequisitionModal from '../../components/dashboard/request/ApproveR
 import RejectRequisitionModal from '../../components/dashboard/request/RejectRequisitionModal';
 import ReceiveMaterialsModal from '../../components/dashboard/request/ReceiveMaterialsModal';
 import ModifyRequisitionModal from '../../components/dashboard/request/ModifyRequisitionModal';
-import useAuth from '../../context/AuthContext';
+import { useAuth } from '../../context';
 
 interface OperationStatus {
     type: 'success' | 'error' | 'info';

@@ -6,37 +6,37 @@ const getAllSiteAssignments = async (req, res) => {
     const offset = (page - 1) * limit;
 
     const whereClause = {};
-    if (user_id) whereClause.user_id = user_id;
-    if (site_id) whereClause.site_id = site_id;
-    if (status) whereClause.status = status;
+    if (user_id) {whereClause.user_id = user_id;}
+    if (site_id) {whereClause.site_id = site_id;}
+    if (status) {whereClause.status = status;}
 
     const { count, rows: assignments } = await SiteAssignment.findAndCountAll({
       where: whereClause,
       include: [
         {
           model: Site,
-          as: 'site'
+          as: 'site',
         },
         {
           model: User,
           as: 'user',
           include: [{
             model: Role,
-            as: 'role'
-          }]
+            as: 'role',
+          }],
         },
         {
           model: User,
           as: 'assignedBy',
           include: [{
             model: Role,
-            as: 'role'
-          }]
-        }
+            as: 'role',
+          }],
+        },
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['assigned_at', 'DESC']]
+      order: [['assigned_at', 'DESC']],
     });
 
     res.json({
@@ -47,15 +47,15 @@ const getAllSiteAssignments = async (req, res) => {
           current_page: parseInt(page),
           total_pages: Math.ceil(count / limit),
           total_items: count,
-          items_per_page: parseInt(limit)
-        }
-      }
+          items_per_page: parseInt(limit),
+        },
+      },
     });
   } catch (error) {
     console.error('Get site assignments error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -67,13 +67,13 @@ const assignSiteToUser = async (req, res) => {
 
     // Check if assignment already exists
     const existingAssignment = await SiteAssignment.findOne({
-      where: { site_id, user_id, status: 'ACTIVE' }
+      where: { site_id, user_id, status: 'ACTIVE' },
     });
 
     if (existingAssignment) {
       return res.status(400).json({
         success: false,
-        message: 'User is already assigned to this site'
+        message: 'User is already assigned to this site',
       });
     }
 
@@ -82,7 +82,7 @@ const assignSiteToUser = async (req, res) => {
       site_id,
       user_id,
       assigned_by,
-      status: 'ACTIVE'
+      status: 'ACTIVE',
     });
 
     // Fetch the assignment with related data
@@ -90,37 +90,37 @@ const assignSiteToUser = async (req, res) => {
       include: [
         {
           model: Site,
-          as: 'site'
+          as: 'site',
         },
         {
           model: User,
           as: 'user',
           include: [{
             model: Role,
-            as: 'role'
-          }]
+            as: 'role',
+          }],
         },
         {
           model: User,
           as: 'assignedBy',
           include: [{
             model: Role,
-            as: 'role'
-          }]
-        }
-      ]
+            as: 'role',
+          }],
+        },
+      ],
     });
 
     res.status(201).json({
       success: true,
       message: 'Site assigned successfully',
-      data: assignmentWithDetails
+      data: { assignment: assignmentWithDetails },
     });
   } catch (error) {
     console.error('Assign site error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -134,7 +134,7 @@ const updateSiteAssignment = async (req, res) => {
     if (!assignment) {
       return res.status(404).json({
         success: false,
-        message: 'Site assignment not found'
+        message: 'Site assignment not found',
       });
     }
 
@@ -143,13 +143,13 @@ const updateSiteAssignment = async (req, res) => {
     res.json({
       success: true,
       message: 'Site assignment updated successfully',
-      data: assignment
+      data: { assignment },
     });
   } catch (error) {
     console.error('Update site assignment error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -162,7 +162,7 @@ const removeSiteAssignment = async (req, res) => {
     if (!assignment) {
       return res.status(404).json({
         success: false,
-        message: 'Site assignment not found'
+        message: 'Site assignment not found',
       });
     }
 
@@ -170,13 +170,13 @@ const removeSiteAssignment = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Site assignment removed successfully'
+      message: 'Site assignment removed successfully',
     });
   } catch (error) {
     console.error('Remove site assignment error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -190,23 +190,23 @@ const getUserAssignedSites = async (req, res) => {
       include: [
         {
           model: Site,
-          as: 'site'
-        }
+          as: 'site',
+        },
       ],
-      order: [['assigned_at', 'DESC']]
+      order: [['assigned_at', 'DESC']],
     });
 
     const sites = assignments.map(assignment => assignment.site);
 
     res.json({
       success: true,
-      data: sites
+      data: sites,
     });
   } catch (error) {
     console.error('Get user assigned sites error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -216,5 +216,5 @@ module.exports = {
   assignSiteToUser,
   updateSiteAssignment,
   removeSiteAssignment,
-  getUserAssignedSites
+  getUserAssignedSites,
 };

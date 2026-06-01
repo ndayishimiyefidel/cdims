@@ -1,127 +1,45 @@
 # Switch to Main Branch on VPS
 
-## 🚨 Issue: You're on `backend` branch instead of `main`
+Use this when VPS code is on the wrong branch and folders are missing.
 
-The `git branch` command shows you're on the `backend` branch, which is why you're missing the `frontend` folder.
+## 1) Move to Repository
 
-## 🔧 Solution: Switch to Main Branch
-
-### **1. Switch to Main Branch**
 ```bash
-# Switch to main branch
-git checkout main
-
-# Verify you're on main branch
+cd /var/www/cdims
+git status
 git branch
-
-# Pull latest changes
-git pull origin main
 ```
 
-### **2. Check Structure After Switch**
-```bash
-# List all files and folders
-ls -la
-
-# You should now see both backend and frontend folders
-```
-
-### **3. Complete Setup After Switch**
-```bash
-# Setup backend
-cd backend
-npm install
-
-# Create .env file
-nano .env
-```
-
-**Add to .env:**
-```env
-DB_HOST=localhost
-DB_USER=cdims_user
-DB_PASSWORD=password@123
-DB_NAME=cdims
-JWT_SECRET=cdims_jwt_secret_key_2024_production
-PORT=3000
-NODE_ENV=production
-```
+## 2) Switch to `main`
 
 ```bash
-# Run migrations and seed
-npm run migrate
-npm run seed
-
-# Setup frontend
-cd ../frontend
-npm install
-npm run build
-
-# Start with PM2
-cd ../backend
-npm install -g pm2
-pm2 start src/app.js --name cdims-backend
-pm2 save
-pm2 startup
-```
-
-## 🔍 **Alternative: Fresh Clone from Main**
-
-If switching branches doesn't work:
-
-```bash
-# Go back to home directory
-cd ~
-
-# Remove existing cdims folder
-rm -rf cdims
-
-# Clone main branch specifically
-git clone -b main https://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@github.com/ndayishimiyefidel/cdims.git
-
-# Check structure
-cd cdims
-ls -la
-```
-
-## 📋 **Expected Structure After Switch**
-
-You should see:
-```
-cdims/
-├── backend/
-├── frontend/
-├── README.md
-├── QUICK_START.md
-├── SETUP_COMMANDS.md
-├── VPS_DEPLOYMENT.md
-├── deploy.sh
-└── ...
-```
-
-## 🚀 **Quick Commands**
-
-### **Option A: Switch Branch (Recommended)**
-```bash
+git fetch origin
 git checkout main
 git pull origin main
+```
+
+## 3) Verify Structure
+
+```bash
 ls -la
 ```
 
-### **Option B: Fresh Clone from Main**
+You should see both `backend/` and `frontend/`.
+
+## 4) If Switch Fails, Fresh Clone
+
 ```bash
-cd ~
+cd /var/www
 rm -rf cdims
-git clone -b main https://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@github.com/ndayishimiyefidel/cdims.git
+git clone -b main https://github.com/ndayishimiyefidel/cdims.git
 cd cdims
 ls -la
 ```
 
-## ✅ **Verification**
+## 5) Continue Deployment
 
-After switching to main branch, you should see:
-- `backend/` folder
-- `frontend/` folder
-- All other project files
+Follow `VPS_DEPLOYMENT.md` for complete setup.
 
-The `frontend` folder was missing because you were on the `backend` branch! 🎯
+## Security Note
+
+Never clone using a personal access token in the repository URL.

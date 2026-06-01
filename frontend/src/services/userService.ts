@@ -1,4 +1,4 @@
-import api from '../api/api';
+import { api } from '../api';
 
 export interface User {
   id: string;
@@ -33,11 +33,8 @@ export interface UpdateUserInput {
 const userService = {
   getAllUsers: async (): Promise<User[]> => {
     try {
-      const token = localStorage.getItem('auth_token');
-      const { data } = await api.get<User[]>('/users', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return data;
+      const result: any = await api.get('/users');
+      return result.users || result;
     } catch (error: any) {
       console.error('Error fetching users:', error);
       throw new Error(error.response?.data?.message || 'Failed to fetch users');
@@ -46,11 +43,8 @@ const userService = {
 
   getUserById: async (id: string): Promise<User> => {
     try {
-      const token = localStorage.getItem('auth_token');
-      const { data } = await api.get<User>(`/users/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return data;
+      const result: any = await api.get(`/users/${id}`);
+      return result.user || result;
     } catch (error: any) {
       console.error('Error fetching user:', error);
       throw new Error(error.response?.data?.message || 'Failed to fetch user');
@@ -59,15 +53,8 @@ const userService = {
 
   createUser: async (data: CreateUserInput): Promise<User> => {
     try {
-      const token = localStorage.getItem('auth_token');
-      const { data: newUser } = await api.post<{
-        data:{
-          user:User
-        }
-      }>('/users', data, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return newUser.data.user;
+      const result: any = await api.post('/users', data);
+      return result.user || result;
     } catch (error: any) {
       console.error('Error creating user:', error);
       throw new Error(error.response?.data?.message || 'Failed to create user');
@@ -76,11 +63,8 @@ const userService = {
 
   updateUser: async (id: string, data: UpdateUserInput): Promise<User> => {
     try {
-      const token = localStorage.getItem('auth_token');
-      const { data: updatedUser } = await api.put<User>(`/users/${id}`, data, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return updatedUser;
+      const result: any = await api.put(`/users/${id}`, data);
+      return result.user || result;
     } catch (error: any) {
       console.error('Error updating user:', error);
       throw new Error(error.response?.data?.message || 'Failed to update user');
@@ -89,10 +73,8 @@ const userService = {
 
   deleteUser: async (id: string): Promise<void> => {
     try {
-      const token = localStorage.getItem('auth_token');
-      await api.delete(`/users/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/users/${id}`);
+      return;
     } catch (error: any) {
       console.error('Error deleting user:', error);
       throw new Error(error.response?.data?.message || 'Failed to delete user');

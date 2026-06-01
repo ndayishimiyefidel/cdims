@@ -1,5 +1,5 @@
-import { type AxiosInstance, type AxiosResponse } from 'axios'; // Type-only imports for verbatimModuleSyntax
-import api from '../api/api'; // Adjust the import path as needed
+import { type AxiosInstance } from 'axios'; // Type-only imports for verbatimModuleSyntax
+import { api } from '../api'; // Adjust the import path as needed
 
 // Interface for Site
 export interface Site {
@@ -61,9 +61,8 @@ class SiteService {
       if (params?.limit) queryParams.append('limit', params.limit.toString());
       if (params?.search) queryParams.append('search', params.search);
 
-      const response: AxiosResponse<{ success: boolean; data: { sites: Site[]; pagination: Pagination } }> =
-        await this.api.get(`/sites?${queryParams.toString()}`);
-      return response.data.data;
+      const result: any = await this.api.get(`/sites?${queryParams.toString()}`);
+      return result;
     } catch (error: any) {
       console.error('Error fetching sites:', error);
       const errorMessage =
@@ -79,9 +78,8 @@ class SiteService {
    */
   async getSiteById(id: number | string): Promise<Site | null> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { site: Site } }> =
-        await this.api.get(`/sites/${id}`);
-      return response.data.data.site;
+      const result: any = await this.api.get(`/sites/${id}`);
+      return result.site || result;
     } catch (error: any) {
       if (error.response?.status === 404) {
         return null;
@@ -100,9 +98,8 @@ class SiteService {
    */
   async createSite(siteData: CreateSiteInput): Promise<Site> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { site: Site }; message: string }> =
-        await this.api.post('/sites', siteData);
-      return response.data.data.site;
+      const result: any = await this.api.post('/sites', siteData);
+      return result.site || result;
     } catch (error: any) {
       console.error('Error creating site:', error);
       const errorMessage =
@@ -119,9 +116,8 @@ class SiteService {
    */
   async updateSite(id: number | string, updateData: UpdateSiteInput): Promise<Site> {
     try {
-      const response: AxiosResponse<{ success: boolean; data: { site: Site }; message: string }> =
-        await this.api.put(`/sites/${id}`, updateData);
-      return response.data.data.site;
+      const result: any = await this.api.put(`/sites/${id}`, updateData);
+      return result.site || result;
     } catch (error: any) {
       console.error('Error updating site:', error);
       const errorMessage =
@@ -137,8 +133,8 @@ class SiteService {
    */
   async deleteSite(id: number | string): Promise<DeleteResponse> {
     try {
-      const response: AxiosResponse<DeleteResponse> = await this.api.delete(`/sites/${id}`);
-      return response.data;
+      const result = await this.api.delete(`/sites/${id}`);
+      return result;
     } catch (error: any) {
       console.error('Error deleting site:', error);
       const errorMessage =

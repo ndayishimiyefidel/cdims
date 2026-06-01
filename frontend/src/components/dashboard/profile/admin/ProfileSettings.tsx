@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
-import useAuth ,{ type AuthContextType } from '../../../../context/AuthContext';
+import { useAuth } from '../../../../context';
+import type { AuthContextType } from '../../../../context';
 
 interface User {
   id: number;

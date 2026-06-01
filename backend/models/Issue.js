@@ -5,44 +5,44 @@ const Issue = sequelize.define('Issue', {
   id: {
     type: DataTypes.BIGINT,
     primaryKey: true,
-    autoIncrement: true
+    autoIncrement: true,
   },
   issue_no: {
     type: DataTypes.STRING(50),
-    unique: true
+    unique: true,
   },
   request_id: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'requests',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   store_id: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'stores',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   issued_by: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'users',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   issued_to: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'users',
-      key: 'id'
-    }
-  }
+      key: 'id',
+    },
+  },
 }, {
   tableName: 'issues',
   hooks: {
@@ -52,8 +52,8 @@ const Issue = sequelize.define('Issue', {
         const count = await Issue.count();
         issue.issue_no = `ISS-${year}-${String(count + 1).padStart(4, '0')}`;
       }
-    }
-  }
+    },
+  },
 });
 
 module.exports = Issue;

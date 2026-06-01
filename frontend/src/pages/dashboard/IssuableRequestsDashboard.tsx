@@ -16,8 +16,9 @@ import {
   List,
   Eye,
 } from 'lucide-react';
-import stockService, { type Request } from '../../services/stockService';
-import siteService, { type Site } from '../../services/siteService';
+import { stockService, siteService } from '../../services';
+import type { Request } from '../../services/stockService';
+import type { Site } from '../../services/siteService';
 import html2pdf from 'html2pdf.js';
 
 type ViewMode = 'table' | 'grid' | 'list';

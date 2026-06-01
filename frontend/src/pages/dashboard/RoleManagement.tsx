@@ -26,11 +26,12 @@ import {
     ChevronDown
 } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
-import roleService, { type CreateRoleInput, type UpdateRoleInput } from '../../services/roleService';
+import { roleService } from '../../services';
+import type { CreateRoleInput, UpdateRoleInput } from '../../services/roleService';
 import AddRoleModal from '../../components/dashboard/Role/AddRoleModal';
 import EditRoleModal from '../../components/dashboard/Role/EditClientModal';
 import DeleteRoleModal from '../../components/dashboard/Role/DeleteClientModal';
-import { formatRole } from '../../utils/dateUtils';
+import { formatRole } from '../../utils';
 
 interface Role {
     id: number;

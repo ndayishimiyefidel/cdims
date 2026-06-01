@@ -25,8 +25,8 @@ import {
   Eye,
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import employeeService from '../../../services/storeService';
-import { API_URL } from '../../../api/api';
+import { storeService as employeeService } from '../../../services';
+import { API_URL } from '../../../api';
 
 // Define types and interfaces
 const MARITAL_STATUS = ['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED'] as const;

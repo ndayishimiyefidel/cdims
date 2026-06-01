@@ -4,11 +4,11 @@ const { User, Role } = require('../../models');
 const authenticate = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    
+
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: 'Access denied. No token provided.'
+        message: 'Access denied. No token provided.',
       });
     }
 
@@ -16,20 +16,20 @@ const authenticate = async (req, res, next) => {
     const user = await User.findByPk(decoded.id, {
       include: [{
         model: Role,
-        as: 'role'
-      }]
+        as: 'role',
+      }],
     });
 
     if (!user || !user.active) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid token or user not found.'
+        message: 'Invalid token or user not found.',
       });
     }
 
     // Check if user needs to change password on first login
- // Check if user needs to change password on first login
-if (user.first_login && req.path !== '/api/auth/change-password' && req.method !== 'PUT') {
+    // Use req.originalUrl to get the full absolute path (req.path is relative to the router mount point)
+if (user.first_login && !req.originalUrl.includes('/change-password') && req.method !== 'PUT') {
   return res.status(403).json({
     success: false,
     message: 'Password change required on first login.',
@@ -40,8 +40,8 @@ if (user.first_login && req.path !== '/api/auth/change-password' && req.method !
       email: user.email,
       phone: user.phone,
       role: user.role,
-      first_login: user.first_login
-    }
+      first_login: user.first_login,
+    },
   });
 }
 
@@ -50,7 +50,7 @@ if (user.first_login && req.path !== '/api/auth/change-password' && req.method !
   } catch (error) {
     res.status(401).json({
       success: false,
-      message: 'Invalid token.'
+      message: 'Invalid token.',
     });
   }
 };
@@ -60,7 +60,7 @@ const authorize = (...roles) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
-        message: 'Access denied. Please authenticate first.'
+        message: 'Access denied. Please authenticate first.',
       });
     }
 
@@ -73,7 +73,7 @@ const authorize = (...roles) => {
     if (!roles.includes(req.user.role.name)) {
       return res.status(403).json({
         success: false,
-        message: 'Access denied. Insufficient permissions.'
+        message: 'Access denied. Insufficient permissions.',
       });
     }
 
@@ -87,7 +87,7 @@ const requireRole = (role) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
-        message: 'Access denied. Please authenticate first.'
+        message: 'Access denied. Please authenticate first.',
       });
     }
 
@@ -100,7 +100,7 @@ const requireRole = (role) => {
     if (req.user.role.name !== role) {
       return res.status(403).json({
         success: false,
-        message: `Access denied. ${role} role required.`
+        message: `Access denied. ${role} role required.`,
       });
     }
 
@@ -113,14 +113,14 @@ const requireAdminOrPadiri = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({
       success: false,
-      message: 'Access denied. Please authenticate first.'
+      message: 'Access denied. Please authenticate first.',
     });
   }
 
   if (!['ADMIN', 'PADIRI'].includes(req.user.role.name)) {
     return res.status(403).json({
       success: false,
-      message: 'Access denied. Admin or Padiri role required.'
+      message: 'Access denied. Admin or Padiri role required.',
     });
   }
 
@@ -131,21 +131,21 @@ const requireAdminOrPadiri = (req, res, next) => {
 const optionalAuth = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    
+
     if (token) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const user = await User.findByPk(decoded.id, {
         include: [{
           model: Role,
-          as: 'role'
-        }]
+          as: 'role',
+        }],
       });
 
       if (user && user.active) {
         req.user = user;
       }
     }
-    
+
     next();
   } catch (error) {
     // Continue without authentication for optional auth
@@ -158,5 +158,5 @@ module.exports = {
   authorize,
   requireRole,
   requireAdminOrPadiri,
-  optionalAuth
+  optionalAuth,
 };

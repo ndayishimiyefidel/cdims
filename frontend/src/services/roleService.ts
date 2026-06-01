@@ -1,4 +1,4 @@
-import api from '../api/api';
+import { api } from '../api';
 
 export interface Role {
   id: number;
@@ -19,11 +19,8 @@ export interface UpdateRoleInput {
 const roleService = {
   getAllRoles: async (): Promise<Role[]> => {
     try {
-      const token = localStorage.getItem('auth_token');
-      const { data } = await api.get<Role[]>('/users/roles', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return data;
+      const result: any = await api.get('/users/roles');
+      return result.roles || result;
     } catch (error: any) {
       console.error('Error fetching roles:', error);
       throw new Error(error.response?.data?.message || 'Failed to fetch roles');
@@ -32,11 +29,8 @@ const roleService = {
 
   getRoleById: async (id: number): Promise<Role> => {
     try {
-      const token = localStorage.getItem('auth_token');
-      const { data } = await api.get<Role>(`/users/roles/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return data;
+      const result: any = await api.get(`/users/roles/${id}`);
+      return result.role || result;
     } catch (error: any) {
       console.error('Error fetching role:', error);
       throw new Error(error.response?.data?.message || 'Failed to fetch role');
@@ -45,11 +39,8 @@ const roleService = {
 
   createRole: async (data: CreateRoleInput): Promise<Role> => {
     try {
-      const token = localStorage.getItem('auth_token');
-      const { data: newRole } = await api.post<Role>('/users/roles', data, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return newRole;
+      const result: any = await api.post('/users/roles', data);
+      return result.role || result;
     } catch (error: any) {
       console.error('Error creating role:', error);
       throw new Error(error.response?.data?.message || 'Failed to create role');
@@ -58,11 +49,8 @@ const roleService = {
 
   updateRole: async (id: number, data: UpdateRoleInput): Promise<Role> => {
     try {
-      const token = localStorage.getItem('auth_token');
-      const { data: updatedRole } = await api.put<Role>(`/users/roles/${id}`, data, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return updatedRole;
+      const result: any = await api.put(`/users/roles/${id}`, data);
+      return result.role || result;
     } catch (error: any) {
       console.error('Error updating role:', error);
       throw new Error(error.response?.data?.message || 'Failed to update role');
@@ -71,10 +59,8 @@ const roleService = {
 
   deleteRole: async (id: number): Promise<void> => {
     try {
-      const token = localStorage.getItem('auth_token');
-      await api.delete(`/users/roles/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/users/roles/${id}`);
+      return;
     } catch (error: any) {
       console.error('Error deleting role:', error);
       throw new Error(error.response?.data?.message || 'Failed to delete role');

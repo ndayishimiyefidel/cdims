@@ -36,13 +36,13 @@ const allowedOrigins = [
     'http://www.cyangugudims.com', // WWW subdomain
     'https://www.cyangugudims.com', // WWW subdomain with SSL
     'https://cdims-frontend.onrender.com', // Production frontend (if deployed)
-    'https://cdims.onrender.com' // Production backend (if needed for testing)
+    'https://cdims.onrender.com', // Production backend (if needed for testing)
 ];
 
 app.use(cors({
     origin: function(origin, callback) {
         // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
+        if (!origin) {return callback(null, true);}
 
         if (allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
@@ -57,19 +57,19 @@ app.use(cors({
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
 }));
 
-// // Rate limiting
-// const limiter = rateLimit({
-//     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-//     max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP to 100 requests per windowMs
-//     message: {
-//         success: false,
-//         message: 'Too many requests from this IP, please try again later.'
-//     }
-// });
-// app.use('/api/', limiter);
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP to 100 requests per windowMs
+    message: {
+        success: false,
+        message: 'Too many requests from this IP, please try again later.',
+    },
+});
+app.use('/api/', limiter);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -89,7 +89,7 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
     explorer: true,
     customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'CDIMS API Documentation'
+    customSiteTitle: 'CDIMS API Documentation',
 }));
 
 // Health check endpoint
@@ -98,7 +98,7 @@ app.get('/health', (req, res) => {
         success: true,
         message: 'CDIMS API is running',
         timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development'
+        environment: process.env.NODE_ENV || 'development',
     });
 });
 
@@ -109,7 +109,7 @@ app.get('/api/health', (req, res) => {
         message: 'CDIMS Backend API is running',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
-        version: '1.0.0'
+        version: '1.0.0',
     });
 });
 
@@ -130,8 +130,8 @@ app.get('/api', (req, res) => {
             '/api/site-assignments',
             '/api/sites',
             '/api/stores',
-            '/api/admin'
-        ]
+            '/api/admin',
+        ],
     });
 });
 
@@ -141,7 +141,7 @@ app.get('/backend', (req, res) => {
         success: true,
         message: 'CDIMS Backend is running',
         version: '1.0.0',
-        environment: process.env.NODE_ENV || 'development'
+        environment: process.env.NODE_ENV || 'development',
     });
 });
 

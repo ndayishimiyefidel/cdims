@@ -7,10 +7,8 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import authService, {
-  type User,
-  type AuthResponse,
-} from '../services/authService';
+import { authService } from '../services';
+import type { User, AuthResponse } from '../services/authService';
 
 export interface AuthContextType {
   user: User | null;

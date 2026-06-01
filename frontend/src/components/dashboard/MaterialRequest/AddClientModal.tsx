@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { X, FileText, Package, Plus, Trash2 } from 'lucide-react';
-import requisitionService, { type CreateRequisitionInput } from '../../../services/requestService';
-import materialService, { type Material, type Unit } from '../../../services/materialsService';
-import siteService, { type Site } from '../../../services/siteService';
-import siteAssignmentService from '../../../services/siteAssignmentService';
+import { requisitionService } from '../../../services';
+import type { CreateRequisitionInput } from '../../../services/requestService';
+import { materialService } from '../../../services';
+import type { Material, Unit } from '../../../services/materialsService';
+import { siteService } from '../../../services';
+import type { Site } from '../../../services/siteService';
+import { siteAssignmentService } from '../../../services';
 
 interface MaterialRequisitionModalProps {
   isOpen: boolean;

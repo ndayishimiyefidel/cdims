@@ -1,6 +1,12 @@
 import axios, { type AxiosInstance } from "axios";
 
-export const API_URL: string = import.meta.env.VITE_API_URL || "https://cyangugudims.com/api";
+const rawApiUrl = import.meta.env.VITE_API_URL || "https://cyangugudims.com/api";
+
+// Normalize API base URL so env can be either domain-only or full /api URL.
+const normalizedApiUrl = rawApiUrl.replace(/\/+$/, "");
+export const API_URL: string = normalizedApiUrl.endsWith("/api")
+  ? normalizedApiUrl
+  : `${normalizedApiUrl}/api`;
 
 // Create an axios instance with a base URL
 const api: AxiosInstance = axios.create({
@@ -20,5 +26,30 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Response interceptor: unwrap data, handle errors globally
+api.interceptors.response.use(
+  (response) => {
+    // If the backend returned an explicit error, reject it
+    if (response.data?.success === false) {
+      return Promise.reject(new Error(response.data?.message || 'Request failed'));
+    }
+    // Unwrap inner data when available (backend always wraps in { success, data, message })
+    // When data is null/undefined (e.g. logout, delete), return the full response
+    // Use nullish coalescing - return full response when data is null (e.g., logout, delete endpoints)
+    return response.data?.data ?? response.data;
+  },
+  (error) => {
+    // Handle 401 Unauthorized globally — redirect to login
+    if (error.response?.status === 401) {
+      localStorage.removeItem('auth_token');
+      // Only redirect if not already on the login page
+      if (!window.location.pathname.includes('/auth/admin/login')) {
+        window.location.href = '/auth/admin/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

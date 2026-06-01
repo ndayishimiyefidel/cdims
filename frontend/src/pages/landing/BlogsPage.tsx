@@ -12,7 +12,6 @@ import {
   ChevronRight
 } from 'lucide-react';
 import HeaderBanner from '../../components/landing/HeaderBanner';
-import { blogs, blogsCategories,type BlogPost } from '../../store/Blogs';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -24,8 +23,11 @@ export default function HRBlogsPage() {
 
   const navigate = useNavigate();
 
-  const categories: string[] = blogsCategories;
-  const blogPosts: BlogPost[] = blogs;
+  const categories: string[] = [
+    'All', 'HR Best Practices', 'Employee Engagement', 'Payroll & Benefits',
+    'Compliance & Legal', 'Technology & Innovation', 'Leadership & Management', 'Workplace Culture'
+  ];
+  const blogPosts: any[] = [];
 
   const filteredPosts = blogPosts.filter(post => {
     const matchesSearch =

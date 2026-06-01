@@ -5,40 +5,40 @@ const Attachment = sequelize.define('Attachment', {
   id: {
     type: DataTypes.BIGINT,
     primaryKey: true,
-    autoIncrement: true
+    autoIncrement: true,
   },
   request_id: {
     type: DataTypes.BIGINT,
     allowNull: true,
     references: {
       model: 'requests',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   doc_type: {
     type: DataTypes.ENUM('BOQ', 'PHOTO', 'PO', 'INVOICE', 'DELIVERY_NOTE', 'OTHER'),
-    allowNull: false
+    allowNull: false,
   },
   file_path: {
     type: DataTypes.STRING(255),
-    allowNull: false
+    allowNull: false,
   },
   uploaded_by: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'users',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   created_at: {
     type: DataTypes.DATE,
     allowNull: false,
-    defaultValue: DataTypes.NOW
-  }
+    defaultValue: DataTypes.NOW,
+  },
 }, {
   tableName: 'attachments',
-  timestamps: false
+  timestamps: false,
 });
 
 module.exports = Attachment;

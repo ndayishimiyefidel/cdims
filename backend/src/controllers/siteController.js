@@ -11,7 +11,7 @@ const getAllSites = async (req, res) => {
       whereClause[Op.or] = [
         { name: { [Op.like]: `%${search}%` } },
         { code: { [Op.like]: `%${search}%` } },
-        { location: { [Op.like]: `%${search}%` } }
+        { location: { [Op.like]: `%${search}%` } },
       ];
     }
 
@@ -19,7 +19,7 @@ const getAllSites = async (req, res) => {
       where: whereClause,
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['name', 'ASC']]
+      order: [['name', 'ASC']],
     });
 
     res.json({
@@ -30,15 +30,15 @@ const getAllSites = async (req, res) => {
           current_page: parseInt(page),
           total_pages: Math.ceil(count / limit),
           total_items: count,
-          items_per_page: parseInt(limit)
-        }
-      }
+          items_per_page: parseInt(limit),
+        },
+      },
     });
   } catch (error) {
     console.error('Get all sites error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -51,19 +51,19 @@ const getSiteById = async (req, res) => {
     if (!site) {
       return res.status(404).json({
         success: false,
-        message: 'Site not found'
+        message: 'Site not found',
       });
     }
 
     res.json({
       success: true,
-      data: { site }
+      data: { site },
     });
   } catch (error) {
     console.error('Get site by ID error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -75,32 +75,32 @@ const createSite = async (req, res) => {
     if (!name) {
       return res.status(400).json({
         success: false,
-        message: 'Site name is required'
+        message: 'Site name is required',
       });
     }
 
     const site = await Site.create({
       code,
       name,
-      location
+      location,
     });
 
     res.status(201).json({
       success: true,
       data: { site },
-      message: 'Site created successfully'
+      message: 'Site created successfully',
     });
   } catch (error) {
     console.error('Create site error:', error);
     if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({
         success: false,
-        message: 'Site code must be unique'
+        message: 'Site code must be unique',
       });
     }
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -114,33 +114,33 @@ const updateSite = async (req, res) => {
     if (!site) {
       return res.status(404).json({
         success: false,
-        message: 'Site not found'
+        message: 'Site not found',
       });
     }
 
     // Update site fields
-    if (code !== undefined) site.code = code;
-    if (name !== undefined) site.name = name;
-    if (location !== undefined) site.location = location;
+    if (code !== undefined) {site.code = code;}
+    if (name !== undefined) {site.name = name;}
+    if (location !== undefined) {site.location = location;}
 
     await site.save();
 
     res.json({
       success: true,
       message: 'Site updated successfully',
-      data: { site }
+      data: { site },
     });
   } catch (error) {
     console.error('Update site error:', error);
     if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({
         success: false,
-        message: 'Site code must be unique'
+        message: 'Site code must be unique',
       });
     }
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -153,7 +153,7 @@ const deleteSite = async (req, res) => {
     if (!site) {
       return res.status(404).json({
         success: false,
-        message: 'Site not found'
+        message: 'Site not found',
       });
     }
 
@@ -161,13 +161,13 @@ const deleteSite = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Site deleted successfully'
+      message: 'Site deleted successfully',
     });
   } catch (error) {
     console.error('Delete site error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -177,5 +177,5 @@ module.exports = {
   getSiteById,
   createSite,
   updateSite,
-  deleteSite
+  deleteSite,
 };

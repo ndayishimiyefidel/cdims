@@ -4,7 +4,7 @@ const AuditService = require('../services/auditService');
 
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '24h'
+    expiresIn: process.env.JWT_EXPIRES_IN || '24h',
   });
 };
 
@@ -15,7 +15,7 @@ const login = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Email and password are required'
+        message: 'Email and password are required',
       });
     }
 
@@ -24,17 +24,17 @@ const login = async (req, res) => {
       where: { email },
       include: [{
         model: Role,
-        as: 'role'
-      }]
+        as: 'role',
+      }],
     });
 
     if (!user || !user.active) {
       // Log failed login attempt
       await AuditService.logLogin(null, req, 'FAILED', 'User not found or inactive');
-      
+
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials'
+        message: 'Invalid credentials',
       });
     }
 
@@ -43,10 +43,10 @@ const login = async (req, res) => {
     if (!isPasswordValid) {
       // Log failed login attempt
       await AuditService.logLogin(user.id, req, 'FAILED', 'Invalid password');
-      
+
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials'
+        message: 'Invalid credentials',
       });
     }
 
@@ -55,7 +55,7 @@ const login = async (req, res) => {
 
     // Generate token
     const token = generateToken(user.id);
-    
+
     // Generate session ID for session reset
     const sessionId = require('crypto').randomUUID();
 
@@ -72,18 +72,18 @@ const login = async (req, res) => {
           first_login: user.first_login,
           role: {
             id: user.role.id,
-            name: user.role.name
-          }
-        }
+            name: user.role.name,
+          },
+        },
       },
       message: 'Login successful',
-      session_reset: true
+      session_reset: true,
     });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -94,13 +94,13 @@ const logout = async (req, res) => {
     // For now, we'll just return a success message
     res.json({
       success: true,
-      message: 'Logout successful'
+      message: 'Logout successful',
     });
   } catch (error) {
     console.error('Logout error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -110,14 +110,14 @@ const getProfile = async (req, res) => {
     const user = await User.findByPk(req.user.id, {
       include: [{
         model: Role,
-        as: 'role'
-      }]
+        as: 'role',
+      }],
     });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
     }
 
@@ -131,18 +131,18 @@ const getProfile = async (req, res) => {
           phone: user.phone,
           role: {
             id: user.role.id,
-            name: user.role.name
+            name: user.role.name,
           },
           created_at: user.created_at,
-          updated_at: user.updated_at
-        }
-      }
+          updated_at: user.updated_at,
+        },
+      },
     });
   } catch (error) {
     console.error('Get profile error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -156,13 +156,13 @@ const updateProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
     }
 
     // Update user fields
-    if (full_name) user.full_name = full_name;
-    if (phone) user.phone = phone;
+    if (full_name) {user.full_name = full_name;}
+    if (phone) {user.phone = phone;}
 
     await user.save();
 
@@ -173,16 +173,16 @@ const updateProfile = async (req, res) => {
           id: user.id,
           full_name: user.full_name,
           email: user.email,
-          phone: user.phone
-        }
+          phone: user.phone,
+        },
       },
-      message: 'Profile updated successfully'
+      message: 'Profile updated successfully',
     });
   } catch (error) {
     console.error('Update profile error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -195,14 +195,14 @@ const changePassword = async (req, res) => {
     if (!current_password || !new_password) {
       return res.status(400).json({
         success: false,
-        message: 'Current password and new password are required'
+        message: 'Current password and new password are required',
       });
     }
 
     if (new_password.length < 6) {
       return res.status(400).json({
         success: false,
-        message: 'New password must be at least 6 characters long'
+        message: 'New password must be at least 6 characters long',
       });
     }
 
@@ -210,7 +210,7 @@ const changePassword = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
     }
 
@@ -219,7 +219,7 @@ const changePassword = async (req, res) => {
     if (!isCurrentPasswordValid) {
       return res.status(400).json({
         success: false,
-        message: 'Current password is incorrect'
+        message: 'Current password is incorrect',
       });
     }
 
@@ -233,13 +233,13 @@ const changePassword = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Password changed successfully'
+      message: 'Password changed successfully',
     });
   } catch (error) {
     console.error('Change password error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -251,7 +251,7 @@ const resetPassword = async (req, res) => {
     if (!email) {
       return res.status(400).json({
         success: false,
-        message: 'Email is required'
+        message: 'Email is required',
       });
     }
 
@@ -260,7 +260,7 @@ const resetPassword = async (req, res) => {
       // For security, don't reveal if email exists or not
       return res.json({
         success: true,
-        message: 'If the email exists, a password reset link has been sent'
+        message: 'If the email exists, a password reset link has been sent',
       });
     }
 
@@ -272,13 +272,13 @@ const resetPassword = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'If the email exists, a password reset link has been sent'
+      message: 'If the email exists, a password reset link has been sent',
     });
   } catch (error) {
     console.error('Reset password error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -291,7 +291,7 @@ const deleteAccount = async (req, res) => {
     if (!password) {
       return res.status(400).json({
         success: false,
-        message: 'Password is required to delete account'
+        message: 'Password is required to delete account',
       });
     }
 
@@ -299,7 +299,7 @@ const deleteAccount = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
     }
 
@@ -308,7 +308,7 @@ const deleteAccount = async (req, res) => {
     if (!isPasswordValid) {
       return res.status(400).json({
         success: false,
-        message: 'Incorrect password'
+        message: 'Incorrect password',
       });
     }
 
@@ -317,13 +317,13 @@ const deleteAccount = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Account deleted successfully'
+      message: 'Account deleted successfully',
     });
   } catch (error) {
     console.error('Delete account error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
@@ -335,5 +335,5 @@ module.exports = {
   updateProfile,
   changePassword,
   resetPassword,
-  deleteAccount
+  deleteAccount,
 };

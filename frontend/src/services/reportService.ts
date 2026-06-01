@@ -1,5 +1,5 @@
-import { type AxiosInstance, type AxiosResponse } from 'axios';
-import api from '../api/api';
+import { type AxiosInstance } from 'axios';
+import { api } from '../api';
 
 // Interface for Material (simplified, referencing the MaterialService)
 export interface Material {
@@ -205,9 +205,8 @@ class ReportService {
       if (params?.date_from) queryParams.append('date_from', params.date_from);
       if (params?.date_to) queryParams.append('date_to', params.date_to);
 
-      const response: AxiosResponse<ReportResponse<RequestReport[]>> = 
-        await this.api.get(`/reports/requests?${queryParams.toString()}`);
-      return response.data;
+      const result: any = await this.api.get(`/reports/requests?${queryParams.toString()}`);
+      return result;
     } catch (error: any) {
       console.error('Error fetching request reports:', error);
       const errorMessage =
@@ -227,9 +226,8 @@ class ReportService {
       if (params?.store_id) queryParams.append('store_id', params.store_id.toString());
       if (params?.low_stock_only) queryParams.append('low_stock_only', params.low_stock_only.toString());
 
-      const response: AxiosResponse<ReportResponse<InventoryReport[]>> = 
-        await this.api.get(`/reports/inventory?${queryParams.toString()}`);
-      return response.data;
+      const result: any = await this.api.get(`/reports/inventory?${queryParams.toString()}`);
+      return result;
     } catch (error: any) {
       console.error('Error fetching inventory reports:', error);
       const errorMessage =
@@ -252,9 +250,8 @@ class ReportService {
       if (params?.date_from) queryParams.append('date_from', params.date_from);
       if (params?.date_to) queryParams.append('date_to', params.date_to);
 
-      const response: AxiosResponse<ReportResponse<StockMovementReport[]>> = 
-        await this.api.get(`/reports/stock-movements?${queryParams.toString()}`);
-      return response.data;
+      const result: any = await this.api.get(`/reports/stock-movements?${queryParams.toString()}`);
+      return result;
     } catch (error: any) {
       console.error('Error fetching stock movement reports:', error);
       const errorMessage =
@@ -276,9 +273,8 @@ class ReportService {
       if (params?.date_from) queryParams.append('date_from', params.date_from);
       if (params?.date_to) queryParams.append('date_to', params.date_to);
 
-      const response: AxiosResponse<ReportResponse<ProcurementReport[]>> = 
-        await this.api.get(`/reports/procurement?${queryParams.toString()}`);
-      return response.data;
+      const result: any = await this.api.get(`/reports/procurement?${queryParams.toString()}`);
+      return result;
     } catch (error: any) {
       console.error('Error fetching procurement reports:', error);
       const errorMessage =
@@ -299,9 +295,8 @@ class ReportService {
       if (params?.date_from) queryParams.append('date_from', params.date_from);
       if (params?.date_to) queryParams.append('date_to', params.date_to);
 
-      const response: AxiosResponse<ReportResponse<UserActivityReport>> = 
-        await this.api.get(`/reports/user-activity?${queryParams.toString()}`);
-      return response.data;
+      const result: any = await this.api.get(`/reports/user-activity?${queryParams.toString()}`);
+      return result;
     } catch (error: any) {
       console.error('Error fetching user activity reports:', error);
       const errorMessage =
@@ -322,9 +317,8 @@ class ReportService {
       if (params?.date_from) queryParams.append('date_from', params.date_from);
       if (params?.date_to) queryParams.append('date_to', params.date_to);
 
-      const response: AxiosResponse<ReportResponse<SitePerformanceReport>> = 
-        await this.api.get(`/reports/site-performance?${queryParams.toString()}`);
-      return response.data;
+      const result: any = await this.api.get(`/reports/site-performance?${queryParams.toString()}`);
+      return result;
     } catch (error: any) {
       console.error('Error fetching site performance reports:', error);
       const errorMessage =
