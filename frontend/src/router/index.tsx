@@ -1,14 +1,17 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { type FC, lazy, Suspense } from 'react';
+import { type FC, lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
-// import Home from '../pages/landing/Home';
-// import MainLayout from '../layout/MainLayout';
-// import BlogsPage from '../pages/landing/BlogsPage';
-// import BlogViewPage from '../components/landing/BlogViewPage';
+// Landing pages (public — no auth required)
+import Home from '../pages/landing/Home';
+import MainLayout from '../layout/MainLayout';
+import AboutPage from '../pages/landing/AboutPage';
+import ContactUs from '../pages/landing/ContactUs';
+import ServicePage from '../pages/landing/ServicePage';
+// Auth pages (public)
 import AuthLayout from '../layout/AuthLayout';
 import AdminLogin from '../pages/auth/Login';
-import logo from '../assets/images/aby_hr.png';
 import UnlockScreen from '../pages/auth/UnlockScreen';
+// Dashboard / admin pages (protected by auth guard)
 import DashboardLayout from '../layout/DashboardLayout';
 import DashboardHome from '../pages/dashboard/DashboardHome';
 import ProtectPrivateAdminRoute from '../components/protectors/ProtectPrivateAdminRoute';
@@ -18,12 +21,6 @@ import EmployeeFormExample from '../components/dashboard/employee/EmployeeForm';
 import ContractDashboard from '../pages/dashboard/ContractManagement';
 import ViewEmployee from '../components/dashboard/employee/EmployeeViewMorePage';
 import SitesManagement from '../pages/dashboard/SitesManagement';
-import UpserJobPost from '../components/dashboard/recruitment/UpsertJobPost';
-import JobView from '../components/dashboard/recruitment/JobView';
-// import JobBoard from '../pages/landing/JobBoard';
-// import JobPostView from '../components/landing/JobViewPage';
-// import JobApplicationForm from '../components/landing/ApplyJob';
-import ApplicantView from '../components/dashboard/recruitment/ApplicantView';
 import ClientManagement from '../pages/dashboard/ClientManagement';
 import MaterialManagement from '../pages/dashboard/MaterialManagement';
 import CategoryDashboard from '../pages/dashboard/CategoryManagement';
@@ -46,10 +43,6 @@ import IssuableMaterialsDashboard from '../pages/dashboard/IssuableMaterialsDash
 import IssueMaterialPage from '../components/dashboard/MaterialRequest/IssueMaterialPage';
 import StockHistory from '../pages/dashboard/StockHistory';
 
-// const ProductPage = lazy(() => import('../pages/landing/FeaturesPage'));
-// const ServicesPage = lazy(() => import('../pages/landing/ServicePage'));
-// const ContactPage = lazy(() => import('../pages/landing/ContactUs'));
-// const AboutPage = lazy(() => import('../pages/landing/AboutPage'));
 const StockManagement = lazy(() => import('../pages/dashboard/StockManagement'));
 
 
@@ -58,7 +51,14 @@ const StockManagement = lazy(() => import('../pages/dashboard/StockManagement'))
  */
 const LoadingSpinner: FC = () => (
   <div className="flex items-center justify-center h-screen bg-white">
-    <img src={logo} alt="Loading..." className="h-40 animate-zoomInOut" />
+    <div className="flex flex-col items-center gap-3">
+      <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+        </svg>
+      </div>
+      <span className="text-xl font-bold text-primary-600 animate-pulse">CDIMS</span>
+    </div>
   </div>
 );
 
@@ -76,296 +76,42 @@ const SuspenseWrapper: FC<SuspenseWrapperProps> = ({ children }) => {
 
 /**
  * Application routes configuration
+ *
+ * Route access rules:
+ *   /, /about, /contact  → PUBLIC (MainLayout, no auth required)
+ *   /auth/*               → PUBLIC (login, unlock — no auth required)
+ *   /admin/*              → PROTECTED (wrapped in ProtectPrivateAdminRoute)
+ *   /*                     → catch-all → redirect to home (public)
  */
 const routes = createBrowserRouter([
+  // ── Public landing pages (no auth required) ──────────────────────
   {
     path: '/',
-    element: <Outlet />,
+    element: <MainLayout />,
     children: [
       {
-        index:true,
-        element: <Navigate to={'/admin/dashboard'} />
+        index: true,
+        element: <Home />,
       },
       {
-        path: 'admin',
-        element: (
-          <SuspenseWrapper>
-            <ProtectPrivateAdminRoute>
-              <Outlet />
-            </ProtectPrivateAdminRoute>
-          </SuspenseWrapper>
-        ),
-        children: [
-          {
-            index: true,
-            element: <Navigate to="/admin/dashboard" replace />,
-          },
-          {
-            path: 'dashboard',
-            element: <DashboardLayout />,
-            children: [
-              {
-                path: '',
-                element: (
-                  <SuspenseWrapper>
-                    <DashboardHome />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'profile',
-                element: (
-                  <SuspenseWrapper>
-                    <AdminProfile />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'stock-management',
-                element: (
-                  <SuspenseWrapper>
-                    <StockManagement />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'stock-history-management',
-                element: (
-                  <SuspenseWrapper>
-                    <StockHistory />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'store-management',
-                element: (
-                  <SuspenseWrapper>
-                    <StoreManagement />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'employee-management/:id',
-                element: (
-                  <SuspenseWrapper>
-                    <ViewEmployee />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'employee-management/create',
-                element: (
-                  <SuspenseWrapper>
-                    <EmployeeFormExample />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'employee-management/update/:id',
-                element: (
-                  <SuspenseWrapper>
-                    <EmployeeFormExample />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'material-management',
-                element: (
-                  <SuspenseWrapper>
-                    <MaterialManagement />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'category-management',
-                element: (
-                  <SuspenseWrapper>
-                    <CategoryDashboard />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'units-management',
-                element: (
-                  <SuspenseWrapper>
-                    <UnitDashboard />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'contract-management',
-                element: (
-                  <SuspenseWrapper>
-                    <ContractDashboard />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'site-management',
-                element: (
-                  <SuspenseWrapper>
-                    <SitesManagement />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'site-assign-management',
-                element: (
-                  <SuspenseWrapper>
-                    <SiteAssignmentDashboard />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'recruiting-management/create',
-                element: (
-                  <SuspenseWrapper>
-                    <UpserJobPost />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'recruiting-management/update/:id',
-                element: (
-                  <SuspenseWrapper>
-                    <UpserJobPost />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'recruiting-management/:id',
-                element: (
-                  <SuspenseWrapper>
-                    <JobView />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'recruiting-management/:jobId/applicants/:applicantId',
-                element: (
-                  <SuspenseWrapper>
-                    <ApplicantView />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'client-management',
-                element: (
-                  <SuspenseWrapper>
-                    <ClientManagement />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'request-report',
-                element: (
-                  <SuspenseWrapper>
-                    <RequestsReportManagement />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'site-report',
-                element: (
-                  <SuspenseWrapper>
-                    <SiteReportManagement />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'inventory-report',
-                element: (
-                  <SuspenseWrapper>
-                    <InventoryReportManagement />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'user-report',
-                element: (
-                  <SuspenseWrapper>
-                    <UserReportManagement />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'stock-report',
-                element: (
-                  <SuspenseWrapper>
-                    <StockReportManagement />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'role-management',
-                element: (
-                  <SuspenseWrapper>
-                    <RoleManagement />
-                  </SuspenseWrapper>
-                ),
-              },
-                  {
-                path: 'material-requisition',
-                element: (
-                  <SuspenseWrapper>
-                     <MaterialRequisition />
-                  </SuspenseWrapper>
-                ),
-              },
-                 {
-                path: 'material-requisition/:id',
-                element: (
-                  <SuspenseWrapper>
-                     <MaterialRequisitionDetail />
-                  </SuspenseWrapper>
-                ),
-              },
-              {
-                path: 'site-receipt-tracking',
-                element: (
-                  <SuspenseWrapper>
-                     <SiteReceiptTracking />
-                  </SuspenseWrapper>
-                ),
-              },
-                 {
-                path: 'stock-movement',
-                element: (
-                  <SuspenseWrapper>
-                     <StockMovementsDashboard />
-                  </SuspenseWrapper>
-                ),
-              },
-                 {
-                path: 'issuable-requests',
-                element: (
-                  <SuspenseWrapper>
-                     <IssuableRequestsDashboard />
-                  </SuspenseWrapper>
-                ),
-              },
-                 {
-                path: 'issuable-materials',
-                element: (
-                  <SuspenseWrapper>
-                     <IssuableMaterialsDashboard />
-                  </SuspenseWrapper>
-                ),
-              },
-                 {
-                path: 'issuable-materials/create',
-                element: (
-                  <SuspenseWrapper>
-                     <IssueMaterialPage />
-                  </SuspenseWrapper>
-                ),
-              },
-            ],
-          },
-        ],
+        path: 'about',
+        element: <AboutPage />,
+      },
+      {
+        path: 'contact',
+        element: <ContactUs />,
+      },
+      {
+        path: 'solutions',
+        element: <ServicePage />,
+      },
+      {
+        path: '*',
+        element: <Navigate to="/" replace />,
       },
     ],
   },
+  // ── Public auth pages (no auth required) ─────────────────────────
   {
     path: '/auth',
     element: <AuthLayout />,
@@ -388,7 +134,253 @@ const routes = createBrowserRouter([
       },
     ],
   },
+  // ── Protected admin / dashboard routes (auth required) ───────────
+  {
+    path: '/admin',
+    element: (
+      <SuspenseWrapper>
+        <ProtectPrivateAdminRoute>
+          <Outlet />
+        </ProtectPrivateAdminRoute>
+      </SuspenseWrapper>
+    ),
+    children: [
+      {
+        index: true,
+        element: <Navigate to="/admin/dashboard" replace />,
+      },
+      {
+        path: 'dashboard',
+        element: <DashboardLayout />,
+        children: [
+          {
+            path: '',
+            element: (
+              <SuspenseWrapper>
+                <DashboardHome />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'profile',
+            element: (
+              <SuspenseWrapper>
+                <AdminProfile />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'stock-management',
+            element: (
+              <SuspenseWrapper>
+                <StockManagement />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'stock-history-management',
+            element: (
+              <SuspenseWrapper>
+                <StockHistory />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'store-management',
+            element: (
+              <SuspenseWrapper>
+                <StoreManagement />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'employee-management/:id',
+            element: (
+              <SuspenseWrapper>
+                <ViewEmployee />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'employee-management/create',
+            element: (
+              <SuspenseWrapper>
+                <EmployeeFormExample />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'employee-management/update/:id',
+            element: (
+              <SuspenseWrapper>
+                <EmployeeFormExample />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'material-management',
+            element: (
+              <SuspenseWrapper>
+                <MaterialManagement />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'category-management',
+            element: (
+              <SuspenseWrapper>
+                <CategoryDashboard />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'units-management',
+            element: (
+              <SuspenseWrapper>
+                <UnitDashboard />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'contract-management',
+            element: (
+              <SuspenseWrapper>
+                <ContractDashboard />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'site-management',
+            element: (
+              <SuspenseWrapper>
+                <SitesManagement />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'site-assign-management',
+            element: (
+              <SuspenseWrapper>
+                <SiteAssignmentDashboard />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'client-management',
+            element: (
+              <SuspenseWrapper>
+                <ClientManagement />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'request-report',
+            element: (
+              <SuspenseWrapper>
+                <RequestsReportManagement />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'site-report',
+            element: (
+              <SuspenseWrapper>
+                <SiteReportManagement />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'inventory-report',
+            element: (
+              <SuspenseWrapper>
+                <InventoryReportManagement />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'user-report',
+            element: (
+              <SuspenseWrapper>
+                <UserReportManagement />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'stock-report',
+            element: (
+              <SuspenseWrapper>
+                <StockReportManagement />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'role-management',
+            element: (
+              <SuspenseWrapper>
+                <RoleManagement />
+              </SuspenseWrapper>
+            ),
+          },
+              {
+            path: 'material-requisition',
+            element: (
+              <SuspenseWrapper>
+                 <MaterialRequisition />
+              </SuspenseWrapper>
+            ),
+          },
+             {
+            path: 'material-requisition/:id',
+            element: (
+              <SuspenseWrapper>
+                 <MaterialRequisitionDetail />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'site-receipt-tracking',
+            element: (
+              <SuspenseWrapper>
+                 <SiteReceiptTracking />
+              </SuspenseWrapper>
+            ),
+          },
+             {
+            path: 'stock-movement',
+            element: (
+              <SuspenseWrapper>
+                 <StockMovementsDashboard />
+              </SuspenseWrapper>
+            ),
+          },
+             {
+            path: 'issuable-requests',
+            element: (
+              <SuspenseWrapper>
+                 <IssuableRequestsDashboard />
+              </SuspenseWrapper>
+            ),
+          },
+             {
+            path: 'issuable-materials',
+            element: (
+              <SuspenseWrapper>
+                 <IssuableMaterialsDashboard />
+              </SuspenseWrapper>
+            ),
+          },
+             {
+            path: 'issuable-materials/create',
+            element: (
+              <SuspenseWrapper>
+                 <IssueMaterialPage />
+              </SuspenseWrapper>
+            ),
+          },
+        ],
+      },
+    ],
+  },
 ]);
 
 export default routes;
-

@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { 
   Menu, 
   X, 
-  User,
   Phone,
   Mail,
-  Users
+  LogIn,
+  Church
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -20,13 +20,10 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
 
   const links: NavLink[] = [
-    { name: 'Home', path: "/" },
-    { name: 'About', path: "/about" },
-    { name: 'Features', path: "/features" },
-    { name: 'Services', path: "/solutions" },
-    { name: 'Blogs', path: "/blogs" },
-    { name: 'Jobs', path: "/jobs" },
-    { name: 'Contact', path: "/contact" },
+    { name: 'Home', path: '/' },
+    { name: 'About', path: '/about' },
+    { name: 'Services', path: '/solutions' },
+    { name: 'Contact', path: '/contact' },
   ];
 
   // Handle navigation
@@ -48,19 +45,19 @@ const Navbar: React.FC = () => {
   return (
     <>
       {/* Top bar */}
-      <div className="bg-gray-900 text-white py-2 px-4 text-sm hidden lg:block">
+      <div className="bg-primary-800 text-white py-2 px-4 text-sm hidden lg:block">
         <div className="w-11/12 mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-6">
             <div className="flex items-center space-x-2">
               <Phone size={14} />
-              <span>+250 123 456 789</span>
+              <span>+250 788 301 000</span>
             </div>
             <div className="flex items-center space-x-2">
               <Mail size={14} />
-              <span>info@abyhr.com</span>
+              <span>info@cyangugudims.rw</span>
             </div>
           </div>
-          <div>Streamlining HR Operations Across Rwanda</div>
+          <div>Catholic Diocese of Cyangugu — Infrastructure Management System</div>
         </div>
       </div>
 
@@ -75,14 +72,16 @@ const Navbar: React.FC = () => {
             {/* Logo */}
             <div className="flex-shrink-0 cursor-pointer" onClick={() => handleNavigate('/')}>
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center shadow-lg">
-                  <Users className="text-white" size={20} />
+                <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-primary-800 rounded-lg flex items-center justify-center shadow-lg">
+                  <Church className="text-white" size={20} />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent">
-                    ABY HR Management
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent leading-tight">
+                    CDIMS
                   </h1>
-                  <p className="text-xs text-gray-500 -mt-1">Complete HR Solutions</p>
+                  <p className="text-[10px] text-gray-500 -mt-0.5 leading-tight">
+                    Cyangugu Diocese Information Management System
+                  </p>
                 </div>
               </div>
             </div>
@@ -107,10 +106,11 @@ const Navbar: React.FC = () => {
             {/* Action Buttons */}
             <div className="hidden md:flex items-center space-x-4">
               <button
-                className="bg-gradient-to-r from-primary-600 to-primary-700 text-white px-6 py-2 rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
-                onClick={() => handleNavigate('/contact')}
+                className="bg-gradient-to-r from-primary-600 to-primary-700 text-white px-6 py-2 rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium flex items-center gap-2"
+                onClick={() => handleNavigate('/auth/admin/login')}
               >
-                Get in Touch
+                <LogIn size={16} />
+                Login
               </button>
             </div>
 
@@ -144,10 +144,11 @@ const Navbar: React.FC = () => {
             {/* Mobile Action Buttons */}
             <div className="pt-4 border-t border-gray-100 space-y-3">
               <button
-                className="w-full bg-gradient-to-r from-primary-600 to-primary-700 text-white py-3 rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all duration-300 shadow-lg font-medium"
-                onClick={() => handleNavigate('/contact')}
+                className="w-full bg-gradient-to-r from-primary-600 to-primary-700 text-white py-3 rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all duration-300 shadow-lg font-medium flex items-center justify-center gap-2"
+                onClick={() => handleNavigate('/auth/admin/login')}
               >
-                Get in Touch
+                <LogIn size={16} />
+                Login
               </button>
             </div>
           </div>

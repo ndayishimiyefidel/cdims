@@ -9,33 +9,30 @@ import {
   Instagram, 
   Linkedin,
   ArrowRight,
-  Users
+  Church
 } from 'lucide-react';
 
 const Footer = () => {
   const footerLinks = {
     solutions: [
-      'Employee Management',
-      'Payroll Processing',
-      'Attendance Tracking',
-      'Performance Reviews',
-      'Recruitment Portal',
-      'Training Management',
-      'Compliance Tools'
+      'Material Management',
+      'Stock & Inventory Control',
+      'Site Management',
+      'Procurement',
+      'Request Tracking',
+      'Reporting & Analytics',
+      'User Management'
     ],
     company: [
-      'About ABY HR',
+      'About CDIMS',
       'Our Mission',
-      'Careers',
       'News & Updates',
-      'Blog',
       'Contact Us'
     ],
     support: [
       'Help Center',
       'Documentation',
       'System Status',
-      'Implementation',
       'Training Resources',
       'Technical Support'
     ],
@@ -43,7 +40,6 @@ const Footer = () => {
       'Privacy Policy',
       'Terms of Service',
       'Data Security',
-      'GDPR Compliance',
       'Service Agreement'
     ]
   };
@@ -58,7 +54,7 @@ const Footer = () => {
   return (
     <footer className="bg-gray-900 text-white w-full">
       {/* Newsletter Section */}
-      <div className="bg-gradient-to-r from-primary-600 w-full to-primary-700">
+      <div className="bg-gradient-to-r from-primary-600 to-primary-700">
         <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -67,15 +63,15 @@ const Footer = () => {
             viewport={{ once: true }}
             className="text-center"
           >
-            <h3 className="text-2xl font-bold mb-4">Stay Connected with HR Insights</h3>
+            <h3 className="text-2xl font-bold mb-4">Stay Connected with CDIMS</h3>
             <p className="text-primary-100 mb-8 max-w-2xl mx-auto">
-              Get the latest updates on HR best practices, system updates, and exclusive insights from ABY HR Management
+              Get the latest updates on system features, infrastructure management best practices, and announcements from the Diocese of Cyangugu
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-xl mx-auto">
               <input
                 type="email"
-                placeholder="Enter your business email"
+                placeholder="Enter your email"
                 className="flex-1 px-6 py-3 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
               />
               <motion.button
@@ -103,19 +99,18 @@ const Footer = () => {
             >
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center shadow-lg">
-                  <Users className="text-white" size={20} />
+                  <Church className="text-white" size={20} />
                 </div>
-                <h2 className="text-2xl font-bold text-primary-400">ABY HR Management</h2>
+                <h2 className="text-2xl font-bold text-primary-400">CDIMS</h2>
               </div>
               <p className="text-gray-400 mb-6 leading-relaxed">
-                Empowering organizations with comprehensive HR solutions. Streamline your workforce management 
-                with our innovative platform designed for modern businesses.
+                Cyangugu Diocese Information Management System — a comprehensive platform for managing infrastructure projects, construction materials, stock inventory, and procurement across all parishes and institutions of the Catholic Diocese of Cyangugu.
               </p>
               
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <Mail size={18} className="text-primary-400" />
-                  <span className="text-gray-300">info@abyhr.com</span>
+                  <span className="text-gray-300">info@cyangugudims.com</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Phone size={18} className="text-primary-400" />
@@ -123,20 +118,20 @@ const Footer = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <MapPin size={18} className="text-primary-400" />
-                  <span className="text-gray-300">Kigali Business District, Rwanda</span>
+                  <span className="text-gray-300">Diocese of Cyangugu, Rwanda</span>
                 </div>
               </div>
             </motion.div>
           </div>
 
-          {/* HR Solutions */}
+          {/* Solutions */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
             viewport={{ once: true }}
           >
-            <h3 className="text-lg font-semibold mb-4">HR Solutions</h3>
+            <h3 className="text-lg font-semibold mb-4">Solutions</h3>
             <ul className="space-y-2">
               {footerLinks.solutions.map((link, index) => (
                 <li key={index}>
@@ -230,7 +225,7 @@ const Footer = () => {
               viewport={{ once: true }}
               className="text-gray-400 text-sm"
             >
-              © 2025 ABY HR Management. All rights reserved.
+              © 2025 CDIMS — Catholic Diocese of Cyangugu. All rights reserved.
             </motion.p>
             
             <motion.div

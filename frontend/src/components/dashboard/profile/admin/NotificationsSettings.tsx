@@ -7,7 +7,6 @@ const NotificationsSettings: React.FC = () => {
     timeOff: { push: true, sms: true, email: true },
     performance: { push: true, sms: true, email: true },
     payroll: { push: true, sms: true, email: true },
-    jobApplications: { push: true, sms: true, email: true },
     systemAlerts: { push: true, sms: true, email: true },
   });
 
@@ -61,11 +60,6 @@ const NotificationsSettings: React.FC = () => {
       key: 'payroll',
       title: 'Payroll and Compensation',
       description: 'Alerts when payroll is processed or pending approval.',
-    },
-    {
-      key: 'jobApplications',
-      title: 'Job Applications and Recruitment',
-      description: 'Alerts when a new job application is submitted or a candidate moves to the next stage.',
     },
     {
       key: 'systemAlerts',

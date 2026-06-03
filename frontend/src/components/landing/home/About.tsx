@@ -5,20 +5,21 @@ import {
   Zap,
   Heart,
   TrendingUp,
-  Building,
+  Building2,
   Calendar,
   Star,
   Globe,
   Award,
   Clock,
-  Briefcase,
+  Church,
+  Warehouse
 } from "lucide-react";
 
 // Types
 interface CountUpState {
-  companies: number;
+  parishes: number;
   years: number;
-  employees: number;
+  materials: number;
   satisfaction: number;
 }
 
@@ -46,9 +47,9 @@ interface Achievement {
 export default function AboutSection() {
   const [activeValue, setActiveValue] = useState<number>(0);
   const [countUp, setCountUp] = useState<CountUpState>({
-    companies: 0,
+    parishes: 0,
     years: 0,
-    employees: 0,
+    materials: 0,
     satisfaction: 0,
   });
 
@@ -56,10 +57,10 @@ export default function AboutSection() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setCountUp({
-        companies: 750,
-        years: 12,
-        employees: 85000,
-        satisfaction: 99.2,
+        parishes: 50,
+        years: 10,
+        materials: 500,
+        satisfaction: 98,
       });
     }, 500);
     return () => clearTimeout(timer);
@@ -67,30 +68,30 @@ export default function AboutSection() {
 
   const stats: Stat[] = [
     {
-      key: "companies",
-      number: `${countUp.companies}+`,
-      label: "Companies Trust Us",
-      icon: <Building className="w-6 h-6" />,
-      color: "text-blue-600",
+      key: "parishes",
+      number: `${countUp.parishes}+`,
+      label: "Parishes & Sites",
+      icon: <Church className="w-6 h-6" />,
+      color: "text-primary-600",
     },
     {
       key: "years",
       number: `${countUp.years}+`,
-      label: "Years of Excellence",
+      label: "Years of Service",
       icon: <Calendar className="w-6 h-6" />,
       color: "text-green-600",
     },
     {
-      key: "employees",
-      number: `${Math.floor(countUp.employees / 1000)}K+`,
-      label: "Professionals Served",
-      icon: <Users className="w-6 h-6" />,
+      key: "materials",
+      number: `${countUp.materials}+`,
+      label: "Materials & Items",
+      icon: <Warehouse className="w-6 h-6" />,
       color: "text-purple-600",
     },
     {
       key: "satisfaction",
       number: `${countUp.satisfaction}%`,
-      label: "Client Satisfaction",
+      label: "User Satisfaction",
       icon: <Star className="w-6 h-6" />,
       color: "text-yellow-600",
     },
@@ -99,54 +100,54 @@ export default function AboutSection() {
   const values: ValueItem[] = [
     {
       icon: <Shield className="w-8 h-8" />,
-      title: "Enterprise Security",
+      title: "Reliable & Secure",
       description:
-        "Bank-grade encryption and compliance with international data protection standards ensure your sensitive HR data stays protected.",
-      highlight: "ISO 27001 Certified",
+        "Enterprise-grade security ensures all diocese infrastructure data, material records, and financial information remain protected and tamper-proof.",
+      highlight: "Data Protection",
     },
     {
       icon: <Zap className="w-8 h-8" />,
-      title: "Lightning Fast Performance",
+      title: "Efficient Workflow",
       description:
-        "Cloud-native architecture delivers instant responses and 99.9% uptime, keeping your team productive around the clock.",
-      highlight: "Sub-second Response Time",
+        "Streamlined request and approval processes connect parishes, site engineers, and diocese administration for faster infrastructure project execution.",
+      highlight: "Quick Turnaround",
     },
     {
       icon: <Heart className="w-8 h-8" />,
-      title: "Employee-Centric Design",
+      title: "Community Focused",
       description:
-        "Intuitive interfaces and personalized experiences make HR processes enjoyable for both administrators and employees.",
-      highlight: "4.9/5 User Rating",
+        "Designed specifically for the Catholic Diocese of Cyangugu, understanding the unique needs of church infrastructure and community resource management.",
+      highlight: "Diocese-Centric",
     },
     {
       icon: <TrendingUp className="w-8 h-8" />,
-      title: "Smart Analytics",
+      title: "Smart Reporting",
       description:
-        "AI-powered insights and predictive analytics help you make data-driven decisions about your workforce strategy.",
-      highlight: "Machine Learning Powered",
+        "Comprehensive analytics and reporting tools provide diocese leadership with real-time insights into infrastructure projects, stock levels, and resource utilization.",
+      highlight: "Data-Driven Decisions",
     },
   ];
 
   const achievements: Achievement[] = [
     {
       icon: <Award className="w-6 h-6" />,
-      title: "Industry Leader",
-      description: "Recognized as the #1 HR platform in East Africa",
+      title: "Diocese-Wide Coverage",
+      description: "Serving parishes and institutions across the entire Diocese of Cyangugu",
     },
     {
       icon: <Globe className="w-6 h-6" />,
-      title: "Global Reach",
-      description: "Serving companies across 15+ countries worldwide",
+      title: "Centralized Platform",
+      description: "Unified management of materials, stock, sites, and procurement",
     },
     {
       icon: <Clock className="w-6 h-6" />,
-      title: "24/7 Support",
-      description: "Round-the-clock customer support in multiple languages",
+      title: "Dedicated Support",
+      description: "Ongoing technical support and training for all diocese users",
     },
     {
-      icon: <Briefcase className="w-6 h-6" />,
-      title: "Enterprise Ready",
-      description: "Scalable solutions for companies of all sizes",
+      icon: <Building2 className="w-6 h-6" />,
+      title: "Scalable Solution",
+      description: "Built to grow with the expanding needs of the diocese community",
     },
   ];
 
@@ -161,13 +162,14 @@ export default function AboutSection() {
         {/* Header */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-100 rounded-2xl mb-6">
-            <Users className="w-8 h-8 text-primary-600" />
+            <Church className="w-8 h-8 text-primary-600" />
           </div>
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-            Why Choose <span className="text-primary-600">ABY HR</span>
+            Why Choose <span className="text-primary-600">CDIMS</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            The most trusted HR management platform, empowering organizations worldwide with cutting-edge technology and unmatched reliability
+            The official infrastructure management platform of the Catholic Diocese of Cyangugu, 
+            empowering efficient resource management across all parishes and institutions
           </p>
         </div>
 
@@ -201,25 +203,27 @@ export default function AboutSection() {
               <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/5 rounded-full translate-y-20 -translate-x-20"></div>
               
               <div className="relative z-10">
-                <h3 className="text-3xl sm:text-4xl font-bold mb-6">Our Story</h3>
+                <h3 className="text-3xl sm:text-4xl font-bold mb-6">Our Mission</h3>
                 <p className="text-xl text-primary-100 leading-relaxed mb-8 max-w-3xl mx-auto">
-                  Founded by HR professionals who experienced firsthand the challenges of outdated systems, 
-                  ABY HR was born from a vision to revolutionize workforce management.
+                  CDIMS was created to provide the Catholic Diocese of Cyangugu with a modern, 
+                  efficient system for managing church infrastructure, construction materials, 
+                  stock inventory, and procurement — ensuring transparency and accountability 
+                  in all diocese operations.
                 </p>
                 
-                {/* Timeline dots */}
+                {/* Key pillars */}
                 <div className="flex justify-center items-center space-x-8 flex-wrap gap-4">
                   <div className="flex items-center text-primary-100">
                     <div className="w-3 h-3 bg-primary-300 rounded-full mr-3"></div>
-                    <span className="text-sm font-medium">Started in Silicon Valley</span>
+                    <span className="text-sm font-medium">Transparency</span>
                   </div>
                   <div className="flex items-center text-primary-100">
                     <div className="w-3 h-3 bg-primary-300 rounded-full mr-3"></div>
-                    <span className="text-sm font-medium">Expanded globally in 3 years</span>
+                    <span className="text-sm font-medium">Efficiency</span>
                   </div>
                   <div className="flex items-center text-primary-100">
                     <div className="w-3 h-3 bg-primary-300 rounded-full mr-3"></div>
-                    <span className="text-sm font-medium">Trusted by Fortune 500</span>
+                    <span className="text-sm font-medium">Accountability</span>
                   </div>
                 </div>
               </div>
@@ -229,8 +233,8 @@ export default function AboutSection() {
           {/* What Sets Us Apart */}
           <div className="mb-16">
             <div className="text-center mb-12">
-              <h3 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">What Sets Us Apart</h3>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">Experience the difference that comes from our core strengths</p>
+              <h3 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">What Sets CDIMS Apart</h3>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">Experience the difference that comes from purpose-built design</p>
             </div>
 
             {/* Values in Cards */}
@@ -285,8 +289,8 @@ export default function AboutSection() {
           {/* Achievements Grid */}
           <div className="bg-gray-50 rounded-3xl p-8 sm:p-12">
             <div className="text-center mb-10">
-              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Why Companies Choose Us</h3>
-              <p className="text-lg text-gray-600">The achievements that set us apart in the industry</p>
+              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Why the Diocese Trusts CDIMS</h3>
+              <p className="text-lg text-gray-600">Built specifically for the needs of the Catholic Diocese of Cyangugu</p>
             </div>
             
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">

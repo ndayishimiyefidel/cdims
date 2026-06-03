@@ -6,51 +6,51 @@ const FeaturedModules = () => {
   const modules = [
     {
       id: 1,
-      name: "Employee Management",
+      name: "Material Management",
       category: "Core Module",
-      image: "https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=400&h=400&fit=crop",
-      features: ["Employee Profiles", "Document Management", "Contact Directory"],
+      image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&h=400&fit=crop",
+      features: ["Material Catalog", "Unit & Category Management", "Pricing History"],
       badge: "Essential"
     },
     {
       id: 2,
-      name: "Payroll Processing",
-      category: "Finance Module",
-      image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=400&fit=crop",
-      features: ["Automated Calculations", "Tax Management", "Salary Reports"],
-      badge: "Automated"
-    },
-    {
-      id: 3,
-      name: "Attendance Tracking",
-      category: "Time Management",
-      image: "https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=400&h=400&fit=crop",
-      features: ["Clock In/Out", "Leave Management", "Overtime Tracking"],
+      name: "Stock & Inventory",
+      category: "Logistics Module",
+      image: "https://images.unsplash.com/photo-1553413077-190dd305871c?w=400&h=400&fit=crop",
+      features: ["Real-time Stock Tracking", "Stock Movements", "Stock History"],
       badge: "Real-time"
     },
     {
-      id: 4,
-      name: "Performance Reviews",
-      category: "Evaluation Module",
-      image: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=400&fit=crop",
-      features: ["Goal Setting", "360° Reviews", "Performance Analytics"],
-      badge: "Advanced"
+      id: 3,
+      name: "Request Management",
+      category: "Workflow Module",
+      image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=400&h=400&fit=crop",
+      features: ["Material Requisition", "Multi-level Approval", "Issue Tracking"],
+      badge: "Streamlined"
     },
     {
-      id: 5,
-      name: "Recruitment Portal",
-      category: "Hiring Module",
-      image: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop",
-      features: ["Job Posting", "Candidate Tracking", "Interview Scheduling"],
+      id: 4,
+      name: "Site Management",
+      category: "Field Module",
+      image: "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?w=400&h=400&fit=crop",
+      features: ["Site Profiles", "Assignment Tracking", "Receipt Management"],
       badge: "Comprehensive"
     },
     {
+      id: 5,
+      name: "Procurement",
+      category: "Supply Module",
+      image: "https://images.unsplash.com/photo-1566576912321-b58d8d6d0b0e?w=400&h=400&fit=crop",
+      features: ["Supplier Management", "Purchase Orders", "Goods Receipt"],
+      badge: "Efficient"
+    },
+    {
       id: 6,
-      name: "Training Management",
-      category: "Development Module",
-      image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=400&h=400&fit=crop",
-      features: ["Course Catalog", "Progress Tracking", "Certification Management"],
-      badge: "Growth Focused"
+      name: "Reports & Analytics",
+      category: "Intelligence Module",
+      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=400&fit=crop",
+      features: ["Custom Reports", "Data Export", "Performance Analytics"],
+      badge: "Insightful"
     }
   ];
 
@@ -64,9 +64,10 @@ const FeaturedModules = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Core HR Modules</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">Core System Modules</h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Comprehensive HR solutions designed to streamline your workforce management and enhance organizational efficiency
+            Comprehensive infrastructure management solutions designed to streamline diocese operations 
+            and enhance resource efficiency
           </p>
         </motion.div>
 

@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { 
+  Warehouse,
+  Building2,
+  ClipboardList,
+  ShoppingCart,
+  Truck,
+  FileBarChart,
   Users,
-  Calculator,
-  Clock,
-  TrendingUp,
-  UserPlus,
-  BookOpen,
-  Shield,
-  FileText,
+  ShieldCheck,
   ArrowRight,
   Sparkles
 } from 'lucide-react';
@@ -23,14 +23,14 @@ const Categories: React.FC = () => {
   const [hoveredCategory, setHoveredCategory] = useState<number | null>(null);
 
   const categories: Category[] = [
-    { icon: Users, name: 'Employee Management', count: '500+ Features' },
-    { icon: Calculator, name: 'Payroll & Benefits', count: '200+ Tools' },
-    { icon: Clock, name: 'Time & Attendance', count: '150+ Options' },
-    { icon: TrendingUp, name: 'Performance Review', count: '100+ Metrics' },
-    { icon: UserPlus, name: 'Recruitment', count: '300+ Templates' },
-    { icon: BookOpen, name: 'Training & Development', count: '250+ Courses' },
-    { icon: Shield, name: 'Compliance', count: '50+ Regulations' },
-    { icon: FileText, name: 'Reports & Analytics', count: '400+ Reports' },
+    { icon: Warehouse, name: 'Material Management', count: '500+ Materials' },
+    { icon: Building2, name: 'Site Management', count: '50+ Sites' },
+    { icon: ClipboardList, name: 'Request Tracking', count: '1000+ Requests' },
+    { icon: ShoppingCart, name: 'Procurement', count: '200+ Orders' },
+    { icon: Truck, name: 'Stock Control', count: 'Real-time Tracking' },
+    { icon: FileBarChart, name: 'Reports & Analytics', count: '50+ Reports' },
+    { icon: Users, name: 'User Management', count: 'Multi-role Access' },
+    { icon: ShieldCheck, name: 'Approval Workflow', count: 'Multi-level' },
   ];
 
   return (
@@ -48,14 +48,15 @@ const Categories: React.FC = () => {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary-500 to-primary-600 text-white px-6 py-2 rounded-full text-sm font-medium mb-6 shadow-lg shadow-primary-200">
             <Sparkles size={16} className="animate-pulse" />
-            <span>Comprehensive HR Solutions</span>
+            <span>Comprehensive Diocese Management</span>
           </div>
           
           <h2 className="text-5xl lg:text-6xl font-bold bg-gradient-to-r from-gray-900 via-primary-800 to-gray-900 bg-clip-text text-transparent mb-6 leading-tight">
-            HR Management Areas
+            System Modules
           </h2>
           <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
-            Discover our comprehensive suite of HR management tools designed to optimize every aspect of your human resource operations and drive organizational success
+            Discover our comprehensive suite of infrastructure management modules designed to optimize 
+            every aspect of diocese resource management and operational efficiency
           </p>
         </div>
 
@@ -110,7 +111,7 @@ const Categories: React.FC = () => {
         {/* Bottom CTA */}
         <div className="text-center mt-16">
           <div className="inline-flex items-center gap-3 bg-white px-8 py-4 rounded-full shadow-lg border border-gray-100 hover:shadow-xl hover:border-primary-200 transition-all duration-300 cursor-pointer group">
-            <span className="text-gray-700 font-medium">View Complete Platform</span>
+            <span className="text-gray-700 font-medium">View Full Platform</span>
             <ArrowRight size={20} className="text-primary-600 group-hover:translate-x-1 transition-transform duration-300" />
           </div>
         </div>
@@ -119,4 +120,4 @@ const Categories: React.FC = () => {
   );
 };
 
-export default Categories;
+export default Categories;

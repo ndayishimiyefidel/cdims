@@ -40,11 +40,11 @@ api.interceptors.response.use(
     return response.data?.data ?? response.data;
   },
   (error) => {
-    // Handle 401 Unauthorized globally — redirect to login
+    // Handle 401 Unauthorized — clear token and redirect only if on a protected route
     if (error.response?.status === 401) {
       localStorage.removeItem('auth_token');
-      // Only redirect if not already on the login page
-      if (!window.location.pathname.includes('/auth/admin/login')) {
+      // Only redirect to login if on a protected /admin route (not public landing pages)
+      if (window.location.pathname.startsWith('/admin')) {
         window.location.href = '/auth/admin/login';
       }
     }
