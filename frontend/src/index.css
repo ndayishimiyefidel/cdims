@@ -4,7 +4,99 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply font-inter; /* makes Inter the default */
-  /* text-transform:capitalize; */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-inter text-gray-900 bg-white antialiased;
+  }
+
+  ::selection {
+    @apply bg-primary-500/20 text-primary-900;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-xl border border-white/20 shadow-xl;
+  }
+
+  .glass-card-strong {
+    @apply bg-white/95 backdrop-blur-xl border border-gray-100/50 shadow-lg;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-gray-900 via-primary-600 to-gray-900 bg-clip-text text-transparent;
+  }
+
+  .gradient-text-primary {
+    @apply bg-gradient-to-r from-primary-500 to-primary-700 bg-clip-text text-transparent;
+  }
+
+  .section-padding {
+    @apply py-20 md:py-28;
+  }
+
+  .container-custom {
+    @apply w-11/12 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .bg-grid {
+    background-image: radial-gradient(circle at 1px 1px, rgba(56, 143, 186, 0.08) 1px, transparent 0);
+    background-size: 40px 40px;
+  }
+
+  .bg-dot-grid {
+    background-image: radial-gradient(circle at 1px 1px, rgba(56, 143, 186, 0.15) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+}
+
+/* Smooth reveal animations */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Gradient orb animations */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-20px) rotate(1deg); }
+  66% { transform: translateY(10px) rotate(-1deg); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 60s linear infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 4s ease-in-out infinite;
 }

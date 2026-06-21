@@ -189,6 +189,61 @@ const updateMaterial = async (req, res) => {
   }
 };
 
+const bulkCreateMaterials = async (req, res) => {
+  try {
+    const { materials } = req.body;
+
+    if (!Array.isArray(materials) || materials.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Materials array is required and must not be empty',
+      });
+    }
+
+    const created = [];
+    const errors = [];
+
+    for (let i = 0; i < materials.length; i++) {
+      const { code, name, specification, category_id, unit_id } = materials[i];
+      
+      if (!name || !unit_id) {
+        errors.push({ row: i + 1, message: 'Name and unit are required', data: materials[i] });
+        continue;
+      }
+
+      try {
+        const material = await Material.create({
+          code,
+          name,
+          specification,
+          category_id,
+          unit_id,
+        });
+        created.push(material);
+      } catch (err) {
+        errors.push({ row: i + 1, message: err.message, data: materials[i] });
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      data: {
+        created: created.length,
+        failed: errors.length,
+        materials: created,
+        errors,
+      },
+      message: `${created.length} material(s) created successfully${errors.length > 0 ? `, ${errors.length} failed` : ''}`,
+    });
+  } catch (error) {
+    console.error('Bulk create materials error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
 const deleteMaterial = async (req, res) => {
   try {
     const { id } = req.params;
@@ -519,6 +574,7 @@ module.exports = {
   createMaterial,
   updateMaterial,
   deleteMaterial,
+  bulkCreateMaterials,
   getCategories,
   createCategory,
   getCategoryById,

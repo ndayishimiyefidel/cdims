@@ -111,6 +111,14 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({
   };
 
   const checkAuthStatus = async () => {
+    // Skip auth check if no token exists — avoids unnecessary 401 API calls
+    // on public landing pages where authentication isn't needed
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const userProfile = await authService.getProfile();

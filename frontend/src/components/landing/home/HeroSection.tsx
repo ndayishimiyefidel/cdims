@@ -1,132 +1,167 @@
-import React from 'react';
-import { ArrowRight, Sparkles, Shield, Building2 } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { ArrowRight, Building2, Shield, Sparkles, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const HeroSection = () => {
+const HeroSection: React.FC = () => {
   const navigate = useNavigate();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Subtle particle animation on canvas
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationFrameId: number;
+    let particles: Array<{ x: number; y: number; size: number; speedX: number; speedY: number; opacity: number }> = [];
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+
+    const initParticles = () => {
+      particles = [];
+      const count = Math.floor((canvas.width * canvas.height) / 15000);
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 2 + 1,
+          speedX: (Math.random() - 0.5) * 0.3,
+          speedY: (Math.random() - 0.5) * 0.3,
+          opacity: Math.random() * 0.3 + 0.1,
+        });
+      }
+    };
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      particles.forEach((p) => {
+        p.x += p.speedX;
+        p.y += p.speedY;
+
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(56, 143, 186, ${p.opacity})`;
+        ctx.fill();
+      });
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    resize();
+    initParticles();
+    animate();
+
+    window.addEventListener('resize', () => {
+      resize();
+      initParticles();
+    });
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', resize);
+    };
+  }, []);
 
   return (
-    <section className="relative min-h-[90vh] bg-gradient-to-br from-white via-primary-50 to-white overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-primary-100/30 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-40 right-20 w-96 h-96 bg-primary-200/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-primary-50/20 to-primary-100/20 rounded-full blur-3xl animate-spin-slow"></div>
-        
-        {/* Floating particles */}
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute animate-float"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 10}s`,
-              animationDuration: `${10 + Math.random() * 20}s`
-            }}
-          >
-            <div className="w-2 h-2 bg-primary-300/40 rounded-full"></div>
-          </div>
-        ))}
+    <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-white via-primary-50/30 to-white">
+      {/* Canvas particles background */}
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
+
+      {/* Gradient orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-primary-200/30 via-primary-100/20 to-transparent rounded-full blur-3xl animate-float-slow" />
+        <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-gradient-to-tr from-primary-300/20 via-primary-100/20 to-transparent rounded-full blur-3xl animate-float-slow" style={{ animationDelay: '-4s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-primary-50/40 to-primary-100/20 rounded-full blur-3xl animate-spin-slow" />
       </div>
 
-      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+      {/* Grid pattern overlay */}
+      <div className="absolute inset-0 bg-grid opacity-40 pointer-events-none" />
 
-      <div className="w-11/12 mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="flex justify-center w-full gap-12 items-center min-h-[80vh]">
-          <div className="flex justify-center text-center items-center flex-col gap-10">
-            <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary-100/50 to-primary-200/50 backdrop-blur-sm border border-primary-300/50 text-primary-600 px-6 py-3 rounded-full text-sm font-medium">
-                <Sparkles size={16} className="animate-pulse text-primary-500" />
-                Catholic Diocese of Cyangugu
-                <Shield size={16} className="animate-pulse delay-500 text-primary-500" />
-              </div>
-              
-              <h1 className="text-4xl lg:text-6xl font-bold leading-tight">
-                <span className="bg-gradient-to-r from-gray-800 via-primary-500 to-gray-800 bg-clip-text text-transparent">
-                  Diocese Information
-                </span>
-                {' '}
-                <span className="bg-gradient-to-r from-primary-400 via-primary-600 to-primary-400 bg-clip-text text-transparent">
-                  Management System
-                </span>  <br />
-                <span className="bg-gradient-to-r from-gray-800 via-primary-500 to-gray-800 bg-clip-text text-transparent">
-                  for Cyangugu
-                </span>
-              </h1>
-              
-              <p className="text-lg text-gray-600 leading-relaxed max-w-3xl">
-                A comprehensive digital platform for managing infrastructure projects, construction materials, 
-                stock inventory, and procurement across all parishes and institutions of the Catholic Diocese of Cyangugu.
-              </p>
-            </div>
+      <div className="container-custom relative z-10">
+        <div className="flex flex-col items-center text-center gap-8 md:gap-12 py-16 md:py-20">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-primary-200/50 text-primary-700 px-5 py-2 rounded-full text-sm font-medium shadow-sm">
+            <Sparkles size={14} className="text-primary-500" />
+            Catholic Diocese of Cyangugu
+            <Shield size={14} className="text-primary-500" />
+          </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button 
-                onClick={() => navigate('/auth/admin/login')}
-                className="group relative bg-gradient-to-r from-primary-500 to-primary-600 text-white px-8 py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 hover:from-primary-600 hover:to-primary-700 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-primary-500/25"
-              >
-                <span className="relative z-10">Sign In to Dashboard</span>
-                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"></div>
-              </button>
-              
-              <button 
-                onClick={() => navigate('/solutions')}
-                className="group relative backdrop-blur-sm border-2 border-primary-400/50 text-primary-500 px-8 py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 hover:border-primary-500 hover:bg-primary-100/20 transition-all duration-300 transform hover:scale-105"
-              >
-                <Building2 size={20} className="group-hover:scale-110 transition-transform text-primary-500" />
-                <span>Explore Solutions</span>
-              </button>
-            </div>
+          {/* Main headline */}
+          <div className="space-y-4 max-w-4xl">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight">
+              <span className="text-gray-900">
+                Diocese Information
+              </span>
+              <br />
+              <span className="gradient-text-primary">
+                Management System
+              </span>
+              <br />
+              <span className="text-gray-900">
+                for Cyangugu
+              </span>
+            </h1>
+            
+            <p className="text-lg md:text-xl text-gray-500 max-w-3xl mx-auto leading-relaxed">
+              A comprehensive digital platform for managing infrastructure projects, 
+              construction materials, stock inventory, and procurement across all 
+              parishes and institutions of the Catholic Diocese of Cyangugu.
+            </p>
+          </div>
 
-            <div className="flex gap-8 pt-8">
-              {[
-                { number: '50+', label: 'Parishes & Institutions' },
-                { number: '500+', label: 'Materials Catalogued' },
-                { number: '99%', label: 'System Uptime' }
-              ].map((stat, index) => (
-                <div key={index} className="text-center">
-                  <div className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
-                    {stat.number}
-                  </div>
-                  <div className="text-sm text-gray-500">{stat.label}</div>
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+            <button 
+              onClick={() => navigate('/auth/admin/login')}
+              className="group inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary-500 to-primary-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-primary-600 hover:to-primary-700 transition-all duration-300 shadow-xl shadow-primary-500/25 hover:shadow-2xl hover:shadow-primary-500/30 hover:-translate-y-1 active:translate-y-0"
+            >
+              <span>Sign In to Dashboard</span>
+              <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+            </button>
+            
+            <button 
+              onClick={() => navigate('/solutions')}
+              className="group inline-flex items-center justify-center gap-2 bg-white text-gray-700 px-8 py-4 rounded-xl font-semibold text-lg border-2 border-gray-200 hover:border-primary-300 hover:text-primary-600 transition-all duration-300 hover:-translate-y-1 active:translate-y-0 shadow-sm hover:shadow-lg"
+            >
+              <Building2 size={20} className="text-primary-500" />
+              <span>Explore Solutions</span>
+              <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-8 md:gap-16 pt-8 md:pt-12 w-full max-w-2xl">
+            {[
+              { number: '50+', label: 'Parishes & Institutions' },
+              { number: '500+', label: 'Materials Catalogued' },
+              { number: '99%', label: 'System Uptime' }
+            ].map((stat) => (
+              <div key={stat.label} className="text-center">
+                <div className="text-3xl md:text-4xl font-bold gradient-text-primary">
+                  {stat.number}
                 </div>
-              ))}
-            </div>
+                <div className="text-xs md:text-sm text-gray-500 mt-1 font-medium">
+                  {stat.label}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(5deg); }
-        }
-        @keyframes spin-slow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-        .animate-spin-slow {
-          animation: spin-slow 60s linear infinite;
-        }
-        .bg-grid-pattern {
-          background-image: radial-gradient(circle at 1px 1px, rgba(239, 68, 68, 0.1) 1px, transparent 0);
-          background-size: 50px 50px;
-        }
-        .delay-1000 {
-          animation-delay: 1s;
-        }
-        .delay-500 {
-          animation-delay: 0.5s;
-        }
-        .delay-1500 {
-          animation-delay: 1.5s;
-        }
-      `}</style>
+      {/* Bottom gradient fade */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white/80 to-transparent pointer-events-none" />
     </section>
   );
 };

@@ -1,6 +1,9 @@
 import { type AxiosInstance } from 'axios'; // Type-only imports for verbatimModuleSyntax
 import { api } from '../api'; // Adjust the import path as needed
 
+// When fetching all records, override backend's default pagination limit (10) to get everything
+const FETCH_ALL_LIMIT = 99999;
+
 // Interface for Material
 export interface Material {
   id: number;
@@ -58,10 +61,11 @@ export type UpdateUnitInput = Partial<CreateUnitInput>;
 export type CreateMaterialPriceInput = Omit<MaterialPrice, 'id' | 'created_at'>;
 
 // Interface for filtering
-interface FilterParams {
+export interface FilterParams {
   search?: string;
   category_id?: number;
   active?: boolean;
+  limit?: number;
 }
 
 // Interface for validation result
@@ -96,6 +100,9 @@ class MaterialService {
       if (params?.search) queryParams.append('search', params.search);
       if (params?.category_id) queryParams.append('category_id', params.category_id.toString());
       if (params?.active !== undefined) queryParams.append('active', params.active.toString());
+      if (params?.limit) queryParams.append('limit', params.limit.toString());
+      // Default to fetching all records if no explicit limit is provided
+      if (!params?.limit) queryParams.append('limit', FETCH_ALL_LIMIT.toString());
 
       const result: any = await this.api.get(`/materials?${queryParams.toString()}`);
       return result.materials;
@@ -162,6 +169,24 @@ class MaterialService {
       const errorMessage =
         (error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || 
         (error as { message?: string }).message || 'Failed to update material';
+      throw new Error(errorMessage);
+    }
+  }
+
+  /**
+   * Bulk create materials from an array
+   * @param materials - Array of material data to create
+   * @returns Response with created count and any errors
+   */
+  async bulkCreateMaterials(materials: CreateMaterialInput[]): Promise<{ created: number; failed: number; errors: any[] }> {
+    try {
+      const result: any = await this.api.post('/materials/bulk', { materials });
+      return result;
+    } catch (error: unknown) {
+      console.error('Error bulk creating materials:', error);
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || 
+        (error as { message?: string }).message || 'Failed to bulk create materials';
       throw new Error(errorMessage);
     }
   }

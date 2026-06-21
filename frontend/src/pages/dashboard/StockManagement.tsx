@@ -1,43 +1,28 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Plus,
   Edit,
   Trash2,
-  Search,
-  ChevronDown,
   Eye,
-  ChevronLeft,
-  ChevronRight,
   AlertTriangle,
-  CheckCircle,
-  XCircle,
-  X,
-  AlertCircle,
   Package,
   RefreshCw,
   Filter,
   Grid3X3,
   List,
   Settings,
-  Minimize2,
   Check,
+  ChevronDown,
 } from "lucide-react";
 import stockService, { type CreateStockInput, type ValidationResult, type Stock, type SetLowStockThresholdInput } from "../../services/stockService";
 import materialService, { type Material } from "../../services/materialsService";
 import storeService, { type Store } from "../../services/storeService";
-import { useNavigate } from "react-router-dom";
+import DataTable, { type Column } from "../../components/ui/DataTable";
+import { PageHeader } from "../../components/ui/PageHeader";
+import { Card } from "../../components/ui/Card";
+import { useToast } from "../../components/ui/Toast";
 
 type ViewMode = 'table' | 'grid' | 'list';
-
-interface OperationStatus {
-  type: "success" | "error" | "info";
-  message: string;
-}
-
-interface StockFilterParams {
-  date_from?: string;
-  date_to?: string;
-}
 
 interface AlertFilterParams {
   date_from?: string;
@@ -45,10 +30,8 @@ interface AlertFilterParams {
 }
 
 const StockDashboard: React.FC = () => {
-  const [stocks, setStocks] = useState<Stock[]>([]);
   const [allStocks, setAllStocks] = useState<Stock[]>([]);
   const [alerts, setAlerts] = useState<Stock[]>([]);
-  const [filteredAlerts, setFilteredAlerts] = useState<Stock[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -57,25 +40,18 @@ const StockDashboard: React.FC = () => {
   const [alertsError, setAlertsError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [alertSearchTerm, setAlertSearchTerm] = useState<string>("");
-  const [sortBy, setSortBy] = useState<keyof Stock>("material_id");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [alertSortBy, setAlertSortBy] = useState<keyof Stock>("material_id");
-  const [alertSortOrder, setAlertSortOrder] = useState<"asc" | "desc">("asc");
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [alertsCurrentPage, setAlertsCurrentPage] = useState<number>(1);
-  const [itemsPerPage] = useState<number>(8);
-  const [alertsItemsPerPage] = useState<number>(5);
+  const [dataPage, setDataPage] = useState<number>(1);
+  const [alertsPage, setAlertsPage] = useState<number>(1);
+  const [pageSize] = useState<number>(10);
   const [deleteConfirm, setDeleteConfirm] = useState<Stock | null>(null);
-  const [operationStatus, setOperationStatus] = useState<OperationStatus | null>(null);
   const [operationLoading, setOperationLoading] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [showFilters, setShowFilters] = useState(false);
-  const [stockFilters, setStockFilters] = useState<StockFilterParams>({ date_from: '', date_to: '' });
+  const [stockFilters, setStockFilters] = useState<AlertFilterParams>({ date_from: '', date_to: '' });
   const [alertFilters, setAlertFilters] = useState<AlertFilterParams>({ date_from: '', date_to: '' });
   const [selectedStore, setSelectedStore] = useState("");
   const [selectedAlertStore, setSelectedAlertStore] = useState("");
   const [selectedAlertMaterial, setSelectedAlertMaterial] = useState("");
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -97,19 +73,21 @@ const StockDashboard: React.FC = () => {
   const [formError, setFormError] = useState<string>('');
   const [thresholdFormError, setThresholdFormError] = useState<string>('');
 
-  const navigate = useNavigate();
+  const { success, error: toastError } = useToast();
 
   useEffect(() => {
     loadData();
   }, [stockFilters, alertFilters]);
 
+  // Reset main data pagination when search/filters change
   useEffect(() => {
-    handleFilterAndSort();
-  }, [searchTerm, sortBy, sortOrder, allStocks, selectedStore, stockFilters]);
+    setDataPage(1);
+  }, [searchTerm, selectedStore, stockFilters]);
 
+  // Reset alerts pagination when search/filters change
   useEffect(() => {
-    handleAlertFilterAndSort();
-  }, [alertSearchTerm, alertSortBy, alertSortOrder, alerts, selectedAlertStore, selectedAlertMaterial, alertFilters]);
+    setAlertsPage(1);
+  }, [alertSearchTerm, selectedAlertStore, selectedAlertMaterial, alertFilters]);
 
   const loadData = async () => {
     try {
@@ -136,116 +114,68 @@ const StockDashboard: React.FC = () => {
     }
   };
 
-  const showOperationStatus = (type: OperationStatus["type"], message: string, duration: number = 3000) => {
-    setOperationStatus({ type, message });
-    setTimeout(() => setOperationStatus(null), duration);
-  };
-
-  const handleFilterAndSort = () => {
+  // Client-side filtered stocks
+  const filteredStocks = useMemo(() => {
     let filtered = [...allStocks];
-
     if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
-        (stock) =>
-          stock.material?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          stock.store?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+        (s) =>
+          s.material?.name?.toLowerCase().includes(term) ||
+          s.store?.name?.toLowerCase().includes(term)
       );
     }
-
     if (selectedStore) {
-      filtered = filtered.filter(stock => stock.store?.name?.toLowerCase() === selectedStore.toLowerCase());
+      filtered = filtered.filter(s => s.store?.name?.toLowerCase() === selectedStore.toLowerCase());
     }
-
-    // Date range filter
     const start = stockFilters.date_from ? new Date(stockFilters.date_from) : null;
     const end = stockFilters.date_to ? new Date(stockFilters.date_to) : null;
-    if (end) {
-      end.setHours(23, 59, 59, 999);
+    if (end) end.setHours(23, 59, 59, 999);
+    if (start || end) {
+      filtered = filtered.filter((s) => {
+        const d = s.createdAt ? new Date(s.createdAt) : null;
+        if (!d) return false;
+        if (start && end) return d >= start && d <= end;
+        if (start) return d >= start;
+        if (end) return d <= end;
+        return true;
+      });
     }
+    return filtered;
+  }, [allStocks, searchTerm, selectedStore, stockFilters]);
 
-    filtered = filtered.filter((stock) => {
-      const createdAt = stock.createdAt ? new Date(stock.createdAt) : null;
-      return (
-        !createdAt || (!start && !end) ||
-        (start && end && createdAt >= start && createdAt <= end) ||
-        (start && !end && createdAt >= start) ||
-        (end && !start && createdAt <= end)
-      );
-    });
-
-    filtered.sort((a, b) => {
-      const aValue = sortBy === "material_id" ? a.material?.name : sortBy === "store_id" ? a.store?.name : a[sortBy];
-      const bValue = sortBy === "material_id" ? b.material?.name : sortBy === "store_id" ? b.store?.name : b[sortBy];
-
-      if (sortBy === "createdAt" || sortBy === "updated_at") {
-        const aDate = aValue ? new Date(aValue as string | Date) : new Date(0);
-        const bDate = bValue ? new Date(bValue as string | Date) : new Date(0);
-        return sortOrder === "asc" ? aDate.getTime() - bDate.getTime() : bDate.getTime() - aDate.getTime();
-      }
-
-      const aStr = aValue ? aValue.toString().toLowerCase() : "";
-      const bStr = bValue ? bValue.toString().toLowerCase() : "";
-      return sortOrder === "asc" ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr);
-    });
-
-    setStocks(filtered);
-    setCurrentPage(1);
-  };
-
-  const handleAlertFilterAndSort = () => {
+  // Client-side filtered alerts
+  const filteredAlerts = useMemo(() => {
     let filtered = [...alerts];
-
     if (alertSearchTerm.trim()) {
+      const term = alertSearchTerm.toLowerCase();
       filtered = filtered.filter(
-        (alert) =>
-          alert.material?.name?.toLowerCase().includes(alertSearchTerm.toLowerCase()) ||
-          alert.store?.name?.toLowerCase().includes(alertSearchTerm.toLowerCase())
+        (a) =>
+          a.material?.name?.toLowerCase().includes(term) ||
+          a.store?.name?.toLowerCase().includes(term)
       );
     }
-
     if (selectedAlertStore) {
-      filtered = filtered.filter(alert => alert.store?.name?.toLowerCase() === selectedAlertStore.toLowerCase());
+      filtered = filtered.filter(a => a.store?.name?.toLowerCase() === selectedAlertStore.toLowerCase());
     }
-
     if (selectedAlertMaterial) {
-      filtered = filtered.filter(alert => alert.material?.name?.toLowerCase() === selectedAlertMaterial.toLowerCase());
+      filtered = filtered.filter(a => a.material?.name?.toLowerCase() === selectedAlertMaterial.toLowerCase());
     }
-
-    // Date range filter
     const start = alertFilters.date_from ? new Date(alertFilters.date_from) : null;
     const end = alertFilters.date_to ? new Date(alertFilters.date_to) : null;
-    if (end) {
-      end.setHours(23, 59, 59, 999);
+    if (end) end.setHours(23, 59, 59, 999);
+    if (start || end) {
+      filtered = filtered.filter((a) => {
+        const d = a.createdAt ? new Date(a.createdAt) : null;
+        if (!d) return false;
+        if (start && end) return d >= start && d <= end;
+        if (start) return d >= start;
+        if (end) return d <= end;
+        return true;
+      });
     }
-
-    filtered = filtered.filter((alert) => {
-      const createdAt = alert.createdAt ? new Date(alert.createdAt) : null;
-      return (
-        !createdAt || (!start && !end) ||
-        (start && end && createdAt >= start && createdAt <= end) ||
-        (start && !end && createdAt >= start) ||
-        (end && !start && createdAt <= end)
-      );
-    });
-
-    filtered.sort((a, b) => {
-      const aValue = alertSortBy === "material_id" ? a.material?.name : alertSortBy === "store_id" ? a.store?.name : a[alertSortBy];
-      const bValue = alertSortBy === "material_id" ? b.material?.name : alertSortBy === "store_id" ? b.store?.name : b[alertSortBy];
-
-      if (alertSortBy === "createdAt" || alertSortBy === "updated_at") {
-        const aDate = aValue ? new Date(aValue as string | Date) : new Date(0);
-        const bDate = bValue ? new Date(bValue as string | Date) : new Date(0);
-        return alertSortOrder === "asc" ? aDate.getTime() - bDate.getTime() : bDate.getTime() - aDate.getTime();
-      }
-
-      const aStr = aValue ? aValue.toString().toLowerCase() : "";
-      const bStr = bValue ? bValue.toString().toLowerCase() : "";
-      return alertSortOrder === "asc" ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr);
-    });
-
-    setFilteredAlerts(filtered);
-    setAlertsCurrentPage(1);
-  };
+    return filtered;
+  }, [alerts, alertSearchTerm, selectedAlertStore, selectedAlertMaterial, alertFilters]);
 
   const handleAddStock = () => {
     setFormData({
@@ -283,12 +213,11 @@ const StockDashboard: React.FC = () => {
 
   const handleStockFilterChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    field: keyof StockFilterParams
+    field: keyof AlertFilterParams
   ) => {
     setStockFilters((prev) => ({
       ...prev,
       [field]: e.target.value,
-      page: 1,
     }));
   };
 
@@ -299,7 +228,6 @@ const StockDashboard: React.FC = () => {
     setAlertFilters((prev) => ({
       ...prev,
       [field]: e.target.value,
-      page: 1,
     }));
   };
 
@@ -324,9 +252,9 @@ const StockDashboard: React.FC = () => {
         low_stock_threshold: 0,
       });
       loadData();
-      showOperationStatus("success", `Stock for ${materials.find(m => m.id === newStock.material_id)?.name || 'material'} created successfully!`);
+      success(`Stock created successfully!`);
     } catch (err: any) {
-      setFormError(err.message || "Failed to create stock");
+      toastError(err.message || "Failed to create stock");
     } finally {
       setOperationLoading(false);
     }
@@ -374,9 +302,9 @@ const StockDashboard: React.FC = () => {
         low_stock_threshold: 0,
       });
       loadData();
-      showOperationStatus("success", `Stock for ${materials.find(m => m.id === selectedStock.material_id)?.name || 'material'} updated successfully!`);
+      success(`Stock updated successfully!`);
     } catch (err: any) {
-      setFormError(err.message || "Failed to update stock");
+      toastError(err.message || "Failed to update stock");
     } finally {
       setOperationLoading(false);
     }
@@ -403,7 +331,7 @@ const StockDashboard: React.FC = () => {
       setSelectedThresholdStock(null);
       setThresholdFormData({ low_stock_threshold: 0 });
       loadData();
-      showOperationStatus("success", `Low stock threshold updated for ${selectedThresholdStock.material?.name || 'material'}`);
+      success(`Low stock threshold updated!`);
     } catch (err: any) {
       setThresholdFormError(err.message || "Failed to set low stock threshold");
     } finally {
@@ -418,9 +346,9 @@ const StockDashboard: React.FC = () => {
       setOperationLoading(true);
       await stockService.acknowledgeLowStockAlert(stock.id);
       loadData();
-      showOperationStatus("success", `Low stock alert acknowledged for ${stock.material?.name || 'material'}`);
+      success(`Low stock alert acknowledged!`);
     } catch (err: any) {
-      showOperationStatus("error", err.message || "Failed to acknowledge low stock alert");
+      toastError(err.message || "Failed to acknowledge low stock alert");
     } finally {
       setOperationLoading(false);
     }
@@ -462,9 +390,9 @@ const StockDashboard: React.FC = () => {
       setDeleteConfirm(null);
       await stockService.updateStock(stock.id, { qty_on_hand: 0 });
       loadData();
-      showOperationStatus("success", `Stock for ${stock.material?.name} deleted successfully!`);
+      success(`Stock deleted successfully!`);
     } catch (err: any) {
-      showOperationStatus("error", err.message || "Failed to delete stock");
+      toastError(err.message || "Failed to delete stock");
     } finally {
       setOperationLoading(false);
     }
@@ -479,100 +407,121 @@ const StockDashboard: React.FC = () => {
     });
   };
 
-  const totalPages = Math.ceil(stocks.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentStocks = stocks.slice(startIndex, endIndex);
+  const renderStockTable = () => {
+    const columns: Column<Stock>[] = [
+      { key: 'material_id', header: 'Material', sortable: true, render: (_, row) => <span className="font-medium text-gray-900">{row.material?.name || 'N/A'}</span> },
+      { key: 'store_id', header: 'Store', sortable: true, render: (_, row) => row.store?.name || 'N/A' },
+      { key: 'qty_on_hand', header: 'Qty on Hand', sortable: true, render: (_, row) => <span className="font-medium">{row.qty_on_hand}</span> },
+      { key: 'unit_price', header: 'Unit Price', sortable: true, render: (_, row) => `RWF ${(row.unit_price || 0).toLocaleString()}` },
+      { key: 'total_price', header: 'Total Price', sortable: false, render: (_, row) => `RWF ${((row.unit_price || 0) * (row.qty_on_hand || 0)).toLocaleString()}` },
+      { key: 'createdAt', header: 'Created', sortable: true, render: (_, row) => formatDate(row.createdAt) },
+      {
+        key: 'actions',
+        header: 'Actions',
+        width: '160px',
+        render: (_, row) => (
+          <div className="flex items-center gap-1">
+            <button onClick={() => handleViewStock(row)} className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors" title="View">
+              <Eye className="w-3.5 h-3.5" />
+            </button>
+            <button onClick={() => handleEditStock(row)} className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors" title="Edit">
+              <Edit className="w-3.5 h-3.5" />
+            </button>
+            <button onClick={() => handleSetThreshold(row)} className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors" title="Set Threshold">
+              <Settings className="w-3.5 h-3.5" />
+            </button>
+            <button onClick={() => setDeleteConfirm(row)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ),
+      },
+    ];
 
-  const alertsTotalPages = Math.ceil(filteredAlerts.length / alertsItemsPerPage);
-  const alertsStartIndex = (alertsCurrentPage - 1) * alertsItemsPerPage;
-  const alertsEndIndex = alertsStartIndex + alertsItemsPerPage;
-  const currentAlerts = filteredAlerts.slice(alertsStartIndex, alertsEndIndex);
+    return (
+      <DataTable<Stock>
+        columns={columns}
+        data={filteredStocks}
+        keyExtractor={(row) => row.id ?? Math.random()}
+        loading={loading}
+        error={error}
+        onRetry={loadData}
+        searchable
+        searchPlaceholder="Search stock..."
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        sortable
+        exportable
+        exportFilename="stock_export"
+        columnVisibility
+        pagination={{
+          page: dataPage,
+          pageSize: pageSize,
+          total: filteredStocks.length,
+          onPageChange: setDataPage,
+        }}
+      />
+    );
+  };
 
-  const renderTableView = () => (
-    <div className="bg-white rounded border border-gray-200">
-      <div className="overflow-x-auto">
-        <table className="w-full text-xs">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="text-left py-2 px-2 text-gray-600 font-medium">#</th>
-              <th 
-                className="text-left py-2 px-2 text-gray-600 font-medium cursor-pointer hover:bg-gray-100" 
-                onClick={() => {
-                  setSortBy("material_id");
-                  setSortOrder(sortBy === "material_id" && sortOrder === "asc" ? "desc" : "asc");
-                }}
-              >
-                <div className="flex items-center space-x-1">
-                  <span>Material</span>
-                  <ChevronDown className={`w-3 h-3 ${sortBy === "material_id" ? "text-primary-600" : "text-gray-400"}`} />
-                </div>
-              </th>
-              <th className="text-left py-2 px-2 text-gray-600 font-medium hidden sm:table-cell">Store</th>
-              <th className="text-left py-2 px-2 text-gray-600 font-medium hidden lg:table-cell">Qty on Hand</th>
-              <th className="text-left py-2 px-2 text-gray-600 font-medium">Unit Price</th>
-              <th className="text-left py-2 px-2 text-gray-600 font-medium">Total Price</th>
-              <th className="text-left py-2 px-2 text-gray-600 font-medium hidden sm:table-cell">Created Date</th>
-              <th className="text-right py-2 px-2 text-gray-600 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {currentStocks.map((stock, index) => (
-              <tr key={stock.id || index} className="hover:bg-gray-25">
-                <td className="py-2 px-2 text-gray-700">{startIndex + index + 1}</td>
-                <td className="py-2 px-2 font-medium text-gray-900 text-xs">{stock.material?.name || 'N/A'}</td>
-                <td className="py-2 px-2 text-gray-700 hidden sm:table-cell">{stock.store?.name || 'N/A'}</td>
-                <td className="py-2 px-2 text-gray-700 hidden lg:table-cell">{stock.qty_on_hand}</td>
-                <td className="py-2 px-2 text-gray-700">
-                  RWF {(stock.unit_price || 0).toLocaleString()}
-                </td>
-                <td className="py-2 px-2 text-gray-700">
-                  RWF {((stock.unit_price || 0) * (stock.qty_on_hand || 0)).toLocaleString()}
-                </td>
-                <td className="py-2 px-2 text-gray-700 hidden sm:table-cell">{formatDate(stock.createdAt)}</td>
-                <td className="py-2 px-2">
-                  <div className="flex items-center justify-end space-x-1">
-                    <button 
-                      onClick={() => handleViewStock(stock)} 
-                      className="text-gray-400 hover:text-primary-600 p-1" 
-                      title="View"
-                    >
-                      <Eye className="w-3 h-3" />
-                    </button>
-                    <button 
-                      onClick={() => handleEditStock(stock)} 
-                      className="text-gray-400 hover:text-primary-600 p-1" 
-                      title="Edit"
-                    >
-                      <Edit className="w-3 h-3" />
-                    </button>
-                    <button 
-                      onClick={() => handleSetThreshold(stock)} 
-                      className="text-gray-400 hover:text-primary-600 p-1" 
-                      title="Set Threshold"
-                    >
-                      <Settings className="w-3 h-3" />
-                    </button>
-                    <button 
-                      onClick={() => setDeleteConfirm(stock)} 
-                      className="text-gray-400 hover:text-red-600 p-1" 
-                      title="Delete"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+  const renderAlertsTable = () => {
+    const columns: Column<Stock>[] = [
+      { key: 'material_id', header: 'Material', sortable: true, render: (_, row) => <span className="font-medium text-gray-900">{row.material?.name || 'N/A'}</span> },
+      { key: 'store_id', header: 'Store', sortable: true, render: (_, row) => row.store?.name || 'N/A' },
+      { key: 'qty_on_hand', header: 'Qty on Hand', sortable: true, render: (_, row) => <span className="text-red-600 font-semibold">{row.qty_on_hand}</span> },
+      { key: 'unit_price', header: 'Unit Price', sortable: true, render: (_, row) => `RWF ${(row.unit_price || 0).toLocaleString()}` },
+      { key: 'low_stock_threshold', header: 'Threshold', sortable: true },
+      {
+        key: 'actions',
+        header: 'Actions',
+        width: '100px',
+        render: (_, row) => (
+          <div className="flex items-center gap-1">
+            {row.low_stock_alert && (
+              <button onClick={() => handleAcknowledgeAlert(row)} className="p-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors" title="Acknowledge Alert">
+                <Check className="w-3.5 h-3.5" />
+              </button>
+            )}
+            <button onClick={() => handleViewStock(row)} className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors" title="View">
+              <Eye className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ),
+      },
+    ];
+
+    return (
+      <DataTable<Stock>
+        columns={columns}
+        data={filteredAlerts}
+        keyExtractor={(row) => row.id ?? Math.random()}
+        loading={alertsLoading}
+        error={alertsError}
+        onRetry={loadData}
+        searchable
+        searchPlaceholder="Search alerts..."
+        searchTerm={alertSearchTerm}
+        onSearchChange={setAlertSearchTerm}
+        sortable
+        exportable={false}
+        exportFilename="low_stock_alerts"
+        pagination={{
+          page: alertsPage,
+          pageSize: pageSize,
+          total: filteredAlerts.length,
+          onPageChange: setAlertsPage,
+        }}
+      />
+    );
+  };
+
+  // Keep grid/list view with pagination
+  const stockTotalPages = Math.ceil(filteredStocks.length / pageSize);
+  const gridViewData = filteredStocks.slice((dataPage - 1) * pageSize, dataPage * pageSize);
 
   const renderGridView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-      {currentStocks.map((stock) => (
+      {gridViewData.map((stock) => (
         <div key={stock.id} className="bg-white rounded border border-gray-200 p-3 hover:shadow-sm transition-shadow">
           <div className="flex items-center space-x-2 mb-2">
             <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
@@ -612,7 +561,7 @@ const StockDashboard: React.FC = () => {
 
   const renderListView = () => (
     <div className="bg-white rounded border border-gray-200 divide-y divide-gray-100">
-      {currentStocks.map((stock) => (
+      {gridViewData.map((stock) => (
         <div key={stock.id} className="px-4 py-3 hover:bg-gray-25">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3 flex-1 min-w-0">
@@ -629,32 +578,16 @@ const StockDashboard: React.FC = () => {
               <span>{formatDate(stock.createdAt)}</span>
             </div>
             <div className="flex items-center space-x-1 flex-shrink-0">
-              <button 
-                onClick={() => handleViewStock(stock)} 
-                className="text-gray-400 hover:text-primary-600 p-1.5 rounded-full hover:bg-primary-50 transition-colors" 
-                title="View Stock"
-              >
+              <button onClick={() => handleViewStock(stock)} className="text-gray-400 hover:text-primary-600 p-1.5 rounded-full hover:bg-primary-50 transition-colors" title="View Stock">
                 <Eye className="w-4 h-4" />
               </button>
-              <button 
-                onClick={() => handleEditStock(stock)} 
-                className="text-gray-400 hover:text-primary-600 p-1.5 rounded-full hover:bg-primary-50 transition-colors" 
-                title="Edit Stock"
-              >
+              <button onClick={() => handleEditStock(stock)} className="text-gray-400 hover:text-primary-600 p-1.5 rounded-full hover:bg-primary-50 transition-colors" title="Edit Stock">
                 <Edit className="w-4 h-4" />
               </button>
-              <button 
-                onClick={() => handleSetThreshold(stock)} 
-                className="text-gray-400 hover:text-primary-600 p-1.5 rounded-full hover:bg-primary-50 transition-colors" 
-                title="Set Threshold"
-              >
+              <button onClick={() => handleSetThreshold(stock)} className="text-gray-400 hover:text-primary-600 p-1.5 rounded-full hover:bg-primary-50 transition-colors" title="Set Threshold">
                 <Settings className="w-4 h-4" />
               </button>
-              <button 
-                onClick={() => setDeleteConfirm(stock)} 
-                className="text-gray-400 hover:text-red-600 p-1.5 rounded-full hover:bg-red-50 transition-colors" 
-                title="Delete Stock"
-              >
+              <button onClick={() => setDeleteConfirm(stock)} className="text-gray-400 hover:text-red-600 p-1.5 rounded-full hover:bg-red-50 transition-colors" title="Delete Stock">
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
@@ -664,566 +597,183 @@ const StockDashboard: React.FC = () => {
     </div>
   );
 
-  const renderAlertsSection = () => (
-    <div className="bg-white rounded border border-gray-200 p-3">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center space-x-2">
-          <AlertTriangle className="w-5 h-5 text-red-600" />
-          <h2 className="text-sm font-semibold text-gray-900">Low Stock Alerts</h2>
-        </div>
-        <button
-          onClick={() => setShowAlerts(!showAlerts)}
-          className="text-gray-400 hover:text-gray-600"
-          title={showAlerts ? "Hide Alerts" : "Show Alerts"}
-        >
-          <ChevronDown className={`w-4 h-4 transform ${showAlerts ? "rotate-180" : ""}`} />
+  const renderSimplePagination = (page: number, totalPages: number, onPageChange: (p: number) => void) => (
+    <div className="flex items-center justify-between bg-white rounded-xl border border-gray-100 px-4 py-3">
+      <div className="text-xs text-gray-500">
+        Showing {((page - 1) * pageSize) + 1}-{Math.min(page * pageSize, filteredStocks.length)} of {filteredStocks.length}
+      </div>
+      <div className="flex items-center gap-2">
+        <button onClick={() => onPageChange(Math.max(1, page - 1))} disabled={page === 1} className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+          Previous
+        </button>
+        <span className="text-xs text-gray-600">Page {page} of {totalPages}</span>
+        <button onClick={() => onPageChange(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+          Next
         </button>
       </div>
-      {showAlerts && (
-        <>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 gap-3">
-            <div className="flex items-center space-x-2">
-              <div className="relative">
-                <Search className="w-3 h-3 text-gray-400 absolute left-2 top-1/2 transform -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Search alerts..."
-                  value={alertSearchTerm}
-                  onChange={(e) => setAlertSearchTerm(e.target.value)}
-                  className="w-48 pl-7 pr-3 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center space-x-1 px-2 py-1.5 text-xs border rounded transition-colors ${
-                  showFilters ? 'bg-primary-50 border-primary-200 text-primary-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <Filter className="w-3 h-3" />
-                <span>Filter</span>
-              </button>
-            </div>
-            <select
-              value={`${alertSortBy}-${alertSortOrder}`}
-              onChange={(e) => {
-                const [field, order] = e.target.value.split("-") as [keyof Stock, "asc" | "desc"];
-                setAlertSortBy(field);
-                setAlertSortOrder(order);
-              }}
-              className="text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-500"
-            >
-              <option value="material_id-asc">Material (A-Z)</option>
-              <option value="material_id-desc">Material (Z-A)</option>
-              <option value="store_id-asc">Store (A-Z)</option>
-              <option value="store_id-desc">Store (Z-A)</option>
-              <option value="qty_on_hand-asc">Quantity (Low-High)</option>
-              <option value="qty_on_hand-desc">Quantity (High-Low)</option>
-            </select>
-          </div>
-          {showFilters && (
-            <div className="mt-3 pt-3 border-t border-gray-100">
-              <div className="flex flex-wrap items-center gap-2">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Store</label>
-                  <select
-                    value={selectedAlertStore}
-                    onChange={(e) => setSelectedAlertStore(e.target.value)}
-                    className="w-full sm:w-40 text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  >
-                    <option value="">All Stores</option>
-                    {stores.map((store) => (
-                      <option key={store.id} value={store.name}>{store.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Material</label>
-                  <select
-                    value={selectedAlertMaterial}
-                    onChange={(e) => setSelectedAlertMaterial(e.target.value)}
-                    className="w-full sm:w-40 text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  >
-                    <option value="">All Materials</option>
-                    {materials.map((material) => (
-                      <option key={material.id} value={material.name}>{material.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Start Date</label>
-                  <input
-                    type="date"
-                    value={alertFilters.date_from || ''}
-                    onChange={(e) => handleAlertFilterChange(e, 'date_from')}
-                    className="w-full sm:w-40 px-3 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">End Date</label>
-                  <input
-                    type="date"
-                    value={alertFilters.date_to || ''}
-                    onChange={(e) => handleAlertFilterChange(e, 'date_to')}
-                    className="w-full sm:w-40 px-3 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  />
-                </div>
-                {(selectedAlertStore || selectedAlertMaterial || alertFilters.date_from || alertFilters.date_to) && (
-                  <button
-                    onClick={() => {
-                      setSelectedAlertStore("");
-                      setSelectedAlertMaterial("");
-                      setAlertFilters({ date_from: '', date_to: '' });
-                    }}
-                    className="px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded hover:bg-gray-50"
-                  >
-                    Clear All Filters
-                  </button>
-                )}
-                {(alertFilters.date_from || alertFilters.date_to) && (
-                  <button
-                    onClick={() => setAlertFilters({ date_from: '', date_to: '' })}
-                    className="px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded hover:bg-gray-50"
-                  >
-                    Clear Dates
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-          {alertsError && (
-            <div className="bg-red-50 border border-red-200 rounded p-3 text-red-700 text-xs mt-3">
-              {alertsError}
-            </div>
-          )}
-          {alertsLoading ? (
-            <div className="bg-white rounded border border-gray-200 p-8 text-center text-gray-500 mt-3">
-              <div className="inline-flex items-center space-x-2">
-                <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-xs">Loading alerts...</span>
-              </div>
-            </div>
-          ) : currentAlerts.length === 0 ? (
-            <div className="bg-white rounded border border-gray-200 p-8 text-center text-gray-500 mt-3">
-              <div className="text-xs">
-                {alertSearchTerm || selectedAlertStore || selectedAlertMaterial || alertFilters.date_from || alertFilters.date_to
-                  ? 'No alerts found matching your criteria'
-                  : 'No low stock alerts at this time'}
-              </div>
-            </div>
-          ) : (
-            <div className="mt-3">
-              <div className="bg-white rounded border border-gray-200">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead className="bg-gray-50 border-b border-gray-200">
-                      <tr>
-                        <th className="text-left py-2 px-2 text-gray-600 font-medium">#</th>
-                        <th
-                          className="text-left py-2 px-2 text-gray-600 font-medium cursor-pointer hover:bg-gray-100"
-                          onClick={() => {
-                            setAlertSortBy("material_id");
-                            setAlertSortOrder(alertSortBy === "material_id" && alertSortOrder === "asc" ? "desc" : "asc");
-                          }}
-                        >
-                          <div className="flex items-center space-x-1">
-                            <span>Material</span>
-                            <ChevronDown className={`w-3 h-3 ${alertSortBy === "material_id" ? "text-primary-600" : "text-gray-400"}`} />
-                          </div>
-                        </th>
-                        <th className="text-left py-2 px-2 text-gray-600 font-medium hidden sm:table-cell">Store</th>
-                        <th className="text-left py-2 px-2 text-gray-600 font-medium hidden lg:table-cell">Qty on Hand</th>
-                        <th className="text-left py-2 px-2 text-gray-600 font-medium hidden lg:table-cell">Unit Price</th>
-                        <th className="text-left py-2 px-2 text-gray-600 font-medium hidden lg:table-cell">Total Price</th>
-                        <th className="text-left py-2 px-2 text-gray-600 font-medium hidden lg:table-cell">Threshold</th>
-                        <th className="text-right py-2 px-2 text-gray-600 font-medium">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {currentAlerts.map((alert, index) => (
-                        <tr key={alert.id} className="hover:bg-gray-25">
-                          <td className="py-2 px-2 text-gray-700">{alertsStartIndex + index + 1}</td>
-                          <td className="py-2 px-2 font-medium text-gray-900 text-xs">{alert.material?.name || 'N/A'}</td>
-                          <td className="py-2 px-2 text-gray-700 hidden sm:table-cell">{alert.store?.name || 'N/A'}</td>
-                          <td className="py-2 px-2 text-gray-700 hidden lg:table-cell">{alert.qty_on_hand}</td>
-                          <td className="py-2 px-2 text-gray-700 hidden lg:table-cell">
-                            RWF {(alert.unit_price || 0).toLocaleString()}
-                          </td>
-                          <td className="py-2 px-2 text-gray-700 hidden lg:table-cell">
-                            RWF {((alert.unit_price || 0) * (alert.qty_on_hand || 0)).toLocaleString()}
-                          </td>
-                          <td className="py-2 px-2 text-gray-700 hidden lg:table-cell">{alert.low_stock_threshold}</td>
-                          <td className="py-2 px-2">
-                            <div className="flex items-center justify-end space-x-1">
-                              {alert.low_stock_alert && (
-                                <button
-                                  onClick={() => handleAcknowledgeAlert(alert)}
-                                  className="text-xs text-green-600 hover:text-green-800 px-2 py-1 border border-green-200 rounded hover:bg-green-50"
-                                  title="Acknowledge Alert"
-                                >
-                                  <Check className="w-3 h-3" />
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              {alertsTotalPages > 1 && (
-                <div className="flex items-center justify-between bg-white px-3 py-2 border-t border-gray-200 mt-3">
-                  <div className="text-xs text-gray-600">
-                    Showing {alertsStartIndex + 1}-{Math.min(alertsEndIndex, filteredAlerts.length)} of {filteredAlerts.length}
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <button
-                      onClick={() => setAlertsCurrentPage(alertsCurrentPage - 1)}
-                      disabled={alertsCurrentPage === 1}
-                      className="flex items-center px-2 py-1 text-xs text-gray-500 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <ChevronLeft className="w-3 h-3" />
-                    </button>
-                    {Array.from({ length: alertsTotalPages }, (_, i) => i + 1).map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => setAlertsCurrentPage(page)}
-                        className={`px-2 py-1 text-xs rounded ${
-                          alertsCurrentPage === page
-                            ? "bg-primary-500 text-white"
-                            : "text-gray-700 bg-white border border-gray-200 hover:bg-gray-50"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => setAlertsCurrentPage(alertsCurrentPage + 1)}
-                      disabled={alertsCurrentPage === alertsTotalPages}
-                      className="flex items-center px-2 py-1 text-xs text-gray-500 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <ChevronRight className="w-3 h-3" />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </>
-      )}
     </div>
   );
 
-  const renderPagination = () => {
-    const pages: number[] = [];
-    const maxVisiblePages = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
-    return (
-      <div className="flex items-center justify-between bg-white px-3 py-2 border-t border-gray-200">
-        <div className="text-xs text-gray-600">
-          Showing {startIndex + 1}-{Math.min(endIndex, stocks.length)} of {stocks.length}
-        </div>
-        <div className="flex items-center space-x-1">
-          <button
-            onClick={() => setCurrentPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="flex items-center px-2 py-1 text-xs text-gray-500 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ChevronLeft className="w-3 h-3" />
-          </button>
-          {pages.map((page) => (
-            <button
-              key={page}
-              onClick={() => setCurrentPage(page)}
-              className={`px-2 py-1 text-xs rounded ${
-                currentPage === page
-                  ? "bg-primary-500 text-white"
-                  : "text-gray-700 bg-white border border-gray-200 hover:bg-gray-50"
-              }`}
-            >
-              {page}
-            </button>
-          ))}
-          <button
-            onClick={() => setCurrentPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="flex items-center px-2 py-1 text-xs text-gray-500 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ChevronRight className="w-3 h-3" />
-          </button>
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 text-xs">
-      <div className="bg-white shadow-md">
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="text-gray-400 hover:text-gray-600 p-1"
-                title="Toggle Sidebar"
-              >
-                <Minimize2 className="w-4 h-4" />
-              </button>
-              <div>
-                <h1 className="text-lg font-semibold text-gray-900">Stock Management</h1>
-                <p className="text-xs text-gray-500 mt-0.5">Manage your organization's stock</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={loadData}
-                disabled={loading || alertsLoading}
-                className="flex items-center space-x-1 px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50"
-                title="Refresh"
-              >
-                <RefreshCw className={`w-3 h-3 ${loading || alertsLoading ? 'animate-spin' : ''}`} />
-                <span>Refresh</span>
-              </button>
-              <button
-                onClick={handleAddStock}
-                disabled={operationLoading}
-                className="flex items-center space-x-1 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded font-medium transition-colors disabled:opacity-50"
-              >
-                <Plus className="w-3 h-3" />
-                <span>Add Stock</span>
-              </button>
-            </div>
+    <div className="min-h-screen bg-gray-50">
+      <PageHeader
+        title="Stock Management"
+        subtitle="Manage your organization's stock"
+        actions={
+          <div className="flex items-center gap-2">
+            <button onClick={loadData} disabled={loading || alertsLoading} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50">
+              <RefreshCw className={`w-4 h-4 ${loading || alertsLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+            <button onClick={handleAddStock} disabled={operationLoading} className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 shadow-sm">
+              <Plus className="w-4 h-4" />
+              Add Stock
+            </button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
-      <div className="px-4 py-4 space-y-4">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="bg-white rounded shadow p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-3 bg-primary-100 rounded-full flex items-center justify-center">
+      <div className="px-4 lg:px-6 py-4 space-y-4">
+        {/* Stats cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-primary-50 rounded-lg flex items-center justify-center">
                 <Package className="w-5 h-5 text-primary-600" />
               </div>
               <div>
-                <p className="text-xs text-gray-600">Total Stock Items</p>
-                <p className="text-lg font-semibold text-gray-900">{allStocks.length}</p>
+                <p className="text-xs text-gray-500 font-medium">Total Stock Items</p>
+                <p className="text-xl font-bold text-gray-900">{allStocks.length}</p>
               </div>
             </div>
-          </div>
-          <div className="bg-white rounded shadow p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-3 bg-green-100 rounded-full flex items-center justify-center">
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
                 <Package className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <p className="text-xs text-gray-600">Unique Stores</p>
-                <p className="text-lg font-semibold text-gray-900">{[...new Set(allStocks.map(stock => stock.store?.name))].filter(name => name).length}</p>
+                <p className="text-xs text-gray-500 font-medium">Unique Stores</p>
+                <p className="text-xl font-bold text-gray-900">{[...new Set(allStocks.map(s => s.store?.name))].filter(Boolean).length}</p>
               </div>
             </div>
-          </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                <Filter className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 font-medium">Total Materials</p>
+                <p className="text-xl font-bold text-gray-900">{materials.length}</p>
+              </div>
+            </div>
+          </Card>
           {alerts.length > 0 && (
-            <div className="bg-white rounded shadow p-4">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-red-100 rounded-full flex items-center justify-center">
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
                   <AlertTriangle className="w-5 h-5 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600">Low Stock Alerts</p>
-                  <p className="text-lg font-semibold text-gray-900">{alerts.length}</p>
+                  <p className="text-xs text-gray-500 font-medium">Low Stock Alerts</p>
+                  <p className="text-xl font-bold text-gray-900">{alerts.length}</p>
                 </div>
               </div>
-            </div>
+            </Card>
           )}
         </div>
 
-        {alerts.length > 0 && renderAlertsSection()}
-
-        <div className="bg-white rounded border border-gray-200 p-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 gap-3">
-            <div className="flex items-center space-x-2">
-              <div className="relative">
-                <Search className="w-3 h-3 text-gray-400 absolute left-2 top-1/2 transform -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Search stock..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-48 pl-7 pr-3 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-transparent"
-                />
+        {/* Alerts section - collapsible */}
+        {alerts.length > 0 && (
+          <Card className="overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+                <h2 className="text-sm font-semibold text-gray-900">Low Stock Alerts</h2>
               </div>
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center space-x-1 px-2 py-1.5 text-xs border rounded transition-colors ${
-                  showFilters ? 'bg-primary-50 border-primary-200 text-primary-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <Filter className="w-3 h-3" />
-                <span>Filter</span>
+              <button onClick={() => setShowAlerts(!showAlerts)} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-50 transition-colors" title={showAlerts ? 'Hide Alerts' : 'Show Alerts'}>
+                <ChevronDown className={`w-4 h-4 transition-transform ${showAlerts ? 'rotate-180' : ''}`} />
               </button>
             </div>
-            <div className="flex items-center space-x-2">
-              <select
-                value={`${sortBy}-${sortOrder}`}
-                onChange={(e) => {
-                  const [field, order] = e.target.value.split("-") as [keyof Stock, "asc" | "desc"];
-                  setSortBy(field);
-                  setSortOrder(order);
-                }}
-                className="text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-500"
-              >
-                <option value="material_id-asc">Material (A-Z)</option>
-                <option value="material_id-desc">Material (Z-A)</option>
-                <option value="store_id-asc">Store (A-Z)</option>
-                <option value="qty_on_hand-asc">Quantity (Low-High)</option>
-                <option value="createdAt-desc">Newest</option>
-                <option value="createdAt-asc">Oldest</option>
-              </select>
-              <div className="flex items-center border border-gray-200 rounded">
-                <button
-                  onClick={() => setViewMode('table')}
-                  className={`p-1.5 text-xs transition-colors ${
-                    viewMode === 'table' ? 'bg-primary-50 text-primary-600' : 'text-gray-400 hover:text-gray-600'
-                  }`}
-                  title="Table View"
-                >
-                  <List className="w-3 h-3" />
-                </button>
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-1.5 text-xs transition-colors ${
-                    viewMode === 'grid' ? 'bg-primary-50 text-primary-600' : 'text-gray-400 hover:text-gray-600'
-                  }`}
-                  title="Grid View"
-                >
-                  <Grid3X3 className="w-3 h-3" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-1.5 text-xs transition-colors ${
-                    viewMode === 'list' ? 'bg-primary-50 text-primary-600' : 'text-gray-400 hover:text-gray-600'
-                  }`}
-                  title="List View"
-                >
-                  <Settings className="w-3 h-3" />
-                </button>
-              </div>
+            {showAlerts && <div className="p-4">{renderAlertsTable()}</div>}
+          </Card>
+        )}
+
+        {/* Main stock table with filter toolbar */}
+        <div className="bg-white rounded-xl border border-gray-100 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowFilters(!showFilters)} className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg transition-colors ${showFilters ? 'bg-primary-50 border-primary-200 text-primary-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+              <Filter className="w-4 h-4" />
+              Filter
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+              <button onClick={() => setViewMode('table')} className={`p-2 transition-colors ${viewMode === 'table' ? 'bg-primary-50 text-primary-600' : 'text-gray-400 hover:text-gray-600'}`} title="Table View"><List className="w-4 h-4" /></button>
+              <button onClick={() => setViewMode('grid')} className={`p-2 transition-colors ${viewMode === 'grid' ? 'bg-primary-50 text-primary-600' : 'text-gray-400 hover:text-gray-600'}`} title="Grid View"><Grid3X3 className="w-4 h-4" /></button>
+              <button onClick={() => setViewMode('list')} className={`p-2 transition-colors ${viewMode === 'list' ? 'bg-primary-50 text-primary-600' : 'text-gray-400 hover:text-gray-600'}`} title="List View"><Settings className="w-4 h-4" /></button>
             </div>
           </div>
-          {showFilters && (
-            <div className="mt-3 pt-3 border-t border-gray-100">
-              <div className="flex flex-wrap items-center gap-2">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Store</label>
-                  <select
-                    value={selectedStore}
-                    onChange={(e) => setSelectedStore(e.target.value)}
-                    className="w-full sm:w-40 text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  >
-                    <option value="">All Stores</option>
-                    {stores.map((store) => (
-                      <option key={store.id} value={store.name}>{store.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Start Date</label>
-                  <input
-                    type="date"
-                    value={stockFilters.date_from || ''}
-                    onChange={(e) => handleStockFilterChange(e, 'date_from')}
-                    className="w-full sm:w-40 px-3 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">End Date</label>
-                  <input
-                    type="date"
-                    value={stockFilters.date_to || ''}
-                    onChange={(e) => handleStockFilterChange(e, 'date_to')}
-                    className="w-full sm:w-40 px-3 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  />
-                </div>
-                {(selectedStore || stockFilters.date_from || stockFilters.date_to) && (
-                  <button
-                    onClick={() => {
-                      setSelectedStore("");
-                      setStockFilters({ date_from: '', date_to: '' });
-                    }}
-                    className="px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded hover:bg-gray-50"
-                  >
-                    Clear All Filters
-                  </button>
-                )}
-                {(stockFilters.date_from || stockFilters.date_to) && (
-                  <button
-                    onClick={() => setStockFilters({ date_from: '', date_to: '' })}
-                    className="px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded hover:bg-gray-50"
-                  >
-                    Clear Dates
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
         </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded p-3 text-red-700 text-xs">
-            {error}
+        {/* Date filter section */}
+        {showFilters && (
+          <div className="bg-white rounded-xl border border-gray-100 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Store</label>
+                <select value={selectedStore} onChange={(e) => setSelectedStore(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500">
+                  <option value="">All Stores</option>
+                  {stores.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Start Date</label>
+                <input type="date" value={stockFilters.date_from || ''} onChange={(e) => handleStockFilterChange(e, 'date_from')} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">End Date</label>
+                <input type="date" value={stockFilters.date_to || ''} onChange={(e) => handleStockFilterChange(e, 'date_to')} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500" />
+              </div>
+            </div>
+            {(selectedStore || stockFilters.date_from || stockFilters.date_to) && (
+              <button onClick={() => { setSelectedStore(""); setStockFilters({ date_from: '', date_to: '' }); }} className="shrink-0 px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Clear All</button>
+            )}
           </div>
         )}
 
-        {loading ? (
-          <div className="bg-white rounded border border-gray-200 p-8 text-center text-gray-500">
-            <div className="inline-flex items-center space-x-2">
-              <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-xs">Loading stock...</span>
-            </div>
-          </div>
-        ) : currentStocks.length === 0 ? (
-          <div className="bg-white rounded border border-gray-200 p-8 text-center text-gray-500">
-            <div className="text-xs">
-              {searchTerm || selectedStore || stockFilters.date_from || stockFilters.date_to ? 'No stock found matching your criteria' : 'No stock found'}
-            </div>
-          </div>
-        ) : (
-          <div>
-            {viewMode === 'table' && renderTableView()}
-            {viewMode === 'grid' && renderGridView()}
-            {viewMode === 'list' && renderListView()}
-            {renderPagination()}
-          </div>
+        {/* Stock content */}
+        {viewMode === 'table' && renderStockTable()}
+
+        {viewMode === 'grid' && (
+          <>
+            {filteredStocks.length === 0 ? (
+              <div className="bg-white rounded-xl border border-gray-100 p-8 text-center text-gray-500 text-sm">No stock found</div>
+            ) : (
+              <>
+                {renderGridView()}
+                {stockTotalPages > 1 && renderSimplePagination(dataPage, stockTotalPages, setDataPage)}
+              </>
+            )}
+          </>
+        )}
+
+        {viewMode === 'list' && (
+          <>
+            {filteredStocks.length === 0 ? (
+              <div className="bg-white rounded-xl border border-gray-100 p-8 text-center text-gray-500 text-sm">No stock found</div>
+            ) : (
+              <>
+                {renderListView()}
+                {stockTotalPages > 1 && renderSimplePagination(dataPage, stockTotalPages, setDataPage)}
+              </>
+            )}
+          </>
         )}
       </div>
 
-      {operationStatus && (
-        <div className="fixed top-4 right-4 z-50">
-          <div className={`flex items-center space-x-2 px-3 py-2 rounded shadow-lg text-xs ${
-            operationStatus.type === "success" ? "bg-green-50 border border-green-200 text-green-800" :
-            operationStatus.type === "error" ? "bg-red-50 border border-red-200 text-red-800" :
-            "bg-primary-50 border border-primary-200 text-primary-800"
-          }`}>
-            {operationStatus.type === "success" && <CheckCircle className="w-4 h-4 text-green-600" />}
-            {operationStatus.type === "error" && <XCircle className="w-4 h-4 text-red-600" />}
-            {operationStatus.type === "info" && <AlertCircle className="w-4 h-4 text-primary-600" />}
-            <span className="font-medium">{operationStatus.message}</span>
-            <button onClick={() => setOperationStatus(null)} className="hover:opacity-70">
-              <X className="w-3 h-3" />
-            </button>
-          </div>
-        </div>
-      )}
-
+      {/* Loading overlay */}
       {operationLoading && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-40">
           <div className="bg-white rounded p-4 shadow-xl">

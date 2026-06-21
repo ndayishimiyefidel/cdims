@@ -1,54 +1,41 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Plus,
   Edit,
   Trash2,
-  Search,
-  ChevronDown,
   Eye,
-  ChevronLeft,
-  ChevronRight,
   AlertTriangle,
-  CheckCircle,
-  XCircle,
-  X,
-  AlertCircle,
   Package as PackageIcon,
   RefreshCw,
   Filter,
   Grid3X3,
   List,
   Settings,
-  Minimize2,
 } from "lucide-react";
 import materialService, { type CreateMaterialInput, type ValidationResult, type Material, type Category, type Unit } from "../../services/materialsService";
-import { useNavigate } from "react-router-dom";
+import DataTable, { type Column, type ExportMeta } from "../../components/ui/DataTable";
+import useAuth from "../../context/AuthContext";
+import { PageHeader } from "../../components/ui/PageHeader";
+import { Card } from "../../components/ui/Card";
+import { useToast } from "../../components/ui/Toast";
 
 type ViewMode = 'table' | 'grid' | 'list';
 
-interface OperationStatus {
-  type: "success" | "error" | "info";
-  message: string;
-}
-
 const MaterialManagement: React.FC = () => {
-  const [materials, setMaterials] = useState<Material[]>([]);
   const [allMaterials, setAllMaterials] = useState<Material[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [sortBy, setSortBy] = useState<keyof Material>("name");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [itemsPerPage] = useState<number>(8);
+  const [dataPage, setDataPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
   const [deleteConfirm, setDeleteConfirm] = useState<Material | null>(null);
-  const [operationStatus, setOperationStatus] = useState<OperationStatus | null>(null);
+  const [deleteConfirmBulk, setDeleteConfirmBulk] = useState<boolean>(false);
+  const [selectedRowIds, setSelectedRowIds] = useState<Set<string | number>>(new Set());
   const [operationLoading, setOperationLoading] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [showFilters, setShowFilters] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -62,20 +49,20 @@ const MaterialManagement: React.FC = () => {
     active: true,
   });
   const [formError, setFormError] = useState<string>('');
-
-  // Add state for date filters
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
 
-  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { success, error: toastError } = useToast();
 
   useEffect(() => {
     loadData();
   }, []);
 
+  // Reset pagination when search, date filters, or page size change
   useEffect(() => {
-    handleFilterAndSort();
-  }, [searchTerm, sortBy, sortOrder, allMaterials, startDate, endDate]);
+    setDataPage(1);
+  }, [searchTerm, startDate, endDate, pageSize]);
 
   const loadData = async () => {
     try {
@@ -96,78 +83,40 @@ const MaterialManagement: React.FC = () => {
     }
   };
 
-  const showOperationStatus = (type: OperationStatus["type"], message: string, duration: number = 3000) => {
-    setOperationStatus({ type, message });
-    setTimeout(() => setOperationStatus(null), duration);
-  };
+  const filteredMaterials = useMemo(() => {
+    let filtered = [...allMaterials];
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (m) =>
+          m.name?.toLowerCase().includes(term) ||
+          m.specification?.toLowerCase().includes(term) ||
+          m.code?.toLowerCase().includes(term)
+      );
+    }
+    if (startDate || endDate) {
+      filtered = filtered.filter((m) => {
+        const createdAt = m.createdAt ? new Date(m.createdAt) : null;
+        if (!createdAt) return false;
+        const start = startDate ? new Date(startDate) : null;
+        const end = endDate ? new Date(endDate) : null;
+        if (end) end.setHours(23, 59, 59, 999);
+        if (start && end) return createdAt >= start && createdAt <= end;
+        if (start) return createdAt >= start;
+        if (end) return createdAt <= end;
+        return true;
+      });
+    }
+    return filtered;
+  }, [allMaterials, searchTerm, startDate, endDate]);
+
+  const totalMaterials = filteredMaterials.length;
 
   const generateCode = (name: string): string => {
     const prefix = name.trim().slice(0, 3).toUpperCase() || 'MAT';
     const number = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     return `${prefix}-${number}`;
   };
-
-  const handleFilterAndSort = () => {
-    let filtered = [...allMaterials];
-
-    // Apply search term filter
-    if (searchTerm.trim()) {
-      filtered = filtered.filter(
-        (material) =>
-          material.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          material.specification?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          material.code?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Apply date range filter
-    if (startDate || endDate) {
-      filtered = filtered.filter((material) => {
-        const createdAt = material.createdAt ? new Date(material.createdAt) : null;
-        if (!createdAt) return false;
-
-        const start = startDate ? new Date(startDate) : null;
-        const end = endDate ? new Date(endDate) : null;
-
-        // Adjust end date to include the entire day
-        if (end) {
-          end.setHours(23, 59, 59, 999);
-        }
-
-        if (start && end) {
-          return createdAt >= start && createdAt <= end;
-        } else if (start) {
-          return createdAt >= start;
-        } else if (end) {
-          return createdAt <= end;
-        }
-        return true;
-      });
-    }
-
-    // Apply sorting
-    filtered.sort((a, b) => {
-      const aValue = a[sortBy];
-      const bValue = b[sortBy];
-
-      if (sortBy === "createdAt" || sortBy === "updated_at") {
-        const aDate = typeof aValue === "string" || aValue instanceof Date ? new Date(aValue) : new Date(0);
-        const bDate = typeof bValue === "string" || bValue instanceof Date ? new Date(bValue) : new Date(0);
-        return sortOrder === "asc" ? aDate.getTime() - bDate.getTime() : bDate.getTime() - aDate.getTime();
-      }
-
-      const aStr = aValue ? aValue.toString().toLowerCase() : "";
-      const bStr = bValue ? bValue.toString().toLowerCase() : "";
-      
-      if (sortOrder === "asc") return aStr > bStr ? 1 : aStr < bStr ? -1 : 0;
-      else return aStr < bStr ? 1 : aStr > bStr ? -1 : 0;
-    });
-
-    setMaterials(filtered);
-    setCurrentPage(1);
-  };
-
-  const totalMaterials = allMaterials.length;
 
   const handleAddMaterial = () => {
     setFormData({
@@ -225,10 +174,11 @@ const MaterialManagement: React.FC = () => {
         unit_id: undefined,
         active: true,
       });
-      loadData();
-      showOperationStatus("success", `${newMaterial.name} created successfully!`);
+      await loadData();
+      setDataPage(1);
+      success(`${newMaterial.name} created successfully!`);
     } catch (err: any) {
-      setFormError(err.message || "Failed to create material");
+      toastError(err.message || "Failed to create material");
     } finally {
       setOperationLoading(false);
     }
@@ -277,10 +227,11 @@ const MaterialManagement: React.FC = () => {
         unit_id: undefined,
         active: true,
       });
-      loadData();
-      showOperationStatus("success", `${formData.name} updated successfully!`);
+      await loadData();
+      setDataPage(1);
+      success(`${formData.name} updated successfully!`);
     } catch (err: any) {
-      setFormError(err.message || "Failed to update material");
+      toastError(err.message || "Failed to update material");
     } finally {
       setOperationLoading(false);
     }
@@ -297,10 +248,36 @@ const MaterialManagement: React.FC = () => {
       setOperationLoading(true);
       setDeleteConfirm(null);
       await materialService.deleteMaterial(material.id);
-      loadData();
-      showOperationStatus("success", `${material.name} deleted successfully!`);
+      await loadData();
+      setDataPage(1);
+      success(`${material.name} deleted successfully!`);
     } catch (err: any) {
-      showOperationStatus("error", err.message || "Failed to delete material");
+      toastError(err.message || "Failed to delete material");
+    } finally {
+      setOperationLoading(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      setOperationLoading(true);
+      setDeleteConfirmBulk(false);
+      const ids = Array.from(selectedRowIds);
+      let deletedCount = 0;
+      for (const id of ids) {
+        try {
+          await materialService.deleteMaterial(Number(id));
+          deletedCount++;
+        } catch (err) {
+          // Continue deleting others even if one fails
+        }
+      }
+      setSelectedRowIds(new Set());
+      await loadData();
+      setDataPage(1);
+      success(`${deletedCount} material${deletedCount !== 1 ? 's' : ''} deleted successfully!`);
+    } catch (err: any) {
+      toastError(err.message || "Failed to delete materials");
     } finally {
       setOperationLoading(false);
     }
@@ -315,362 +292,466 @@ const MaterialManagement: React.FC = () => {
     });
   };
 
+  const formatDateTime = (date?: Date | string): string => {
+    if (!date) return new Date().toLocaleString("en-GB");
+    return new Date(date).toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
-  const totalPages = Math.ceil(materials.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentMaterials = materials.slice(startIndex, endIndex);
+  const exportMeta: ExportMeta = {
+    systemName: "DIOCESE CATHOLIQUE CYANGUGU",
+    systemContact: "ECONOMAT GENERAL — SDEID",
+    systemAddress: "BP: 05 CYANGUGU",
+    generatedBy: user?.full_name || user?.email || "Unknown",
+    logoUrl: "/hello.jpg",
+  };
 
-  const renderTableView = () => (
-    <div className="bg-white rounded border border-gray-200">
-      <div className="overflow-x-auto">
-        <table className="w-full text-xs">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="text-left py-2 px-2 text-gray-600 font-medium">#</th>
-              <th 
-                className="text-left py-2 px-2 text-gray-600 font-medium cursor-pointer hover:bg-gray-100" 
-                onClick={() => setSortBy("name")}
-              >
-                <div className="flex items-center space-x-1">
-                  <span>Name</span>
-                  <ChevronDown className={`w-3 h-3 ${sortBy === "name" ? "text-primary-600" : "text-gray-400"}`} />
-                </div>
-              </th>
-              <th className="text-left py-2 px-2 text-gray-600 font-medium hidden md:table-cell">Code</th>
-              <th className="text-left py-2 px-2 text-gray-600 font-medium hidden lg:table-cell">Specification</th>
-              <th className="text-left py-2 px-2 text-gray-600 font-medium hidden sm:table-cell">Category</th>
-              <th className="text-left py-2 px-2 text-gray-600 font-medium hidden sm:table-cell">Unit</th>
-              <th className="text-left py-2 px-2 text-gray-600 font-medium hidden sm:table-cell">Created Date</th>
-              <th className="text-right py-2 px-2 text-gray-600 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {currentMaterials.map((material, index) => (
-              <tr key={material.id || index} className="hover:bg-gray-25">
-                <td className="py-2 px-2 text-gray-700">{startIndex + index + 1}</td>
-                <td className="py-2 px-2 font-medium text-gray-900 text-xs">{material.name}</td>
-                <td className="py-2 px-2 text-gray-700 hidden md:table-cell">{material.code || 'N/A'}</td>
-                <td className="py-2 px-2 text-gray-700 hidden lg:table-cell">{material.specification || 'N/A'}</td>
-                <td className="py-2 px-2 text-gray-700 hidden sm:table-cell">
-                  {material.category_id ? categories.find(c => c.id === material.category_id)?.name || 'N/A' : 'None'}
-                </td>
-                <td className="py-2 px-2 text-gray-700 hidden sm:table-cell">
-                  {material.unit_id ? units.find(u => u.id === material.unit_id)?.name || 'N/A' : 'None'}
-                </td>
-                <td className="py-2 px-2 text-gray-700 hidden sm:table-cell">{formatDate(material.createdAt)}</td>
-                <td className="py-2 px-2">
-                  <div className="flex items-center justify-end space-x-1">
-                    <button 
-                      onClick={() => handleViewMaterial(material)} 
-                      className="text-gray-400 hover:text-primary-600 p-1" 
-                      title="View"
-                    >
-                      <Eye className="w-3 h-3" />
-                    </button>
-                    <button 
-                      onClick={() => handleEditMaterial(material)} 
-                      className="text-gray-400 hover:text-primary-600 p-1" 
-                      title="Edit"
-                    >
-                      <Edit className="w-3 h-3" />
-                    </button>
-                    <button 
-                      onClick={() => setDeleteConfirm(material)} 
-                      className="text-gray-400 hover:text-red-600 p-1" 
-                      title="Delete"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
 
-  const renderGridView = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-      {currentMaterials.map((material) => (
-        <div key={material.id} className="bg-white rounded border border-gray-200 p-3 hover:shadow-sm transition-shadow">
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-              <PackageIcon className="w-4 h-4 text-primary-700" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-medium text-gray-900 text-xs truncate">{material.name}</div>
-              <div className="text-gray-500 text-xs truncate">{material.code || 'No code'}</div>
-            </div>
-          </div>
-          <div className="space-y-1 mb-3">
-            <div className="text-xs text-gray-600 truncate">
-              Specification: {material.specification || 'N/A'}
-            </div>
-            <div className="text-xs text-gray-600 truncate">
-              Category: {material.category_id ? categories.find(c => c.id === material.category_id)?.name || 'N/A' : 'None'}
-            </div>
-            <div className="text-xs text-gray-600 truncate">
-              Unit: {material.unit_id ? units.find(u => u.id === material.unit_id)?.name || 'N/A' : 'None'}
-            </div>
-            <div className="text-xs text-gray-600 truncate">
-            </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex space-x-1">
-              <button onClick={() => handleViewMaterial(material)} className="text-gray-400 hover:text-primary-600 p-1" title="View">
-                <Eye className="w-3 h-3" />
-              </button>
-              <button onClick={() => handleEditMaterial(material)} className="text-gray-400 hover:text-primary-600 p-1" title="Edit">
-                <Edit className="w-3 h-3" />
-              </button>
-            </div>
-            <button onClick={() => setDeleteConfirm(material)} className="text-gray-400 hover:text-red-600 p-1" title="Delete">
-              <Trash2 className="w-3 h-3" />
+  const renderDataTable = () => {
+    const columns: Column<Material>[] = [
+      { key: 'name', header: 'Name', sortable: true, render: (_, row) => <span className="font-medium text-gray-900">{row.name}</span> },
+      { key: 'code', header: 'Code', sortable: true, hidden: false, render: (_, row) => row.code || <span className="text-gray-400 italic">N/A</span> },
+      { key: 'specification', header: 'Specification', sortable: true, hidden: true },
+      { key: 'category_id', header: 'Category', sortable: true, render: (_, row) => row.category_id ? categories.find(c => c.id === row.category_id)?.name || <span className="text-gray-400">N/A</span> : <span className="text-gray-400">None</span>, getValue: (row) => row.category_id ? categories.find(c => c.id === row.category_id)?.name || 'N/A' : 'None' },
+      { key: 'unit_id', header: 'Unit', sortable: true, render: (_, row) => row.unit_id ? units.find(u => u.id === row.unit_id)?.name || <span className="text-gray-400">N/A</span> : <span className="text-gray-400">None</span>, getValue: (row) => row.unit_id ? units.find(u => u.id === row.unit_id)?.name || 'N/A' : 'None' },
+      { key: 'createdAt', header: 'Created', sortable: true, render: (_, row) => formatDate(row.createdAt), getValue: (row) => formatDateTime(row.createdAt) },
+      {
+        key: 'actions',
+        header: 'Actions',
+        exportable: false,
+        width: '120px',
+        render: (_, row) => (
+          <div className="flex items-center gap-2">
+            <button onClick={() => handleViewMaterial(row)} className="p-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors" title="View Material">
+              <Eye className="w-3.5 h-3.5" />
+            </button>
+            <button onClick={() => handleEditMaterial(row)} className="p-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors" title="Edit Material">
+              <Edit className="w-3.5 h-3.5" />
+            </button>
+            <button onClick={() => setDeleteConfirm(row)} className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors" title="Delete Material">
+              <Trash2 className="w-3.5 h-3.5" />
             </button>
           </div>
-        </div>
-      ))}
+        ),
+      },
+    ];
+
+    return (
+      <DataTable<Material>
+        columns={columns}
+        data={filteredMaterials}
+        keyExtractor={(row) => row.id ?? Math.random()}
+        loading={loading}
+        error={error}
+        onRetry={loadData}
+        selectable
+        selectedRows={selectedRowIds}
+        onSelectionChange={setSelectedRowIds}
+        bulkActions={[
+          {
+            label: 'Delete Selected',
+            icon: Trash2,
+            variant: 'danger',
+            onClick: () => setDeleteConfirmBulk(true),
+          },
+        ]}
+        searchable
+        searchPlaceholder="Search materials..."
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        sortable
+        defaultSortColumn="createdAt"
+        defaultSortDirection="desc"
+        exportable
+        exportFilename="materials_export"
+        exportMeta={exportMeta}
+        columnVisibility
+        pagination={{
+          page: dataPage,
+          pageSize: pageSize,
+          total: filteredMaterials.length,
+          onPageChange: setDataPage,
+          onPageSizeChange: setPageSize,
+        }}
+      />
+    );
+  };
+
+  const renderGridView = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {filteredMaterials.slice((dataPage - 1) * pageSize, dataPage * pageSize).map((material) => {
+        const categoryName = material.category_id
+          ? categories.find(c => c.id === material.category_id)?.name
+          : null;
+        const unitName = material.unit_id
+          ? units.find(u => u.id === material.unit_id)?.name
+          : null;
+        return (
+          <div
+            key={material.id}
+            className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200 overflow-hidden flex flex-col"
+          >
+            {/* Card header with icon, name, code, status */}
+            <div className="p-3.5 pb-2 flex items-start gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
+                <PackageIcon className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h4 className="font-semibold text-gray-900 text-sm truncate">{material.name}</h4>
+                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full flex-shrink-0 ${
+                    material.active !== false
+                      ? 'bg-green-50 text-green-700'
+                      : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    <span className={`w-1 h-1 rounded-full ${material.active !== false ? 'bg-green-500' : 'bg-gray-400'}`} />
+                    {material.active !== false ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+                {material.code ? (
+                  <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-medium text-primary-700 bg-primary-50 rounded-md">
+                    {material.code}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-gray-400 italic">No code</span>
+                )}
+              </div>
+            </div>
+
+            {/* Details section */}
+            <div className="px-3.5 py-2 flex-1 space-y-1.5">
+              {material.specification && (
+                <div className="flex items-start gap-1.5">
+                  <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider flex-shrink-0 mt-0.5">Spec:</span>
+                  <span className="text-xs text-gray-600 line-clamp-2">{material.specification}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-3 text-xs text-gray-500">
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Cat:</span>
+                  <span>{categoryName || <span className="text-gray-300 italic">None</span>}</span>
+                </div>
+                <span className="text-gray-200">|</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Unit:</span>
+                  <span>{unitName || <span className="text-gray-300 italic">None</span>}</span>
+                </div>
+              </div>
+              <div className="text-[10px] text-gray-400">
+                Created: {formatDate(material.createdAt)}
+              </div>
+            </div>
+
+            {/* Actions footer */}
+            <div className="px-3.5 py-2.5 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => handleViewMaterial(material)}
+                  className="p-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                  title="View Material"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => handleEditMaterial(material)}
+                  className="p-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors"
+                  title="Edit Material"
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <button
+                onClick={() => setDeleteConfirm(material)}
+                className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                title="Delete Material"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 
   const renderListView = () => (
-    <div className="bg-white rounded border border-gray-200 divide-y divide-gray-100">
-      {currentMaterials.map((material) => (
-        <div key={material.id} className="px-4 py-3 hover:bg-gray-25">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3 flex-1 min-w-0">
-              <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <PackageIcon className="w-5 h-5 text-primary-700" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-gray-900 text-sm truncate">{material.name}</div>
-                <div className="text-gray-500 text-xs truncate">{material.code || 'No code'}</div>
-              </div>
-            </div>
-            <div className="hidden md:grid grid-cols-4 gap-4 text-xs text-gray-600 flex-1 max-w-xl px-4">
-              <span className="truncate">{material.specification || 'N/A'}</span>
-              <span className="truncate">{material.category_id ? categories.find(c => c.id === material.category_id)?.name || 'N/A' : 'None'}</span>
-              <span>{formatDate(material.createdAt)}</span>
-            </div>
-            <div className="flex items-center space-x-1 flex-shrink-0">
-              <button 
-                onClick={() => handleViewMaterial(material)} 
-                className="text-gray-400 hover:text-primary-600 p-1.5 rounded-full hover:bg-primary-50 transition-colors" 
-                title="View Material"
-              >
-                <Eye className="w-4 h-4" />
-              </button>
-              <button 
-                onClick={() => handleEditMaterial(material)} 
-                className="text-gray-400 hover:text-primary-600 p-1.5 rounded-full hover:bg-primary-50 transition-colors" 
-                title="Edit Material"
-              >
-                <Edit className="w-4 h-4" />
-              </button>
-              <button 
-                onClick={() => setDeleteConfirm(material)} 
-                className="text-gray-400 hover:text-red-600 p-1.5 rounded-full hover:bg-red-50 transition-colors" 
-                title="Delete Material"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* List header */}
+      <div className="hidden lg:flex items-center gap-3 px-5 py-2.5 bg-gray-50 border-b border-gray-100 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="w-10 flex-shrink-0" /> {/* spacer for icon */}
+          <span className="min-w-[140px]">Name &amp; Code</span>
+          <span className="w-24">Category</span>
+          <span className="w-20">Unit</span>
+          <span className="flex-1">Specification</span>
         </div>
-      ))}
+        <div className="flex items-center gap-4 flex-shrink-0">
+          <span className="w-20 text-center">Status</span>
+          <span className="w-24 text-center">Created</span>
+          <span className="w-24 text-center">Actions</span>
+        </div>
+      </div>
+
+      <div className="divide-y divide-gray-50">
+        {filteredMaterials.slice((dataPage - 1) * pageSize, dataPage * pageSize).map((material) => {
+          const categoryName = material.category_id
+            ? categories.find(c => c.id === material.category_id)?.name
+            : null;
+          const unitName = material.unit_id
+            ? units.find(u => u.id === material.unit_id)?.name
+            : null;
+          return (
+            <div
+              key={material.id}
+              className="px-5 py-3 hover:bg-gray-50 transition-colors duration-150"
+            >
+              <div className="flex items-center gap-3">
+                {/* Icon + name column */}
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <PackageIcon className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-semibold text-gray-900 text-sm truncate">{material.name}</h4>
+                    </div>
+                    {material.code ? (
+                      <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-medium text-primary-700 bg-primary-50 rounded-md">
+                        {material.code}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-gray-400 italic">No code</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Data columns — hidden on small screens */}
+                <div className="hidden lg:flex items-center gap-4 flex-1 max-w-xl">
+                  <span className="w-24 text-xs text-gray-600 truncate">{categoryName || <span className="text-gray-300 italic">None</span>}</span>
+                  <span className="w-20 text-xs text-gray-600 truncate">{unitName || <span className="text-gray-300 italic">None</span>}</span>
+                  <span className="flex-1 text-xs text-gray-500 truncate">{material.specification || <span className="text-gray-300 italic">N/A</span>}</span>
+                </div>
+
+                {/* Status + Date + Actions */}
+                <div className="hidden lg:flex items-center gap-4 flex-shrink-0">
+                  {/* Status badge */}
+                  <span className={`w-20 inline-flex items-center justify-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full ${
+                    material.active !== false
+                      ? 'bg-green-50 text-green-700'
+                      : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    <span className={`w-1 h-1 rounded-full ${material.active !== false ? 'bg-green-500' : 'bg-gray-400'}`} />
+                    {material.active !== false ? 'Active' : 'Inactive'}
+                  </span>
+                  <span className="w-24 text-[10px] text-gray-400 text-center">{formatDate(material.createdAt)}</span>
+                  {/* Action buttons */}
+                  <div className="w-24 flex items-center justify-center gap-0.5">
+                    <button
+                      onClick={() => handleViewMaterial(material)}
+                      className="p-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="View Material"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleEditMaterial(material)}
+                      className="p-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors"
+                      title="Edit Material"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirm(material)}
+                      className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete Material"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Mobile actions row */}
+                <div className="flex lg:hidden items-center gap-1 flex-shrink-0">
+                  <button
+                    onClick={() => handleViewMaterial(material)}
+                    className="p-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="View"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleEditMaterial(material)}
+                    className="p-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors"
+                    title="Edit"
+                  >
+                    <Edit className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setDeleteConfirm(material)}
+                    className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Mobile info row */}
+              <div className="flex lg:hidden items-center gap-3 mt-2 pl-[52px]">
+                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full ${
+                  material.active !== false
+                    ? 'bg-green-50 text-green-700'
+                    : 'bg-gray-100 text-gray-500'
+                }`}>
+                  <span className={`w-1 h-1 rounded-full ${material.active !== false ? 'bg-green-500' : 'bg-gray-400'}`} />
+                  {material.active !== false ? 'Active' : 'Inactive'}
+                </span>
+                <span className="text-[10px] text-gray-400">{categoryName || 'No cat'}</span>
+                <span className="text-gray-200">|</span>
+                <span className="text-[10px] text-gray-400">{unitName || 'No unit'}</span>
+                <span className="text-gray-200">|</span>
+                <span className="text-[10px] text-gray-400">{formatDate(material.createdAt)}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 
-  const renderPagination = () => {
-    const pages: number[] = [];
-    const maxVisiblePages = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
-    return (
-      <div className="flex items-center justify-between bg-white px-3 py-2 border-t border-gray-200">
-        <div className="text-xs text-gray-600">
-          Showing {startIndex + 1}-{Math.min(endIndex, materials.length)} of {materials.length}
-        </div>
-        <div className="flex items-center space-x-1">
-          <button
-            onClick={() => setCurrentPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="flex items-center px-2 py-1 text-xs text-gray-500 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ChevronLeft className="w-3 h-3" />
-          </button>
-          {pages.map((page) => (
-            <button
-              key={page}
-              onClick={() => setCurrentPage(page)}
-              className={`px-2 py-1 text-xs rounded ${
-                currentPage === page
-                  ? "bg-primary-500 text-white"
-                  : "text-gray-700 bg-white border border-gray-200 hover:bg-gray-50"
-              }`}
-            >
-              {page}
-            </button>
-          ))}
-          <button
-            onClick={() => setCurrentPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="flex items-center px-2 py-1 text-xs text-gray-500 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ChevronRight className="w-3 h-3" />
-          </button>
-        </div>
-      </div>
-    );
-  };
+  const totalPages = Math.ceil(filteredMaterials.length / pageSize);
 
   return (
-    <div className="min-h-screen bg-gray-50 text-xs">
-      <div className="bg-white shadow-md">
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="text-gray-400 hover:text-gray-600 p-1"
-                title="Toggle Sidebar"
-              >
-                <Minimize2 className="w-4 h-4" />
-              </button>
-              <div>
-                <h1 className="text-lg font-semibold text-gray-900">Material Management</h1>
-                <p className="text-xs text-gray-500 mt-0.5">Manage your materials</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={loadData}
-                disabled={loading}
-                className="flex items-center space-x-1 px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50"
-                title="Refresh"
-              >
-                <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
-                <span>Refresh</span>
-              </button>
-              <button
-                onClick={handleAddMaterial}
-                disabled={operationLoading}
-                className="flex items-center space-x-1 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded font-medium transition-colors disabled:opacity-50"
-              >
-                <Plus className="w-3 h-3" />
-                <span>Add Material</span>
-              </button>
-            </div>
+    <div className="min-h-screen bg-gray-50">
+      <PageHeader
+        title="Material Management"
+        subtitle="Manage your materials"
+        actions={
+          <div className="flex items-center gap-2">
+            <button
+              onClick={loadData}
+              disabled={loading}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+            <button
+              onClick={handleAddMaterial}
+              disabled={operationLoading}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Add Material
+            </button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
-      <div className="px-4 py-4 space-y-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <div className="bg-white rounded shadow p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-3 bg-primary-100 rounded-full flex items-center justify-center">
+      <div className="px-4 lg:px-6 py-4 space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-primary-50 rounded-lg flex items-center justify-center">
                 <PackageIcon className="w-5 h-5 text-primary-600" />
               </div>
               <div>
-                <p className="text-xs text-gray-600">Total Materials</p>
-                <p className="text-lg font-semibold text-gray-900">{totalMaterials}</p>
+                <p className="text-xs text-gray-500 font-medium">Total Materials</p>
+                <p className="text-xl font-bold text-gray-900">{totalMaterials}</p>
               </div>
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+                <PackageIcon className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 font-medium">Active</p>
+                <p className="text-xl font-bold text-gray-900">{allMaterials.filter(m => m.active !== false).length}</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
+                <Filter className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 font-medium">Categories</p>
+                <p className="text-xl font-bold text-gray-900">{categories.length}</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
+                <Grid3X3 className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 font-medium">Units</p>
+                <p className="text-xl font-bold text-gray-900">{units.length}</p>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Filters bar */}
+        <div className="bg-white rounded-xl border border-gray-100 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg transition-colors ${
+                showFilters ? 'bg-primary-50 border-primary-200 text-primary-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <Filter className="w-4 h-4" />
+              Filter
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+              <button
+                onClick={() => setViewMode('table')}
+                className={`p-2 transition-colors ${viewMode === 'table' ? 'bg-primary-50 text-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
+                title="Table View"
+              >
+                <List className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 transition-colors ${viewMode === 'grid' ? 'bg-primary-50 text-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
+                title="Grid View"
+              >
+                <Grid3X3 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 transition-colors ${viewMode === 'list' ? 'bg-primary-50 text-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
+                title="List View"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded border border-gray-200 p-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-            <div className="flex items-center space-x-2">
-              <div className="relative">
-                <Search className="w-3 h-3 text-gray-400 absolute left-2 top-1/2 transform -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Search materials..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-48 pl-7 pr-3 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center space-x-1 px-2 py-1.5 text-xs border rounded transition-colors ${
-                  showFilters ? 'bg-primary-50 border-primary-200 text-primary-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <Filter className="w-3 h-3" />
-                <span>Filter</span>
-              </button>
-            </div>
-            <div className="flex items-center space-x-2">
-              <select
-                value={`${sortBy}-${sortOrder}`}
-                onChange={(e) => {
-                  const [field, order] = e.target.value.split("-") as [keyof Material, "asc" | "desc"];
-                  setSortBy(field);
-                  setSortOrder(order);
-                }}
-                className="text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-500"
-              >
-                <option value="name-asc">Name (A-Z)</option>
-                <option value="name-desc">Name (Z-A)</option>
-                <option value="createdAt-desc">Newest</option>
-                <option value="createdAt-asc">Oldest</option>
-              </select>
-              <div className="flex items-center border border-gray-200 rounded">
-                <button
-                  onClick={() => setViewMode('table')}
-                  className={`p-1.5 text-xs transition-colors ${
-                    viewMode === 'table' ? 'bg-primary-50 text-primary-600' : 'text-gray-400 hover:text-gray-600'
-                  }`}
-                  title="Table View"
-                >
-                  <List className="w-3 h-3" />
-                </button>
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-1.5 text-xs transition-colors ${
-                    viewMode === 'grid' ? 'bg-primary-50 text-primary-600' : 'text-gray-400 hover:text-gray-600'
-                  }`}
-                  title="Grid View"
-                >
-                  <Grid3X3 className="w-3 h-3" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-1.5 text-xs transition-colors ${
-                    viewMode === 'list' ? 'bg-primary-50 text-primary-600' : 'text-gray-400 hover:text-gray-600'
-                  }`}
-                  title="List View"
-                >
-                  <Settings className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-          </div>
-          {/* Date Filter Section */}
-          {showFilters && (
-            <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:space-x-3 space-y-2 sm:space-y-0">
+        {/* Date Filter Section */}
+        {showFilters && (
+          <div className="bg-white rounded-xl border border-gray-100 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Start Date</label>
                 <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full sm:w-40 px-3 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
                 />
               </div>
               <div>
@@ -679,109 +760,177 @@ const MaterialManagement: React.FC = () => {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full sm:w-40 px-3 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
                 />
               </div>
-              <button
-                onClick={() => {
-                  setStartDate("");
-                  setEndDate("");
-                }}
-                className="px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded hover:bg-gray-50"
-              >
-                Clear Dates
-              </button>
+              <div className="flex items-end">
+                <button
+                  onClick={() => { setStartDate(""); setEndDate(""); }}
+                  className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Clear Dates
+                </button>
+              </div>
             </div>
-          )}
-        </div>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded p-3 text-red-700 text-xs">
-            {error}
           </div>
         )}
 
-        {loading ? (
-          <div className="bg-white rounded border border-gray-200 p-8 text-center text-gray-500">
-            <div className="inline-flex items-center space-x-2">
-              <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-xs">Loading materials...</span>
-            </div>
-          </div>
-        ) : currentMaterials.length === 0 ? (
-          <div className="bg-white rounded border border-gray-200 p-8 text-center text-gray-500">
-            <div className="text-xs">
-              {searchTerm || startDate || endDate ? 'No materials found matching your criteria' : 'No materials found'}
-            </div>
-          </div>
-        ) : (
-          <div>
-            {viewMode === 'table' && renderTableView()}
-            {viewMode === 'grid' && renderGridView()}
-            {viewMode === 'list' && renderListView()}
-            {renderPagination()}
-          </div>
+        {viewMode === 'table' && renderDataTable()}
+
+        {viewMode === 'grid' && (
+          <>
+            {filteredMaterials.length === 0 ? (
+              <div className="bg-white rounded-xl border border-gray-100 p-8 text-center text-gray-500 text-sm">
+                {searchTerm || startDate || endDate ? 'No materials found matching your criteria' : 'No materials found'}
+              </div>
+            ) : (
+              <>
+                {renderGridView()}
+                {/* Simple pagination for grid/list */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between bg-white rounded-xl border border-gray-100 px-4 py-3 mt-3">
+                    <div className="text-xs text-gray-500">
+                      Showing {((dataPage - 1) * pageSize) + 1}-{Math.min(dataPage * pageSize, filteredMaterials.length)} of {filteredMaterials.length}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setDataPage(Math.max(1, dataPage - 1))}
+                        disabled={dataPage === 1}
+                        className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Previous
+                      </button>
+                      <span className="px-3 py-1.5 text-xs text-gray-600">
+                        Page {dataPage} of {totalPages}
+                      </span>
+                      <button
+                        onClick={() => setDataPage(Math.min(totalPages, dataPage + 1))}
+                        disabled={dataPage === totalPages}
+                        className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </>
+        )}
+
+        {viewMode === 'list' && (
+          <>
+            {filteredMaterials.length === 0 ? (
+              <div className="bg-white rounded-xl border border-gray-100 p-8 text-center text-gray-500 text-sm">
+                {searchTerm || startDate || endDate ? 'No materials found matching your criteria' : 'No materials found'}
+              </div>
+            ) : (
+              <>
+                {renderListView()}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between bg-white rounded-xl border border-gray-100 px-4 py-3 mt-3">
+                    <div className="text-xs text-gray-500">
+                      Showing {((dataPage - 1) * pageSize) + 1}-{Math.min(dataPage * pageSize, filteredMaterials.length)} of {filteredMaterials.length}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setDataPage(Math.max(1, dataPage - 1))}
+                        disabled={dataPage === 1}
+                        className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Previous
+                      </button>
+                      <span className="px-3 py-1.5 text-xs text-gray-600">
+                        Page {dataPage} of {totalPages}
+                      </span>
+                      <button
+                        onClick={() => setDataPage(Math.min(totalPages, dataPage + 1))}
+                        disabled={dataPage === totalPages}
+                        className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </>
         )}
       </div>
 
-      {operationStatus && (
-        <div className="fixed top-4 right-4 z-50">
-          <div className={`flex items-center space-x-2 px-3 py-2 rounded shadow-lg text-xs ${
-            operationStatus.type === "success" ? "bg-green-50 border border-green-200 text-green-800" :
-            operationStatus.type === "error" ? "bg-red-50 border border-red-200 text-red-800" :
-            "bg-primary-50 border border-primary-200 text-primary-800"
-          }`}>
-            {operationStatus.type === "success" && <CheckCircle className="w-4 h-4 text-green-600" />}
-            {operationStatus.type === "error" && <XCircle className="w-4 h-4 text-red-600" />}
-            {operationStatus.type === "info" && <AlertCircle className="w-4 h-4 text-primary-600" />}
-            <span className="font-medium">{operationStatus.message}</span>
-            <button onClick={() => setOperationStatus(null)} className="hover:opacity-70">
-              <X className="w-3 h-3" />
-            </button>
-          </div>
-        </div>
-      )}
-
+      {/* Loading overlay */}
       {operationLoading && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-40">
-          <div className="bg-white rounded p-4 shadow-xl">
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-gray-700 text-xs font-medium">Processing...</span>
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-40">
+          <div className="bg-white rounded-xl p-5 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-sm font-medium text-gray-700">Processing...</span>
             </div>
           </div>
         </div>
       )}
 
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded p-4 w-full max-w-sm">
-            <div className="flex items-center space-x-2 mb-3">
-              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-4 h-4 text-red-600" />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in" onClick={() => setDeleteConfirm(null)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl border border-red-100 animate-modal-in" onClick={e => e.stopPropagation()}>
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mb-4 border-2 border-red-100">
+                <AlertTriangle className="w-7 h-7 text-red-500" />
               </div>
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900">Delete Material</h3>
-                <p className="text-xs text-gray-500">This action cannot be undone</p>
-              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Delete Material</h3>
+              <p className="text-sm text-gray-500">This action cannot be undone</p>
             </div>
-            <div className="mb-4">
-              <p className="text-xs text-gray-700">
-                Are you sure you want to delete{" "}
-                <span className="font-semibold">{deleteConfirm.name}</span>
-                ?
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5">
+              <p className="text-sm text-amber-800 text-center">
+                Are you sure you want to delete{' '}
+                <span className="font-semibold">"{deleteConfirm.name}"</span>?
               </p>
             </div>
-            <div className="flex items-center justify-end space-x-2">
+            <div className="flex items-center justify-center gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-3 py-1.5 text-xs text-gray-700 border border-gray-200 rounded hover:bg-gray-50"
+                className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 hover:border-gray-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-200"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDeleteMaterial(deleteConfirm)}
-                className="px-3 py-1.5 text-xs bg-red-600 text-white rounded hover:bg-red-700"
+                className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 active:bg-red-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500/30 shadow-lg shadow-red-500/20"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteConfirmBulk && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in" onClick={() => setDeleteConfirmBulk(false)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl border border-red-100 animate-modal-in" onClick={e => e.stopPropagation()}>
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mb-4 border-2 border-red-100">
+                <AlertTriangle className="w-7 h-7 text-red-500" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Delete Materials</h3>
+              <p className="text-sm text-gray-500">This action cannot be undone</p>
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5">
+              <p className="text-sm text-amber-800 text-center">
+                Are you sure you want to delete{' '}
+                <span className="font-semibold">{selectedRowIds.size} selected material{selectedRowIds.size !== 1 ? 's' : ''}</span>?
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={() => setDeleteConfirmBulk(false)}
+                className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 hover:border-gray-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 active:bg-red-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500/30 shadow-lg shadow-red-500/20"
               >
                 Delete
               </button>
@@ -791,79 +940,95 @@ const MaterialManagement: React.FC = () => {
       )}
 
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900">Add New Material</h3>
-            {formError && (
-              <div className="bg-red-50 border border-red-200 rounded p-2 text-red-700 text-xs mb-4">
-                {formError}
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in" onClick={() => { setShowAddModal(false); setFormError(''); }}>
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-gray-100 animate-modal-in overflow-hidden" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="bg-gradient-to-r from-primary-600 to-primary-500 px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <Plus className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Add New Material</h3>
+                  <p className="text-sm text-primary-100">Fill in the details below</p>
+                </div>
               </div>
-            )}
-            <form onSubmit={handleSubmit} className="space-y-3">
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+              {formError && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-red-700">{formError}</p>
+                </div>
+              )}
+
+              {/* Name */}
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Material Name *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Material Name <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 placeholder:text-gray-400"
                   placeholder="Enter material name"
                 />
               </div>
-              {/* <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Code</label>
-                <input
-                  type="text"
-                  name="code"
-                  value={formData.code}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  placeholder="Enter code or leave blank to auto-generate"
-                />
-              </div> */}
+
+              {/* Specification */}
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Specification</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Specification</label>
                 <textarea
                   name="specification"
                   value={formData.specification}
                   onChange={handleInputChange}
                   rows={3}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  placeholder="Enter material specification"
+                  className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 placeholder:text-gray-400 resize-none"
+                  placeholder="Enter material specification (optional)"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Category</label>
-                <select
-                  name="category_id"
-                  value={formData.category_id || ''}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
-                >
-                  <option value="">Select a category</option>
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
+
+              {/* Two column layout */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
+                  <select
+                    name="category_id"
+                    value={formData.category_id || ''}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 bg-white"
+                  >
+                    <option value="">Select a category</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Unit <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="unit_id"
+                    value={formData.unit_id || ''}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 bg-white"
+                  >
+                    <option value="">Select a unit</option>
+                    {units.map(unit => (
+                      <option key={unit.id} value={unit.id}>{unit.name} ({unit.symbol})</option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Unit *</label>
-                <select
-                  name="unit_id"
-                  value={formData.unit_id || ''}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
-                >
-                  <option value="">Select a unit</option>
-                  {units.map(unit => (
-                    <option key={unit.id} value={unit.id}>{unit.name} ({unit.symbol})</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex justify-end space-x-2 pt-2">
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={() => {
@@ -878,16 +1043,26 @@ const MaterialManagement: React.FC = () => {
                     });
                     setFormError('');
                   }}
-                  className="px-4 py-2 text-xs border border-gray-200 rounded hover:bg-gray-50 text-gray-700"
+                  className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-200"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={operationLoading}
-                  className="px-4 py-2 text-xs bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-primary-600 rounded-xl hover:bg-primary-700 active:bg-primary-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500/30 shadow-lg shadow-primary-500/20"
                 >
-                  {operationLoading ? 'Creating...' : 'Create Material'}
+                  {operationLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      Create Material
+                    </>
+                  )}
                 </button>
               </div>
             </form>
@@ -896,89 +1071,129 @@ const MaterialManagement: React.FC = () => {
       )}
 
       {showUpdateModal && selectedMaterial && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900">Update Material</h3>
-            {formError && (
-              <div className="bg-red-50 border border-red-200 rounded p-2 text-red-700 text-xs mb-4">
-                {formError}
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in" onClick={() => { setShowUpdateModal(false); setFormError(''); }}>
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-gray-100 animate-modal-in overflow-hidden" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="bg-gradient-to-r from-amber-600 to-amber-500 px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <Edit className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Update Material</h3>
+                  <p className="text-sm text-amber-100">Editing: {selectedMaterial.name}</p>
+                </div>
               </div>
-            )}
-            <form onSubmit={handleUpdateSubmit} className="space-y-3">
+            </div>
+
+            <form onSubmit={handleUpdateSubmit} className="p-6 space-y-5">
+              {formError && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-red-700">{formError}</p>
+                </div>
+              )}
+
+              {/* Name */}
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Material Name *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Material Name <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 placeholder:text-gray-400"
                   placeholder="Enter material name"
                 />
               </div>
+
+              {/* Code */}
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Code</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Code</label>
                 <input
                   type="text"
                   name="code"
                   value={formData.code}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  placeholder="Enter code"
+                  className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 placeholder:text-gray-400"
+                  placeholder="Enter material code"
                 />
               </div>
+
+              {/* Specification */}
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Specification</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Specification</label>
                 <textarea
                   name="specification"
                   value={formData.specification}
                   onChange={handleInputChange}
                   rows={3}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  placeholder="Enter material specification"
+                  className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 placeholder:text-gray-400 resize-none"
+                  placeholder="Enter material specification (optional)"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Category</label>
-                <select
-                  name="category_id"
-                  value={formData.category_id || ''}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
+
+              {/* Two column layout */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
+                  <select
+                    name="category_id"
+                    value={formData.category_id || ''}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 bg-white"
+                  >
+                    <option value="">Select a category</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Unit <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="unit_id"
+                    value={formData.unit_id || ''}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 bg-white"
+                  >
+                    <option value="">Select a unit</option>
+                    {units.map(unit => (
+                      <option key={unit.id} value={unit.id}>{unit.name} ({unit.symbol})</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Active toggle */}
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${formData.active ? 'bg-green-500' : 'bg-gray-300'}`} />
+                  <label className="text-sm font-medium text-gray-700">Active Status</label>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, active: !formData.active })}
+                  className={`relative w-11 h-6 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 ${
+                    formData.active ? 'bg-primary-500' : 'bg-gray-300'
+                  }`}
                 >
-                  <option value="">Select a category</option>
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 ${
+                      formData.active ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Unit *</label>
-                <select
-                  name="unit_id"
-                  value={formData.unit_id || ''}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
-                >
-                  <option value="">Select a unit</option>
-                  {units.map(unit => (
-                    <option key={unit.id} value={unit.id}>{unit.name} ({unit.symbol})</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  name="active"
-                  checked={formData.active}
-                  onChange={handleInputChange}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
-                <label className="text-xs font-medium text-gray-700">Active</label>
-              </div>
-              <div className="flex justify-end space-x-2 pt-2">
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={() => {
@@ -994,16 +1209,26 @@ const MaterialManagement: React.FC = () => {
                     });
                     setFormError('');
                   }}
-                  className="px-4 py-2 text-xs border border-gray-200 rounded hover:bg-gray-50 text-gray-700"
+                  className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-200"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={operationLoading}
-                  className="px-4 py-2 text-xs bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-amber-600 rounded-xl hover:bg-amber-700 active:bg-amber-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-amber-500/30 shadow-lg shadow-amber-500/20"
                 >
-                  {operationLoading ? 'Updating...' : 'Update Material'}
+                  {operationLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <Edit className="w-4 h-4" />
+                      Update Material
+                    </>
+                  )}
                 </button>
               </div>
             </form>
@@ -1012,53 +1237,77 @@ const MaterialManagement: React.FC = () => {
       )}
 
       {showViewModal && selectedMaterial && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900">Material Details</h3>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Material Name</label>
-                <p className="text-xs text-gray-900">{selectedMaterial.name || '-'}</p>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Code</label>
-                <p className="text-xs text-gray-900">{selectedMaterial.code || '-'}</p>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Specification</label>
-                <p className="text-xs text-gray-900">{selectedMaterial.specification || '-'}</p>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Category</label>
-                <p className="text-xs text-gray-900">{selectedMaterial.category_id ? categories.find(c => c.id === selectedMaterial.category_id)?.name || '-' : 'None'}</p>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Unit</label>
-                <p className="text-xs text-gray-900">{selectedMaterial.unit_id ? units.find(u => u.id === selectedMaterial.unit_id)?.name || '-' : 'None'}</p>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Active</label>
-                <p className="text-xs text-gray-900">{selectedMaterial.active ? 'Yes' : 'No'}</p>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Created At</label>
-                <p className="text-xs text-gray-900">{formatDate(selectedMaterial.createdAt)}</p>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Updated At</label>
-                <p className="text-xs text-gray-900">{formatDate(selectedMaterial.updated_at)}</p>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in" onClick={() => { setShowViewModal(false); setSelectedMaterial(null); }}>
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-gray-100 animate-modal-in overflow-hidden" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <Eye className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Material Details</h3>
+                  <p className="text-sm text-blue-100">Viewing: {selectedMaterial.name}</p>
+                </div>
               </div>
             </div>
-            <div className="flex justify-end pt-4">
-              <button
-                onClick={() => {
-                  setShowViewModal(false);
-                  setSelectedMaterial(null);
-                }}
-                className="px-4 py-2 text-xs border border-gray-200 rounded hover:bg-gray-50 text-gray-700"
-              >
-                Close
-              </button>
+
+            <div className="p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Material Name</p>
+                  <p className="text-sm font-semibold text-gray-900">{selectedMaterial.name || '-'}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Code</p>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center px-2 py-0.5 text-sm font-mono font-medium text-primary-700 bg-primary-50 rounded-lg">
+                      {selectedMaterial.code || '-'}
+                    </span>
+                  </div>
+                </div>
+                <div className="sm:col-span-2 bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Specification</p>
+                  <p className="text-sm text-gray-900">{selectedMaterial.specification || '-'}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Category</p>
+                  <p className="text-sm text-gray-900">{selectedMaterial.category_id ? categories.find(c => c.id === selectedMaterial.category_id)?.name || '-' : <span className="text-gray-400 italic">None</span>}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Unit</p>
+                  <p className="text-sm text-gray-900">{selectedMaterial.unit_id ? units.find(u => u.id === selectedMaterial.unit_id)?.name || '-' : <span className="text-gray-400 italic">None</span>}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Status</p>
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-lg ${
+                    selectedMaterial.active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${selectedMaterial.active ? 'bg-green-500' : 'bg-gray-400'}`} />
+                    {selectedMaterial.active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Created At</p>
+                  <p className="text-sm font-medium text-gray-900">{formatDate(selectedMaterial.createdAt)}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Updated At</p>
+                  <p className="text-sm font-medium text-gray-900">{formatDate(selectedMaterial.updated_at)}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+                <button
+                  onClick={() => {
+                    setShowViewModal(false);
+                    setSelectedMaterial(null);
+                  }}
+                  className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-200"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

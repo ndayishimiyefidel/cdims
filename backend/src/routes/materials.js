@@ -790,6 +790,7 @@ router.get('/:id', authenticate, materialController.getMaterialById);
  *               $ref: '#/components/schemas/Error'
  */
 router.post('/', authenticate, authorize('ADMIN', 'DIOCESAN_SITE_ENGINEER', 'PADIRI'), materialController.createMaterial);
+router.post('/bulk', authenticate, authorize('ADMIN', 'DIOCESAN_SITE_ENGINEER', 'PADIRI'), materialController.bulkCreateMaterials);
 
 /**
  * @swagger

@@ -1,7 +1,7 @@
-import { type FC} from 'react';
-import { RouterProvider} from 'react-router-dom';
+import { type FC } from 'react';
+import { RouterProvider } from 'react-router-dom';
 import routes from './router';
-
+import { ToastProvider } from './components/ui/Toast';
 
 /**
  * Main App component
@@ -9,9 +9,9 @@ import routes from './router';
  */
 const App: FC = () => {
   return (
-    <>
-        <RouterProvider router={routes} />
-    </>
+    <ToastProvider>
+      <RouterProvider router={routes} />
+    </ToastProvider>
   );
 };
 

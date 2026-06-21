@@ -17,9 +17,9 @@ const MainLayout = () => {
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
-     
-      <Outlet></Outlet>
-     
+      <main>
+        <Outlet />
+      </main>
       <Footer />
     </div>
   )
